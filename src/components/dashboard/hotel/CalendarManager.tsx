@@ -108,9 +108,14 @@ const CalendarManager = ({ hotelId }: Props) => {
     
     if (isSameDay(checkIn, currentDate)) {
       const duration = differenceInDays(checkOut, checkIn) + 1;
-      return { start: true, span: Math.min(duration, 14 - differenceInDays(currentDate, timelineStartDate)) };
+      return { 
+        start: true, 
+        span: Math.min(duration, 14 - differenceInDays(currentDate, timelineStartDate)),
+        isFirstDay: true,
+        isLastDay: differenceInDays(checkOut, checkIn) === 0 // check if check-in and check-out are on the same day
+      };
     }
-    return { start: false, span: 0 };
+    return { start: false, span: 0, isFirstDay: false, isLastDay: false };
   };
 
   const modifiers = {
@@ -213,6 +218,10 @@ const CalendarManager = ({ hotelId }: Props) => {
                     
                     if (bookingWithStart) {
                       const position = getBookingPosition(bookingWithStart, date);
+                      const checkInDate = new Date(bookingWithStart.check_in);
+                      const checkOutDate = new Date(bookingWithStart.check_out);
+                      const isLastDayInView = timelineDates.findIndex(d => isSameDay(d, checkOutDate)) === dateIndex + position.span - 1;
+                      
                       return (
                         <div 
                           key={date.toISOString()} 
@@ -221,7 +230,16 @@ const CalendarManager = ({ hotelId }: Props) => {
                         >
                           <div 
                             className="absolute inset-1 rounded p-2 text-white text-xs cursor-pointer hover:opacity-90 transition-opacity flex flex-col justify-center overflow-hidden"
-                            style={{ backgroundColor: getStatusColor(bookingWithStart.status) }}
+                            style={{ 
+                              backgroundColor: getStatusColor(bookingWithStart.status),
+                              clipPath: position.isLastDay 
+                                ? 'polygon(50% 0, 50% 100%, 50% 100%, 50% 0)' 
+                                : isLastDayInView 
+                                  ? 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' 
+                                  : position.isFirstDay 
+                                    ? 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' 
+                                    : undefined
+                            }}
                             onClick={() => setSelectedBooking(bookingWithStart)}
                           >
                             <div className="font-semibold truncate">
