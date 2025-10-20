@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar } from "lucide-react";
+import { Calendar, Search } from "lucide-react";
 
 interface Props {
   hotelId: string;
@@ -11,6 +12,7 @@ interface Props {
 
 const BookingsManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -31,6 +33,16 @@ const BookingsManager = ({ hotelId }: Props) => {
     }
   };
 
+  const filteredBookings = bookings.filter((booking) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      booking.guest_name?.toLowerCase().includes(searchLower) ||
+      booking.guest_email?.toLowerCase().includes(searchLower) ||
+      booking.rooms?.name?.toLowerCase().includes(searchLower) ||
+      booking.status?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -41,12 +53,21 @@ const BookingsManager = ({ hotelId }: Props) => {
       <Card>
         <CardHeader>
           <CardTitle>All Bookings</CardTitle>
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by guest, room, or status..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          {bookings.length === 0 ? (
+          {filteredBookings.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No bookings yet</p>
+              <p>{searchTerm ? "No bookings found" : "No bookings yet"}</p>
             </div>
           ) : (
             <Table>
@@ -61,7 +82,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((booking) => (
+                {filteredBookings.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.guest_name}</TableCell>
                     <TableCell>{booking.rooms?.name}</TableCell>
