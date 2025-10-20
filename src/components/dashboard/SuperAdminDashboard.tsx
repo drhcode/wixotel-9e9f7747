@@ -9,6 +9,10 @@ import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut } from "luci
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ImportCSV from "./hotel/ImportCSV";
+import HotelManagement from "./superadmin/HotelManagement";
+import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
+import AllReservations from "./superadmin/AllReservations";
+import AllGuests from "./superadmin/AllGuests";
 
 interface Hotel {
   id: string;
@@ -136,9 +140,13 @@ const SuperAdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="import">Import Data</TabsTrigger>
+            <TabsTrigger value="hotels">Hotels</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="reservations">Reservations</TabsTrigger>
+            <TabsTrigger value="guests">Guests</TabsTrigger>
+            <TabsTrigger value="import">Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -270,6 +278,22 @@ const SuperAdminDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="hotels">
+            <HotelManagement />
+          </TabsContent>
+
+          <TabsContent value="subscriptions">
+            <SubscriptionsManagement />
+          </TabsContent>
+
+          <TabsContent value="reservations">
+            <AllReservations />
+          </TabsContent>
+
+          <TabsContent value="guests">
+            <AllGuests />
           </TabsContent>
 
           <TabsContent value="import">
