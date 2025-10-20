@@ -207,17 +207,17 @@ const CalendarManager = ({ hotelId }: Props) => {
                       key={date.toISOString()} 
                       className={`p-3 border-b border-r text-center ${
                         isToday 
-                          ? 'bg-primary/30 ring-[3px] ring-primary ring-inset shadow-lg shadow-primary/50' 
+                          ? 'bg-primary/20 ring-1 ring-primary ring-inset' 
                           : 'bg-muted/30'
                       }`}
                     >
-                      <div className={`text-xs font-semibold ${isToday ? 'text-primary font-extrabold' : ''}`}>
+                      <div className={`text-xs font-semibold ${isToday ? 'text-primary' : ''}`}>
                         {format(date, 'EEE')}
                       </div>
-                      <div className={`text-sm ${isToday ? 'text-primary font-extrabold' : ''}`}>
+                      <div className={`text-sm ${isToday ? 'text-primary font-bold' : ''}`}>
                         {format(date, 'dd')}
                       </div>
-                      <div className={`text-xs ${isToday ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                      <div className={`text-xs ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
                         {format(date, 'MMM')}
                       </div>
                     </div>
