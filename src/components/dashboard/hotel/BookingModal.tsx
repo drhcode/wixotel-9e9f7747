@@ -28,6 +28,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guests, setGuests] = useState<any[]>([]);
   const [selectedRoom, setSelectedRoom] = useState(prefilledRoomId || "");
   const [selectedGuest, setSelectedGuest] = useState("");
+  const [guestSearchTerm, setGuestSearchTerm] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -50,7 +51,24 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     const { data } = await supabase
       .from('guests')
       .select('*')
-      .eq('hotel_id', hotelId);
+      .eq('hotel_id', hotelId)
+      .order('created_at', { ascending: false })
+      .limit(9);
+    setGuests(data || []);
+  };
+
+  const searchGuests = async (term: string) => {
+    if (!term.trim()) {
+      fetchGuests();
+      return;
+    }
+    
+    const { data } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('hotel_id', hotelId)
+      .or(`name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`)
+      .order('created_at', { ascending: false });
     setGuests(data || []);
   };
 
@@ -187,17 +205,30 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
           <div>
             <Label>Guest</Label>
-            <Select value={selectedGuest} onValueChange={setSelectedGuest}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select existing or add new" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">+ Add New Guest</SelectItem>
-                {guests.map(guest => (
-                  <SelectItem key={guest.id} value={guest.id}>{guest.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Input
+                placeholder="Search guests by name, email, or phone..."
+                value={guestSearchTerm}
+                onChange={(e) => {
+                  setGuestSearchTerm(e.target.value);
+                  searchGuests(e.target.value);
+                }}
+              />
+              <Select value={selectedGuest} onValueChange={setSelectedGuest}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select existing or add new" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">+ Add New Guest</SelectItem>
+                  {guests.map(guest => (
+                    <SelectItem key={guest.id} value={guest.id}>{guest.name}</SelectItem>
+                  ))}
+                  {guests.length === 0 && guestSearchTerm && (
+                    <div className="text-sm text-muted-foreground p-2">No guests found</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {(!selectedGuest || selectedGuest === 'new') && (
