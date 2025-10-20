@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hotel, LogOut, AlertCircle } from "lucide-react";
+import { Hotel, LogOut, AlertCircle, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { HotelSidebar } from "./hotel/HotelSidebar";
 import HotelOverview from "./hotel/HotelOverview";
 import RoomsManager from "./hotel/RoomsManager";
 import BookingsManager from "./hotel/BookingsManager";
@@ -26,6 +28,7 @@ const HotelAdminDashboard = () => {
   const navigate = useNavigate();
   const [hotel, setHotel] = useState<HotelData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchHotelData();
@@ -162,74 +165,93 @@ const HotelAdminDashboard = () => {
     );
   }
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return <HotelOverview hotelId={hotel.id} />;
+      case "calendar":
+        return <CalendarManager hotelId={hotel.id} />;
+      case "rooms":
+        return <RoomsManager hotelId={hotel.id} />;
+      case "bookings":
+        return <BookingsManager hotelId={hotel.id} />;
+      case "guests":
+        return <GuestsManager hotelId={hotel.id} />;
+      case "settings":
+        return <ProfileSettings />;
+      default:
+        return <HotelOverview hotelId={hotel.id} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {hotel.logo_url ? (
-                <img 
-                  src={hotel.logo_url} 
-                  alt={`${hotel.name} logo`}
-                  className="h-12 w-12 object-contain rounded-lg"
-                />
-              ) : (
-                <Hotel className="h-8 w-8 text-primary" />
-              )}
-              <div>
-                <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  {hotel.name}
-                </span>
-                <p className="text-xs text-muted-foreground">Hotel Dashboard</p>
+    <SidebarProvider>
+      <div className="min-h-screen w-full flex bg-background">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col w-full">
+          {/* Header */}
+          <header className="border-b bg-card sticky top-0 z-40">
+            <div className="px-4 lg:px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger className="lg:hidden">
+                    <Menu className="h-5 w-5" />
+                  </SidebarTrigger>
+                  {hotel.logo_url ? (
+                    <img 
+                      src={hotel.logo_url} 
+                      alt={`${hotel.name} logo`}
+                      className="h-10 w-10 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <Hotel className="h-7 w-7 text-primary" />
+                  )}
+                  <div>
+                    <span className="text-xl lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                      {hotel.name}
+                    </span>
+                    <p className="text-xs text-muted-foreground hidden sm:block">Hotel Dashboard</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Logout</span>
+                </Button>
               </div>
             </div>
-            <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
+
+            {/* Mobile Tabs */}
+            <div className="lg:hidden border-t overflow-x-auto">
+              <div className="flex px-2 py-2 gap-1 min-w-max">
+                {["overview", "calendar", "rooms", "bookings", "guests", "settings"].map((tab) => (
+                  <Button
+                    key={tab}
+                    variant={activeTab === tab ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab(tab)}
+                    className="capitalize whitespace-nowrap"
+                  >
+                    {tab}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </header>
+
+          {/* Content Area */}
+          <main className={activeTab === "calendar" ? "" : "container mx-auto px-4 lg:px-6 py-6"}>
+            <div className={activeTab === "calendar" ? "px-4 lg:px-6 py-6" : ""}>
+              {renderContent()}
+            </div>
+          </main>
         </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="rooms">Rooms</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview">
-            <HotelOverview hotelId={hotel.id} />
-          </TabsContent>
-
-          <TabsContent value="calendar">
-            <CalendarManager hotelId={hotel.id} />
-          </TabsContent>
-
-          <TabsContent value="rooms">
-            <RoomsManager hotelId={hotel.id} />
-          </TabsContent>
-
-          <TabsContent value="bookings">
-            <BookingsManager hotelId={hotel.id} />
-          </TabsContent>
-
-          <TabsContent value="guests">
-            <GuestsManager hotelId={hotel.id} />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <ProfileSettings />
-          </TabsContent>
-        </Tabs>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
