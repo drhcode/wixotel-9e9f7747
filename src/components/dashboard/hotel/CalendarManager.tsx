@@ -141,12 +141,19 @@ const CalendarManager = ({ hotelId }: Props) => {
       const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
       const span = differenceInDays(endCell, startCell) + 1;
 
+      // Check if this is the actual check-in date (not just window start)
+      const isActualCheckIn = isSameDay(checkIn, currentDate);
+      // Check if the end date is the actual check-out date (not just window end)
+      const isActualCheckOut = isSameDay(checkOut, endCell);
+
       return {
         start: true,
         span: Math.max(1, span),
+        isActualCheckIn,
+        isActualCheckOut
       };
     }
-    return { start: false, span: 0 };
+    return { start: false, span: 0, isActualCheckIn: false, isActualCheckOut: false };
   };
 
   const modifiers = {
@@ -278,12 +285,14 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return (
                           <div 
                             key={date.toISOString()} 
-                            className="border-b border-r min-h-[80px] bg-background p-2"
+                            className="border-b border-r min-h-[80px] bg-background relative"
                             style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.span, 16) }}
                           >
                             <div 
-                              className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
+                                left: position.isActualCheckIn ? '50%' : '0',
+                                right: position.isActualCheckOut ? '50%' : '0',
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
                                 color: getStatusColor(startBooking.status),
