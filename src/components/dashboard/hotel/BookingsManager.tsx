@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar, Search, Trash2, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import TransformReservationsCSV from "./TransformReservationsCSV";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -226,6 +227,8 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   return (
     <div className="space-y-6">
+      <TransformReservationsCSV />
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
