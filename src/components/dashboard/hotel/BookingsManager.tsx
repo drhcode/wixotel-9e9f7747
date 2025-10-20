@@ -360,7 +360,7 @@ const BookingsManager = ({ hotelId }: Props) => {
           )}
         </CardContent>
         {filteredBookings.length > 0 && (
-          <div className="px-6 pb-4">
+          <div className="px-6 pb-4 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -369,17 +369,68 @@ const BookingsManager = ({ hotelId }: Props) => {
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {[...Array(totalPages)].map((_, i) => (
-                  <PaginationItem key={i + 1}>
+                
+                {/* First page */}
+                {totalPages > 1 && (
+                  <PaginationItem>
                     <PaginationLink
-                      onClick={() => setCurrentPage(i + 1)}
-                      isActive={currentPage === i + 1}
+                      onClick={() => setCurrentPage(1)}
+                      isActive={currentPage === 1}
                       className="cursor-pointer"
                     >
-                      {i + 1}
+                      1
                     </PaginationLink>
                   </PaginationItem>
-                ))}
+                )}
+                
+                {/* Ellipsis after first page */}
+                {currentPage > 3 && totalPages > 5 && (
+                  <PaginationItem>
+                    <span className="flex h-9 w-9 items-center justify-center">...</span>
+                  </PaginationItem>
+                )}
+                
+                {/* Middle pages */}
+                {[...Array(totalPages)].map((_, i) => {
+                  const page = i + 1;
+                  const showPage = page > 1 && page < totalPages && 
+                    Math.abs(page - currentPage) <= 1;
+                  
+                  if (!showPage) return null;
+                  
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                {/* Ellipsis before last page */}
+                {currentPage < totalPages - 2 && totalPages > 5 && (
+                  <PaginationItem>
+                    <span className="flex h-9 w-9 items-center justify-center">...</span>
+                  </PaginationItem>
+                )}
+                
+                {/* Last page */}
+                {totalPages > 1 && (
+                  <PaginationItem>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(totalPages)}
+                      isActive={currentPage === totalPages}
+                      className="cursor-pointer"
+                    >
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+                
                 <PaginationItem>
                   <PaginationNext 
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
