@@ -195,7 +195,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={checkOut} onSelect={(date) => date && setCheckOut(date)} />
+                  <Calendar 
+                    mode="single" 
+                    selected={checkOut} 
+                    onSelect={(date) => {
+                      if (date) {
+                        setCheckOut(date);
+                        setCheckOutOpen(false);
+                      }
+                    }} 
+                  />
                 </PopoverContent>
               </Popover>
             </div>
