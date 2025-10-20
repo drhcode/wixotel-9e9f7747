@@ -115,19 +115,16 @@ const CalendarManager = ({ hotelId }: Props) => {
     const currentDate = startOfDay(date);
 
     if (isSameDay(checkIn, currentDate)) {
-      // For visual display, we need to span from middle of check-in to middle of check-out
-      // So a 1-night stay needs 2 cells, 2-night needs 3 cells, etc.
-      const nights = differenceInDays(checkOut, checkIn);
-      const visualSpan = nights + 1; // Add 1 to show from check-in day to check-out day
+      // span excludes checkout day so back-to-back bookings can share the day cell
+      const rawSpan = Math.max(1, differenceInDays(checkOut, checkIn));
       const daysFromStart = differenceInDays(currentDate, timelineStartDate);
       const remainingInTimeline = Math.max(0, 14 - daysFromStart);
       return {
         start: true,
-        span: Math.min(visualSpan, remainingInTimeline),
-        nights: nights,
+        span: Math.min(rawSpan, remainingInTimeline),
       };
     }
-    return { start: false, span: 0, nights: 0 };
+    return { start: false, span: 0 };
   };
 
   const modifiers = {
@@ -269,9 +266,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 backgroundColor: `${getStatusColor(booking.status)}20`,
                                 border: `2px solid ${getStatusColor(booking.status)}`,
                                 color: getStatusColor(booking.status),
-                                // For all bookings: start at 50% of first cell, end at 50% of last cell
-                                left: '50%',
-                                right: `-${((position.span - 1) * 100) + 50}%`,
+                                left: position.span === 1 ? '25%' : `${50 / position.span}%`,
+                                right: position.span === 1 ? '25%' : `${-50 / position.span}%`,
                                 borderRadius: '8px',
                               }}
                               onClick={() => setSelectedBooking(booking)}
