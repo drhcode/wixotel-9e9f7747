@@ -7,12 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 import { format } from "date-fns";
 import BookingDetailsModal from "../hotel/BookingDetailsModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const AllReservations = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBookings();
@@ -53,6 +63,12 @@ const AllReservations = () => {
     }
   };
 
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -88,7 +104,7 @@ const AllReservations = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBookings.map((booking) => (
+              {paginatedBookings.map((booking) => (
                 <TableRow 
                   key={booking.id}
                   className="cursor-pointer hover:bg-accent"
@@ -128,6 +144,37 @@ const AllReservations = () => {
             </TableBody>
           </Table>
         </CardContent>
+        {filteredBookings.length > 0 && (
+          <div className="px-6 pb-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, i) => (
+                  <PaginationItem key={i + 1}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(i + 1)}
+                      isActive={currentPage === i + 1}
+                      className="cursor-pointer"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </Card>
 
       {selectedBooking && (

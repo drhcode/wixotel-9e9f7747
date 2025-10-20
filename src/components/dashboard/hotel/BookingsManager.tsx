@@ -7,6 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar, Search, Trash2, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import TransformReservationsCSV from "./TransformReservationsCSV";
 import {
   AlertDialog,
@@ -29,6 +37,8 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBookings();
@@ -58,6 +68,12 @@ const BookingsManager = ({ hotelId }: Props) => {
       booking.status?.toLowerCase().includes(searchLower)
     );
   });
+
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -313,7 +329,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBookings.map((booking) => (
+                {paginatedBookings.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.guest_name}</TableCell>
                     <TableCell>{booking.rooms?.name}</TableCell>
@@ -343,6 +359,37 @@ const BookingsManager = ({ hotelId }: Props) => {
             </Table>
           )}
         </CardContent>
+        {filteredBookings.length > 0 && (
+          <div className="px-6 pb-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, i) => (
+                  <PaginationItem key={i + 1}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(i + 1)}
+                      isActive={currentPage === i + 1}
+                      className="cursor-pointer"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </Card>
 
       <AlertDialog open={!!deletingBooking} onOpenChange={() => setDeletingBooking(null)}>
