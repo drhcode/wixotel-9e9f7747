@@ -284,6 +284,9 @@ export type Database = {
           is_available: boolean
           name: string
           price: number
+          room_number: string | null
+          room_type: string | null
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -297,6 +300,9 @@ export type Database = {
           is_available?: boolean
           name: string
           price: number
+          room_number?: string | null
+          room_type?: string | null
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -310,6 +316,9 @@ export type Database = {
           is_available?: boolean
           name?: string
           price?: number
+          room_number?: string | null
+          room_type?: string | null
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -392,6 +401,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_booking_overlap: {
+        Args: {
+          p_booking_id?: string
+          p_check_in: string
+          p_check_out: string
+          p_room_id: string
+        }
+        Returns: boolean
+      }
+      get_available_rooms: {
+        Args: { p_check_in: string; p_check_out: string; p_hotel_id: string }
+        Returns: {
+          capacity: number
+          id: string
+          name: string
+          price: number
+          room_number: string
+          room_type: string
+        }[]
+      }
       get_user_hotel_id: {
         Args: { _user_id: string }
         Returns: string

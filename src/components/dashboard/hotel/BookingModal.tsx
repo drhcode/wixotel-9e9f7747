@@ -1,0 +1,213 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  hotelId: string;
+  prefilledDates?: { start: Date; end: Date } | null;
+  prefilledRoomId?: string | null;
+  onSuccess: () => void;
+}
+
+const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomId, onSuccess }: Props) => {
+  const [checkIn, setCheckIn] = useState<Date>(prefilledDates?.start || new Date());
+  const [checkOut, setCheckOut] = useState<Date>(prefilledDates?.end || new Date());
+  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [guests, setGuests] = useState<any[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState(prefilledRoomId || "");
+  const [selectedGuest, setSelectedGuest] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchGuests();
+      if (checkIn && checkOut) {
+        fetchAvailableRooms();
+      }
+    }
+  }, [isOpen, checkIn, checkOut]);
+
+  const fetchGuests = async () => {
+    const { data } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('hotel_id', hotelId);
+    setGuests(data || []);
+  };
+
+  const fetchAvailableRooms = async () => {
+    const { data, error } = await supabase.rpc('get_available_rooms', {
+      p_hotel_id: hotelId,
+      p_check_in: format(checkIn, 'yyyy-MM-dd'),
+      p_check_out: format(checkOut, 'yyyy-MM-dd')
+    });
+    
+    if (!error) setAvailableRooms(data || []);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      let guestId = selectedGuest;
+
+      if (!guestId && guestName) {
+        const { data: newGuest, error: guestError } = await supabase
+          .from('guests')
+          .insert({ hotel_id: hotelId, name: guestName, phone: guestPhone, email: guestEmail })
+          .select()
+          .single();
+
+        if (guestError) throw guestError;
+        guestId = newGuest.id;
+      }
+
+      const room = availableRooms.find(r => r.id === selectedRoom);
+      const { error } = await supabase.from('bookings').insert({
+        hotel_id: hotelId,
+        room_id: selectedRoom,
+        guest_id: guestId,
+        guest_name: guestName || guests.find(g => g.id === guestId)?.name,
+        guest_phone: guestPhone || guests.find(g => g.id === guestId)?.phone,
+        guest_email: guestEmail || guests.find(g => g.id === guestId)?.email,
+        check_in: format(checkIn, 'yyyy-MM-dd'),
+        check_out: format(checkOut, 'yyyy-MM-dd'),
+        total_amount: room?.price || 0,
+        notes,
+        status: 'confirmed'
+      });
+
+      if (error) throw error;
+      toast.success("Reservation created");
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>New Reservation</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Check-in</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(checkIn, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={checkIn} onSelect={(date) => date && setCheckIn(date)} />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div>
+              <Label>Check-out</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(checkOut, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={checkOut} onSelect={(date) => date && setCheckOut(date)} />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div>
+            <Label>Available Rooms</Label>
+            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select room" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRooms.map(room => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.room_number || room.name} - ${room.price}/night
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Guest</Label>
+            <Select value={selectedGuest} onValueChange={setSelectedGuest}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select existing or add new" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">+ Add New Guest</SelectItem>
+                {guests.map(guest => (
+                  <SelectItem key={guest.id} value={guest.id}>{guest.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(!selectedGuest || selectedGuest === 'new') && (
+            <>
+              <div>
+                <Label>Guest Name *</Label>
+                <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Phone *</Label>
+                  <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div>
+            <Label>Notes</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={handleSubmit} disabled={loading || !selectedRoom}>
+              {loading ? "Creating..." : "Create Reservation"}
+            </Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default BookingModal;
