@@ -260,7 +260,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                           <div 
                             key={date.toISOString()} 
                             className="border-b border-r min-h-[80px] bg-background p-2"
-                            style={{ gridColumn: `span ${position.span}` }}
+                            style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.span, 16) }}
                           >
                             <div 
                               className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
