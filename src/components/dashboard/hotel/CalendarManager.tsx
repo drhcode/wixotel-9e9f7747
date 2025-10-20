@@ -226,9 +226,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                           style={{ gridColumn: `span ${position.span}` }}
                         >
                           <div 
-                            className="absolute top-2 bottom-2 text-white text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
+                            className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
                             style={{ 
-                              backgroundColor: getStatusColor(bookingWithStart.status),
+                              backgroundColor: `${getStatusColor(bookingWithStart.status)}20`,
+                              border: `2px solid ${getStatusColor(bookingWithStart.status)}`,
+                              color: getStatusColor(bookingWithStart.status),
                               left: position.span === 1 ? '25%' : '50%',
                               right: position.span === 1 ? '25%' : '0',
                               borderRadius: position.span === 1 ? '8px' : '0 8px 8px 0',
