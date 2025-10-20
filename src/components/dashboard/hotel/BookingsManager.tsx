@@ -4,7 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 interface Props {
   hotelId: string;
@@ -13,6 +26,8 @@ interface Props {
 const BookingsManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -42,6 +57,69 @@ const BookingsManager = ({ hotelId }: Props) => {
       booking.status?.toLowerCase().includes(searchLower)
     );
   });
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'default';
+      case 'checked_in':
+        return 'secondary';
+      case 'checked_out':
+        return 'outline';
+      case 'cancelled':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const handleDeleteAttempt = (bookingId: string) => {
+    setDeletingBooking(bookingId);
+    setDeletePassword("");
+  };
+
+  const handleDelete = async () => {
+    if (!deletingBooking) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('deletion_password')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profile?.deletion_password) {
+        toast.error("Please set up a deletion password in Settings first");
+        setDeletingBooking(null);
+        return;
+      }
+
+      if (profile.deletion_password !== deletePassword) {
+        toast.error("Incorrect password");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', deletingBooking);
+
+      if (error) throw error;
+
+      toast.success("Booking deleted successfully");
+      setDeletingBooking(null);
+      setDeletePassword("");
+      fetchBookings();
+    } catch (error: any) {
+      toast.error("Failed to delete booking");
+      console.error(error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -79,6 +157,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                   <TableHead>Check-out</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -88,8 +167,21 @@ const BookingsManager = ({ hotelId }: Props) => {
                     <TableCell>{booking.rooms?.name}</TableCell>
                     <TableCell>{new Date(booking.check_in).toLocaleDateString()}</TableCell>
                     <TableCell>{new Date(booking.check_out).toLocaleDateString()}</TableCell>
-                    <TableCell><Badge>{booking.status}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(booking.status)}>
+                        {booking.status}
+                      </Badge>
+                    </TableCell>
                     <TableCell>${booking.total_amount}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteAttempt(booking.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -97,6 +189,38 @@ const BookingsManager = ({ hotelId }: Props) => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deletingBooking} onOpenChange={() => setDeletingBooking(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter your deletion password to confirm this action.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-4">
+            <Label htmlFor="delete-password">Deletion Password</Label>
+            <Input
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your deletion password"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeletingBooking(null);
+              setDeletePassword("");
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

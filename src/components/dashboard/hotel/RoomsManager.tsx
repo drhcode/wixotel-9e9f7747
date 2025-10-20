@@ -9,6 +9,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   hotelId: string;
@@ -27,6 +37,8 @@ const RoomsManager = ({ hotelId }: Props) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [deletingRoom, setDeletingRoom] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -107,17 +119,47 @@ const RoomsManager = ({ hotelId }: Props) => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (roomId: string) => {
-    if (!confirm("Are you sure you want to delete this room?")) return;
+  const handleDeleteAttempt = (roomId: string) => {
+    setDeletingRoom(roomId);
+    setDeletePassword("");
+  };
+
+  const handleDelete = async () => {
+    if (!deletingRoom) return;
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('deletion_password')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profile?.deletion_password) {
+        toast.error("Please set up a deletion password in Settings first");
+        setDeletingRoom(null);
+        return;
+      }
+
+      if (profile.deletion_password !== deletePassword) {
+        toast.error("Incorrect password");
+        return;
+      }
+
       const { error } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId);
+        .eq('id', deletingRoom);
 
       if (error) throw error;
+
       toast.success("Room deleted successfully");
+      setDeletingRoom(null);
+      setDeletePassword("");
       fetchRooms();
     } catch (error: any) {
       toast.error("Failed to delete room");
@@ -232,7 +274,7 @@ const RoomsManager = ({ hotelId }: Props) => {
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleDelete(room.id)}>
+                  <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleDeleteAttempt(room.id)}>
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
@@ -254,6 +296,38 @@ const RoomsManager = ({ hotelId }: Props) => {
           </Card>
         )}
       </div>
+
+      <AlertDialog open={!!deletingRoom} onOpenChange={() => setDeletingRoom(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Room</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter your deletion password to confirm this action.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-4">
+            <Label htmlFor="delete-password">Deletion Password</Label>
+            <Input
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your deletion password"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeletingRoom(null);
+              setDeletePassword("");
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
