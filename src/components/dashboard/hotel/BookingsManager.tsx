@@ -308,6 +308,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                   <TableHead>Check-out</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -324,6 +325,9 @@ const BookingsManager = ({ hotelId }: Props) => {
                       </Badge>
                     </TableCell>
                     <TableCell>€{booking.total_amount}</TableCell>
+                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                      {booking.notes || '-'}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"

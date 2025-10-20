@@ -229,6 +229,13 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Badge>{booking.status}</Badge>
           </div>
 
+          {booking.notes && (
+            <div>
+              <p className="text-sm text-muted-foreground">Notes</p>
+              <p className="text-sm">{booking.notes}</p>
+            </div>
+          )}
+
           {booking.status === 'confirmed' && !canCheckIn() && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />

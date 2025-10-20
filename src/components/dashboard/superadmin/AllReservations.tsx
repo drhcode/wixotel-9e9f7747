@@ -84,6 +84,7 @@ const AllReservations = () => {
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
+                <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,6 +119,9 @@ const AllReservations = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{booking.payment_status}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                    {booking.notes || '-'}
                   </TableCell>
                 </TableRow>
               ))}
