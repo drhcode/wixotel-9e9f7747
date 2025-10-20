@@ -53,7 +53,10 @@ const GuestsManager = ({ hotelId }: Props) => {
       guest.name?.toLowerCase().includes(searchLower) ||
       guest.email?.toLowerCase().includes(searchLower) ||
       guest.phone?.toLowerCase().includes(searchLower) ||
-      guest.id_number?.toLowerCase().includes(searchLower)
+      guest.id_number?.toLowerCase().includes(searchLower) ||
+      guest.country?.toLowerCase().includes(searchLower) ||
+      guest.city?.toLowerCase().includes(searchLower) ||
+      guest.address?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -118,7 +121,7 @@ const GuestsManager = ({ hotelId }: Props) => {
           <div className="relative mt-4">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, phone, or ID..."
+              placeholder="Search by name, email, phone, location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -139,6 +142,9 @@ const GuestsManager = ({ hotelId }: Props) => {
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>ID Number</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>City</TableHead>
+                  <TableHead>Address</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -149,6 +155,9 @@ const GuestsManager = ({ hotelId }: Props) => {
                     <TableCell>{guest.email || '-'}</TableCell>
                     <TableCell>{guest.phone}</TableCell>
                     <TableCell>{guest.id_number || '-'}</TableCell>
+                    <TableCell>{guest.country || '-'}</TableCell>
+                    <TableCell>{guest.city || '-'}</TableCell>
+                    <TableCell>{guest.address || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"

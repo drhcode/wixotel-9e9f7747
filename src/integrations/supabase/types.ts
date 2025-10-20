@@ -92,6 +92,9 @@ export type Database = {
       }
       guests: {
         Row: {
+          address: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email: string | null
           hotel_id: string
@@ -103,6 +106,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           hotel_id: string
@@ -114,6 +120,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           hotel_id?: string
