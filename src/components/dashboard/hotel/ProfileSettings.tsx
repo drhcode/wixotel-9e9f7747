@@ -29,19 +29,14 @@ const ProfileSettings = () => {
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   
-  const [deletionPassword, setDeletionPassword] = useState("");
-  const [confirmDeletionPassword, setConfirmDeletionPassword] = useState("");
-  
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   
   const [loading, setLoading] = useState(false);
-  const [hasPassword, setHasPassword] = useState(false);
 
   useEffect(() => {
     fetchHotelData();
-    checkExistingPassword();
   }, []);
 
   const fetchHotelData = async () => {
@@ -65,18 +60,6 @@ const ProfileSettings = () => {
     }
   };
 
-  const checkExistingPassword = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('deletion_password')
-      .eq('user_id', user.id)
-      .single();
-
-    setHasPassword(!!profile?.deletion_password);
-  };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -150,45 +133,6 @@ const ProfileSettings = () => {
     }
   };
 
-  const handleSaveDeletionPassword = async () => {
-    if (!deletionPassword) {
-      toast.error("Please enter a deletion password");
-      return;
-    }
-
-    if (deletionPassword !== confirmDeletionPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (deletionPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
-
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("User not authenticated");
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ deletion_password: deletionPassword })
-      .eq('user_id', user.id);
-
-    setLoading(false);
-    if (error) {
-      toast.error("Failed to save password");
-    } else {
-      toast.success("Deletion password saved successfully");
-      setDeletionPassword("");
-      setConfirmDeletionPassword("");
-      setHasPassword(true);
-    }
-  };
 
   const handleChangeLoginPassword = async () => {
     if (!currentPassword || !newPassword || !confirmNewPassword) {
@@ -410,51 +354,6 @@ const ProfileSettings = () => {
         </CardContent>
       </Card>
 
-      <Separator />
-
-      {/* Deletion Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Deletion Password
-          </CardTitle>
-          <CardDescription>
-            {hasPassword 
-              ? "Your deletion password is set. You can update it below."
-              : "Set a password required for deleting reservations. This adds an extra layer of security."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="deletion-password">
-              {hasPassword ? "New Deletion Password" : "Deletion Password"}
-            </Label>
-            <Input
-              id="deletion-password"
-              type="password"
-              value={deletionPassword}
-              onChange={(e) => setDeletionPassword(e.target.value)}
-              placeholder="Enter password (min 6 characters)"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirm-deletion-password">Confirm Password</Label>
-            <Input
-              id="confirm-deletion-password"
-              type="password"
-              value={confirmDeletionPassword}
-              onChange={(e) => setConfirmDeletionPassword(e.target.value)}
-              placeholder="Confirm password"
-            />
-          </div>
-
-          <Button onClick={handleSaveDeletionPassword} disabled={loading}>
-            {loading ? "Saving..." : hasPassword ? "Update Password" : "Set Password"}
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 };

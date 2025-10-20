@@ -38,7 +38,6 @@ const RoomsManager = ({ hotelId }: Props) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [deletingRoom, setDeletingRoom] = useState<string | null>(null);
-  const [deletePassword, setDeletePassword] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -121,35 +120,12 @@ const RoomsManager = ({ hotelId }: Props) => {
 
   const handleDeleteAttempt = (roomId: string) => {
     setDeletingRoom(roomId);
-    setDeletePassword("");
   };
 
   const handleDelete = async () => {
     if (!deletingRoom) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('deletion_password')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (!profile?.deletion_password) {
-        toast.error("Please set up a deletion password in Settings first");
-        setDeletingRoom(null);
-        return;
-      }
-
-      if (profile.deletion_password !== deletePassword) {
-        toast.error("Incorrect password");
-        return;
-      }
-
       // Check for upcoming or active bookings
       const { data: bookings, error: bookingsError } = await supabase
         .from('bookings')
@@ -162,7 +138,6 @@ const RoomsManager = ({ hotelId }: Props) => {
       if (bookings && bookings.length > 0) {
         toast.error("Cannot delete room with active or upcoming reservations");
         setDeletingRoom(null);
-        setDeletePassword("");
         return;
       }
 
@@ -175,7 +150,6 @@ const RoomsManager = ({ hotelId }: Props) => {
 
       toast.success("Room deleted successfully");
       setDeletingRoom(null);
-      setDeletePassword("");
       fetchRooms();
     } catch (error: any) {
       toast.error("Failed to delete room");
@@ -318,24 +292,11 @@ const RoomsManager = ({ hotelId }: Props) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Room</AlertDialogTitle>
             <AlertDialogDescription>
-              Please enter your deletion password to confirm this action.
+              Are you sure you want to delete this room? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2 py-4">
-            <Label htmlFor="delete-password">Deletion Password</Label>
-            <Input
-              id="delete-password"
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="Enter your deletion password"
-            />
-          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeletingRoom(null);
-              setDeletePassword("");
-            }}>
+            <AlertDialogCancel onClick={() => setDeletingRoom(null)}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>

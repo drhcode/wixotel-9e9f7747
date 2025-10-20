@@ -27,7 +27,6 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
-  const [deletePassword, setDeletePassword] = useState("");
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
@@ -76,7 +75,6 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   const handleDeleteAttempt = (bookingId: string) => {
     setDeletingBooking(bookingId);
-    setDeletePassword("");
   };
 
   const parseCSV = (text: string): any[] => {
@@ -210,28 +208,6 @@ const BookingsManager = ({ hotelId }: Props) => {
     if (!deletingBooking) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('deletion_password')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (!profile?.deletion_password) {
-        toast.error("Please set up a deletion password in Settings first");
-        setDeletingBooking(null);
-        return;
-      }
-
-      if (profile.deletion_password !== deletePassword) {
-        toast.error("Incorrect password");
-        return;
-      }
-
       const { error } = await supabase
         .from('bookings')
         .delete()
@@ -241,7 +217,6 @@ const BookingsManager = ({ hotelId }: Props) => {
 
       toast.success("Booking deleted successfully");
       setDeletingBooking(null);
-      setDeletePassword("");
       fetchBookings();
     } catch (error: any) {
       toast.error("Failed to delete booking");
@@ -368,24 +343,11 @@ const BookingsManager = ({ hotelId }: Props) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Booking</AlertDialogTitle>
             <AlertDialogDescription>
-              Please enter your deletion password to confirm this action.
+              Are you sure you want to delete this booking? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2 py-4">
-            <Label htmlFor="delete-password">Deletion Password</Label>
-            <Input
-              id="delete-password"
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="Enter your deletion password"
-            />
-          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeletingBooking(null);
-              setDeletePassword("");
-            }}>
+            <AlertDialogCancel onClick={() => setDeletingBooking(null)}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>

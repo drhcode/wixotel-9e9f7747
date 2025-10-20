@@ -31,7 +31,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
 
   useEffect(() => {
     if (booking) {
@@ -129,34 +128,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const handleDelete = async () => {
-    if (!deletePassword) {
-      toast.error("Please enter deletion password");
-      return;
-    }
-
-    // Get current user's profile to check password
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("User not authenticated");
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('deletion_password')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profile?.deletion_password) {
-      toast.error("Please set up a deletion password in your profile settings first");
-      return;
-    }
-
-    if (profile.deletion_password !== deletePassword) {
-      toast.error("Incorrect password");
-      return;
-    }
-    
     const { error } = await supabase
       .from('bookings')
       .delete()
@@ -278,13 +249,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
 
           {showDeleteConfirm && (
             <div className="space-y-2 p-4 border rounded-lg bg-destructive/10">
-              <Label>Enter deletion password to confirm</Label>
-              <Input
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Deletion password"
-              />
+              <p className="text-sm font-medium">Are you sure you want to delete this booking?</p>
+              <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
             </div>
           )}
           
@@ -317,7 +283,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 <Button size="sm" variant="destructive" onClick={handleDelete}>
                   Confirm Delete
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}>
+                <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(false)}>
                   Cancel
                 </Button>
               </>
