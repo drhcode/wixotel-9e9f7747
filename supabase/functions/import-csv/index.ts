@@ -262,13 +262,35 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   }
 
   // Get rooms for the hotel
-  const roomQuery = supabase.from('rooms').select('id, room_number, hotel_id');
+  const roomQuery = supabase.from('rooms').select('id, name, room_number, hotel_id');
   if (userHotelId) {
     roomQuery.eq('hotel_id', userHotelId);
   }
   
   const { data: rooms } = await roomQuery;
-  const roomMap = new Map(rooms?.map((r: any) => [`${r.hotel_id}_${r.room_number}`, r.id]) || []);
+  
+  // Create flexible matching maps
+  const roomByNumberMap = new Map();
+  const roomByNameMap = new Map();
+  
+  rooms?.forEach((r: any) => {
+    const key = `${r.hotel_id}_${r.room_number}`;
+    roomByNumberMap.set(key, r.id);
+    
+    // Also map by full name (lowercase)
+    const nameKey = `${r.hotel_id}_${r.name.toLowerCase()}`;
+    roomByNameMap.set(nameKey, r.id);
+    
+    // Extract number from name for flexible matching (e.g., "201" from "Deluxe Room 201")
+    const numberMatch = r.name.match(/\d{3}/);
+    if (numberMatch) {
+      const extractedNumber = numberMatch[0];
+      const numberKey = `${r.hotel_id}_${extractedNumber}`;
+      if (!roomByNumberMap.has(numberKey)) {
+        roomByNumberMap.set(numberKey, r.id);
+      }
+    }
+  });
 
   // Import reservations in batches of 50
   for (let i = 0; i < csvData.length; i += 50) {
@@ -360,12 +382,17 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           guestId = newGuest.id;
         }
 
-        // Find room
+        // Find room - try by room_number first, then by name
         const roomNumber = reservation.room_number || reservation.room;
-        const roomId = roomMap.get(`${reservationHotelId}_${roomNumber}`);
+        let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomNumber}`);
+        
+        // If not found by number, try by name
+        if (!roomId && roomNumber) {
+          roomId = roomByNameMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+        }
 
         if (!roomId) {
-          errors.push(`Room ${roomNumber} not found for reservation`);
+          errors.push(`Room "${roomNumber}" not found for reservation`);
           continue;
         }
 
