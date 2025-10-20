@@ -155,7 +155,7 @@ const AllGuests = () => {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="font-medium">${booking.total_amount}</div>
+                                <div className="font-medium">€{booking.total_amount}</div>
                                 <div className="text-xs text-muted-foreground">{booking.status}</div>
                               </div>
                             </div>

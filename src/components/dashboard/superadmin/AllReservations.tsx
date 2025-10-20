@@ -110,7 +110,7 @@ const AllReservations = () => {
                   </TableCell>
                   <TableCell>{format(new Date(booking.check_in), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{format(new Date(booking.check_out), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>${booking.total_amount}</TableCell>
+                  <TableCell>€{booking.total_amount}</TableCell>
                   <TableCell>
                     <Badge style={{ backgroundColor: getStatusColor(booking.status) }} className="text-white">
                       {booking.status}

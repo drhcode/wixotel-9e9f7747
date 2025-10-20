@@ -193,7 +193,7 @@ const SuperAdminDashboard = () => {
                   <DollarSign className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                  <div className="text-3xl font-bold">€{stats.totalRevenue.toLocaleString()}</div>
                   <p className="text-xs text-muted-foreground mt-1">From subscriptions</p>
                 </CardContent>
               </Card>

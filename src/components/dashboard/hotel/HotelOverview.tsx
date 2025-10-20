@@ -106,7 +106,7 @@ const HotelOverview = ({ hotelId }: Props) => {
             <DollarSign className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-success">${stats.totalRevenue.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-success">€{stats.totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">From completed bookings</p>
           </CardContent>
         </Card>

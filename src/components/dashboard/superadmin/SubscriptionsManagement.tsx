@@ -167,9 +167,9 @@ const SubscriptionsManagement = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic - $29/month</SelectItem>
-                    <SelectItem value="pro">Pro - $79/month</SelectItem>
-                    <SelectItem value="premium">Premium - $149/month</SelectItem>
+                    <SelectItem value="basic">Basic - €29/month</SelectItem>
+                    <SelectItem value="pro">Pro - €79/month</SelectItem>
+                    <SelectItem value="premium">Premium - €149/month</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

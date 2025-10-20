@@ -198,7 +198,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               <SelectContent>
                 {availableRooms.map(room => (
                   <SelectItem key={room.id} value={room.id}>
-                    {room.room_number || room.name} - ${room.price}/night
+                    {room.room_number || room.name} - €{room.price}/night
                   </SelectItem>
                 ))}
               </SelectContent>

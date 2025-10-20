@@ -345,7 +345,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                         {booking.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>${booking.total_amount}</TableCell>
+                    <TableCell>€{booking.total_amount}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"

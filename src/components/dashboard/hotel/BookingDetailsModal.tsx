@@ -213,7 +213,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   <SelectContent>
                     {availableRooms.map((room) => (
                       <SelectItem key={room.id} value={room.id}>
-                        {room.name} - ${room.price}
+                        {room.name} - €{room.price}
                       </SelectItem>
                     ))}
                   </SelectContent>

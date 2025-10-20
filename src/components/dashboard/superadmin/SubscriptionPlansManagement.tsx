@@ -288,7 +288,7 @@ const SubscriptionPlansManagement = () => {
               {filteredPlans.map((plan) => (
                 <TableRow key={plan.id}>
                   <TableCell className="font-medium">{plan.name}</TableCell>
-                  <TableCell>${plan.price}</TableCell>
+                  <TableCell>€{plan.price}</TableCell>
                   <TableCell className="capitalize">{plan.billing_period}</TableCell>
                   <TableCell className="max-w-xs">
                     <div className="flex flex-wrap gap-1">

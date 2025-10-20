@@ -347,7 +347,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                     {format(new Date(booking.check_in), 'MMM dd')} - {format(new Date(booking.check_out), 'MMM dd, yyyy')}
                   </div>
                   <div className="text-sm font-medium mt-2">
-                    ${booking.total_amount}
+                    €{booking.total_amount}
                   </div>
                 </Card>
               ))

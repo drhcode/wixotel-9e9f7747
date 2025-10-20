@@ -230,7 +230,7 @@ const RoomsManager = ({ hotelId }: Props) => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price per Night ($)</Label>
+                  <Label htmlFor="price">Price per Night (€)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -279,7 +279,7 @@ const RoomsManager = ({ hotelId }: Props) => {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Price per night:</span>
-                  <span className="font-semibold text-primary">${room.price}</span>
+                  <span className="font-semibold text-primary">€{room.price}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Capacity:</span>
