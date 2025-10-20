@@ -91,12 +91,29 @@ const CalendarManager = ({ hotelId }: Props) => {
     );
   };
 
-  const getCheckInBookingsForRoom = (roomId: string, date: Date) => {
+  const getStartCellBookingForRoom = (roomId: string, date: Date) => {
+    const lastVisibleDate = addDays(timelineStartDate, 13);
     const dateStr = format(date, 'yyyy-MM-dd');
-    return bookings.filter(booking => 
-      booking.room_id === roomId &&
-      booking.check_in === dateStr
-    );
+
+    for (const booking of bookings) {
+      if (booking.room_id !== roomId) continue;
+      // Check overlap with current 14-day window (inclusive of checkout day for visual continuity)
+      const overlaps =
+        booking.check_in <= format(lastVisibleDate, 'yyyy-MM-dd') &&
+        booking.check_out >= format(timelineStartDate, 'yyyy-MM-dd');
+      if (!overlaps) continue;
+
+      // Start cell is the later of check_in and window start
+      const startCellDate = new Date(
+        Math.max(new Date(booking.check_in).getTime(), startOfDay(timelineStartDate).getTime())
+      );
+      const startCellStr = format(startCellDate, 'yyyy-MM-dd');
+      if (startCellStr === dateStr) {
+        return booking;
+      }
+    }
+
+    return null;
   };
 
   const generateTimelineDates = () => {
@@ -110,20 +127,23 @@ const CalendarManager = ({ hotelId }: Props) => {
   const timelineDates = generateTimelineDates();
 
   const getBookingPosition = (booking: any, date: Date) => {
-    const checkIn = new Date(booking.check_in);
-    const checkOut = new Date(booking.check_out);
+    const checkIn = startOfDay(new Date(booking.check_in));
+    const checkOut = startOfDay(new Date(booking.check_out));
     const currentDate = startOfDay(date);
+    const windowStart = startOfDay(timelineStartDate);
+    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
 
-    if (isSameDay(checkIn, currentDate)) {
-      // Calculate nights (difference in days)
-      const nights = differenceInDays(checkOut, checkIn);
-      // Visual span should be nights + 1 to go from middle of check-in to middle of check-out
-      const visualSpan = nights + 1;
-      const daysFromStart = differenceInDays(currentDate, timelineStartDate);
-      const remainingInTimeline = Math.max(0, 14 - daysFromStart);
+    // Start cell for this booking within current window
+    const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
+
+    if (isSameDay(startCell, currentDate)) {
+      // End cell within current window (inclusive for "middle to middle")
+      const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
+      const span = differenceInDays(endCell, startCell) + 1;
+
       return {
         start: true,
-        span: Math.min(visualSpan, remainingInTimeline),
+        span: Math.max(1, span),
       };
     }
     return { start: false, span: 0 };
@@ -245,11 +265,10 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return null;
                       }
 
-                      const checkInBookings = getCheckInBookingsForRoom(room.id, date);
+                      const startBooking = getStartCellBookingForRoom(room.id, date);
                       
-                      if (checkInBookings.length > 0) {
-                        const booking = checkInBookings[0]; // Take first check-in
-                        const position = getBookingPosition(booking, date);
+                      if (startBooking) {
+                        const position = getBookingPosition(startBooking, date);
                         
                         // Mark the spanned dates as rendered
                         for (let i = 0; i < position.span; i++) {
@@ -265,17 +284,17 @@ const CalendarManager = ({ hotelId }: Props) => {
                             <div 
                               className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
-                                backgroundColor: `${getStatusColor(booking.status)}20`,
-                                border: `2px solid ${getStatusColor(booking.status)}`,
-                                color: getStatusColor(booking.status),
+                                backgroundColor: `${getStatusColor(startBooking.status)}20`,
+                                border: `2px solid ${getStatusColor(startBooking.status)}`,
+                                color: getStatusColor(startBooking.status),
                               }}
-                              onClick={() => setSelectedBooking(booking)}
+                              onClick={() => setSelectedBooking(startBooking)}
                             >
                               <div className="font-semibold truncate">
-                                {booking.guests?.name || booking.guest_name}
+                                {startBooking.guests?.name || startBooking.guest_name}
                               </div>
                               <div className="text-[10px] opacity-90 truncate">
-                                {format(new Date(booking.check_in), 'MMM dd')} - {format(new Date(booking.check_out), 'MMM dd')}
+                                {format(new Date(startBooking.check_in), 'MMM dd')} - {format(new Date(startBooking.check_out), 'MMM dd')}
                               </div>
                             </div>
                           </div>
