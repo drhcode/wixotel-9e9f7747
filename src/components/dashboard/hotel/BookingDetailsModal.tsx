@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
 interface Props {
   booking: any;
@@ -11,7 +14,7 @@ interface Props {
 }
 
 const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
-  const handleStatusUpdate = async (newStatus: string) => {
+  const handleStatusUpdate = async (newStatus: BookingStatus) => {
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })

@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
 
@@ -54,11 +55,12 @@ const CalendarManager = ({ hotelId }: Props) => {
   };
 
   const handleDateSelect = (selectInfo: any) => {
+    const resource = selectInfo.resource;
     setSelectedDates({
       start: selectInfo.start,
       end: selectInfo.end
     });
-    setSelectedRoom(selectInfo.resource?.id || null);
+    setSelectedRoom(resource?.id || null);
     setIsModalOpen(true);
   };
 
@@ -69,12 +71,15 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const handleEventDrop = async (dropInfo: any) => {
     const { event } = dropInfo;
+    const resources = event.getResources();
+    const resourceId = resources && resources.length > 0 ? resources[0].id : event._def.resourceIds[0];
+    
     const { error } = await supabase
       .from('bookings')
       .update({
-        check_in: event.start,
-        check_out: event.end,
-        room_id: event.getResources()[0]?.id
+        check_in: format(event.start!, 'yyyy-MM-dd'),
+        check_out: format(event.end!, 'yyyy-MM-dd'),
+        room_id: resourceId
       })
       .eq('id', event.id);
 
@@ -83,6 +88,26 @@ const CalendarManager = ({ hotelId }: Props) => {
       dropInfo.revert();
     } else {
       toast.success("Booking updated");
+      fetchBookings();
+    }
+  };
+
+  const handleEventResize = async (resizeInfo: any) => {
+    const { event } = resizeInfo;
+    
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        check_in: format(event.start!, 'yyyy-MM-dd'),
+        check_out: format(event.end!, 'yyyy-MM-dd')
+      })
+      .eq('id', event.id);
+
+    if (error) {
+      toast.error("Failed to resize booking");
+      resizeInfo.revert();
+    } else {
+      toast.success("Booking dates updated");
       fetchBookings();
     }
   };
@@ -122,22 +147,24 @@ const CalendarManager = ({ hotelId }: Props) => {
 
       <div className="bg-card rounded-lg border p-4">
         <FullCalendar
-          plugins={[resourceTimelinePlugin, interactionPlugin]}
-          initialView="resourceTimelineWeek"
-          resources={resources}
-          events={events}
-          selectable={true}
-          editable={true}
-          select={handleDateSelect}
-          eventClick={handleEventClick}
-          eventDrop={handleEventDrop}
-          eventResize={handleEventDrop}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth'
-          }}
-          height="auto"
+          {...({
+            plugins: [resourceTimelinePlugin, interactionPlugin],
+            initialView: "resourceTimelineWeek",
+            resources: resources,
+            events: events,
+            selectable: true,
+            editable: true,
+            select: handleDateSelect,
+            eventClick: handleEventClick,
+            eventDrop: handleEventDrop,
+            eventResize: handleEventResize,
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth'
+            },
+            height: "auto"
+          } as any)}
         />
       </div>
 
