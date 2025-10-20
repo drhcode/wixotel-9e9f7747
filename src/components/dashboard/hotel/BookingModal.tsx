@@ -31,6 +31,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [guestCountry, setGuestCountry] = useState("");
+  const [guestCity, setGuestCity] = useState("");
+  const [guestAddress, setGuestAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -82,7 +85,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
         const { data: newGuest, error: guestError } = await supabase
           .from('guests')
-          .insert({ hotel_id: hotelId, name: guestName, phone: guestPhone, email: guestEmail })
+          .insert({ 
+            hotel_id: hotelId, 
+            name: guestName, 
+            phone: guestPhone, 
+            email: guestEmail,
+            country: guestCountry,
+            city: guestCity,
+            address: guestAddress
+          })
           .select()
           .single();
 
@@ -204,6 +215,20 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <Label>Email</Label>
                   <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Country</Label>
+                  <Input value={guestCountry} onChange={(e) => setGuestCountry(e.target.value)} />
+                </div>
+                <div>
+                  <Label>City</Label>
+                  <Input value={guestCity} onChange={(e) => setGuestCity(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Input value={guestAddress} onChange={(e) => setGuestAddress(e.target.value)} />
               </div>
             </>
           )}
