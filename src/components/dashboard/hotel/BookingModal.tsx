@@ -38,6 +38,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -160,7 +162,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-in</Label>
-              <Popover>
+              <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -168,14 +170,24 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={checkIn} onSelect={(date) => date && setCheckIn(date)} />
+                  <Calendar 
+                    mode="single" 
+                    selected={checkIn} 
+                    onSelect={(date) => {
+                      if (date) {
+                        setCheckIn(date);
+                        setCheckInOpen(false);
+                        setCheckOutOpen(true);
+                      }
+                    }} 
+                  />
                 </PopoverContent>
               </Popover>
             </div>
             
             <div>
               <Label>Check-out</Label>
-              <Popover>
+              <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />

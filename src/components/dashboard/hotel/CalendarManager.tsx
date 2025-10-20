@@ -200,13 +200,29 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <div className="p-3 border-b border-r font-semibold bg-muted/30">
                   Room
                 </div>
-                {timelineDates.map(date => (
-                  <div key={date.toISOString()} className="p-3 border-b border-r text-center bg-muted/30">
-                    <div className="text-xs font-semibold">{format(date, 'EEE')}</div>
-                    <div className="text-sm">{format(date, 'dd')}</div>
-                    <div className="text-xs text-muted-foreground">{format(date, 'MMM')}</div>
-                  </div>
-                ))}
+                {timelineDates.map(date => {
+                  const isToday = isSameDay(date, new Date());
+                  return (
+                    <div 
+                      key={date.toISOString()} 
+                      className={`p-3 border-b border-r text-center ${
+                        isToday 
+                          ? 'bg-primary/30 ring-[3px] ring-primary ring-inset shadow-lg shadow-primary/50' 
+                          : 'bg-muted/30'
+                      }`}
+                    >
+                      <div className={`text-xs font-semibold ${isToday ? 'text-primary font-extrabold' : ''}`}>
+                        {format(date, 'EEE')}
+                      </div>
+                      <div className={`text-sm ${isToday ? 'text-primary font-extrabold' : ''}`}>
+                        {format(date, 'dd')}
+                      </div>
+                      <div className={`text-xs ${isToday ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                        {format(date, 'MMM')}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               
               {/* Room Rows */}
