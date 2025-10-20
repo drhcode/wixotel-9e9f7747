@@ -35,6 +35,7 @@ const Auth = () => {
         email: signupData.email,
         password: signupData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: signupData.fullName
           }

@@ -11,8 +11,32 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState<'super_admin' | 'hotel_admin' | null>(null);
 
   useEffect(() => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (roleData) {
+              setUserRole(roleData.role);
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          navigate("/auth");
+        }
+      }
+    );
+
+    // Then check for existing session
     checkUserAndRole();
-  }, []);
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const checkUserAndRole = async () => {
     try {
