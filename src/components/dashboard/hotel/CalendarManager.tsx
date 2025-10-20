@@ -219,36 +219,28 @@ const CalendarManager = ({ hotelId }: Props) => {
                     if (bookingWithStart) {
                       const position = getBookingPosition(bookingWithStart, date);
                       
-                      // Calculate clipPath for midday check-in/check-out
-                      let clipPath = undefined;
-                      if (position.span === 1) {
-                        // Same day check-in and check-out: show only middle portion
-                        clipPath = 'polygon(25% 0, 75% 0, 75% 100%, 25% 100%)';
-                      } else {
-                        // Multi-day booking: clip first half of first day and last half of last day
-                        const clipStart = (50 / position.span);
-                        const clipEnd = 100 - (50 / position.span);
-                        clipPath = `polygon(${clipStart}% 0, ${clipEnd}% 0, ${clipEnd}% 100%, ${clipStart}% 100%)`;
-                      }
-                      
                       return (
                         <div 
                           key={date.toISOString()} 
-                          className="relative border-b border-r min-h-[80px] p-1"
+                          className="relative border-b border-r min-h-[80px]"
                           style={{ gridColumn: `span ${position.span}` }}
                         >
                           <div 
-                            className="absolute inset-1 rounded p-2 text-white text-xs cursor-pointer hover:opacity-90 transition-opacity flex flex-col justify-center overflow-hidden"
+                            className="absolute top-2 bottom-2 text-white text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
                             style={{ 
                               backgroundColor: getStatusColor(bookingWithStart.status),
-                              clipPath: clipPath
+                              left: position.span === 1 ? '25%' : '50%',
+                              right: position.span === 1 ? '25%' : '0',
+                              borderRadius: position.span === 1 ? '8px' : '0 8px 8px 0',
+                              borderTopLeftRadius: position.span === 1 ? '8px' : position.isFirstDay ? '8px' : '0',
+                              borderBottomLeftRadius: position.span === 1 ? '8px' : position.isFirstDay ? '8px' : '0',
                             }}
                             onClick={() => setSelectedBooking(bookingWithStart)}
                           >
                             <div className="font-semibold truncate">
                               {bookingWithStart.guests?.name || bookingWithStart.guest_name}
                             </div>
-                            <div className="text-[10px] opacity-90">
+                            <div className="text-[10px] opacity-90 truncate">
                               {format(new Date(bookingWithStart.check_in), 'MMM dd')} - {format(new Date(bookingWithStart.check_out), 'MMM dd')}
                             </div>
                           </div>
