@@ -144,9 +144,11 @@ const CalendarManager = ({ hotelId }: Props) => {
       return {
         start: true,
         span: Math.max(1, span),
+        isActualCheckIn: isSameDay(checkIn, currentDate),
+        isActualCheckOut: isSameDay(checkOut, addDays(currentDate, span - 1))
       };
     }
-    return { start: false, span: 0 };
+    return { start: false, span: 0, isActualCheckIn: false, isActualCheckOut: false };
   };
 
   const modifiers = {
@@ -278,15 +280,17 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return (
                           <div 
                             key={date.toISOString()} 
-                            className="border-b border-r min-h-[80px] bg-background p-2"
+                            className="border-b border-r min-h-[80px] bg-background p-2 relative"
                             style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.span, 16) }}
                           >
                             <div 
-                              className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
                                 color: getStatusColor(startBooking.status),
+                                left: position.isActualCheckIn ? '50%' : '0.5rem',
+                                right: position.isActualCheckOut ? '50%' : '0.5rem'
                               }}
                               onClick={() => setSelectedBooking(startBooking)}
                             >
