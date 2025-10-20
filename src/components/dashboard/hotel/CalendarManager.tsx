@@ -211,10 +211,10 @@ const CalendarManager = ({ hotelId }: Props) => {
                           : 'bg-muted/30'
                       }`}
                     >
-                      <div className={`text-xs font-semibold ${isToday ? 'text-primary' : ''}`}>
+                      <div className={`text-xs ${isToday ? 'text-primary' : 'font-semibold'}`}>
                         {format(date, 'EEE')}
                       </div>
-                      <div className={`text-sm ${isToday ? 'text-primary font-bold' : ''}`}>
+                      <div className={`text-sm ${isToday ? 'text-primary' : ''}`}>
                         {format(date, 'dd')}
                       </div>
                       <div className={`text-xs ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
