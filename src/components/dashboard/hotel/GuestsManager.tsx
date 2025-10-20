@@ -91,6 +91,22 @@ const GuestsManager = ({ hotelId }: Props) => {
         return;
       }
 
+      // Check for upcoming or active bookings
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id, check_out, status')
+        .eq('guest_id', deletingGuest)
+        .in('status', ['pending', 'confirmed', 'checked_in']);
+
+      if (bookingsError) throw bookingsError;
+
+      if (bookings && bookings.length > 0) {
+        toast.error("Cannot delete guest with active or upcoming reservations");
+        setDeletingGuest(null);
+        setDeletePassword("");
+        return;
+      }
+
       const { error } = await supabase
         .from('guests')
         .delete()

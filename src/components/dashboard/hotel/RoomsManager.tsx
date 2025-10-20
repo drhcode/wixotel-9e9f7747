@@ -150,6 +150,22 @@ const RoomsManager = ({ hotelId }: Props) => {
         return;
       }
 
+      // Check for upcoming or active bookings
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id, check_out, status')
+        .eq('room_id', deletingRoom)
+        .in('status', ['pending', 'confirmed', 'checked_in']);
+
+      if (bookingsError) throw bookingsError;
+
+      if (bookings && bookings.length > 0) {
+        toast.error("Cannot delete room with active or upcoming reservations");
+        setDeletingRoom(null);
+        setDeletePassword("");
+        return;
+      }
+
       const { error } = await supabase
         .from('rooms')
         .delete()
