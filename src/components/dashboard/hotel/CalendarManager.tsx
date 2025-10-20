@@ -316,8 +316,7 @@ const CalendarManager = ({ hotelId }: Props) => {
 
       {/* Mobile Calendar View */}
       <div className="lg:hidden space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <Card className="p-4">
+        <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">
               {format(currentMonth, 'MMMM yyyy')}
@@ -342,16 +341,26 @@ const CalendarManager = ({ hotelId }: Props) => {
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
+            onSelect={(date) => {
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
             className="w-full"
           />
-          </Card>
+        </Card>
 
-          <Card className="p-4">
+        <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
+          <span className="text-sm font-medium">
+            Reserved Rooms ({selectedDateBookings.length}) | Free Rooms ({rooms.length - selectedDateBookings.length})
+          </span>
+        </div>
+
+        <Card className="p-4">
           <h3 className="font-semibold text-lg mb-4">
             Bookings for {format(selectedDate, 'MMM dd, yyyy')}
           </h3>
@@ -388,14 +397,7 @@ const CalendarManager = ({ hotelId }: Props) => {
               ))
             )}
           </div>
-          </Card>
-        </div>
-
-        <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
-          <span className="text-sm font-medium">
-            Reserved Rooms ({selectedDateBookings.length}) | Free Rooms ({rooms.length - selectedDateBookings.length})
-          </span>
-        </div>
+        </Card>
       </div>
 
       <BookingModal
