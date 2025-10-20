@@ -278,16 +278,12 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return (
                           <div 
                             key={date.toISOString()} 
-                            className="border-b border-r min-h-[80px] bg-background relative"
+                            className="border-b border-r min-h-[80px] bg-background p-2"
                             style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.span, 16) }}
                           >
                             <div 
-                              className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+                              className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
-                                left: '50%',
-                                right: position.span === 1 ? '50%' : '0',
-                                top: '8px',
-                                bottom: '8px',
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
                                 color: getStatusColor(startBooking.status),
