@@ -87,7 +87,15 @@ const CalendarManager = ({ hotelId }: Props) => {
     return bookings.filter(booking => 
       booking.room_id === roomId &&
       dateStr >= booking.check_in && 
-      dateStr <= booking.check_out
+      dateStr < booking.check_out // Changed to < so check-out day is not occupied
+    );
+  };
+
+  const getCheckInBookingsForRoom = (roomId: string, date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return bookings.filter(booking => 
+      booking.room_id === roomId &&
+      booking.check_in === dateStr
     );
   };
 
@@ -201,61 +209,71 @@ const CalendarManager = ({ hotelId }: Props) => {
               </div>
               
               {/* Room Rows */}
-              {rooms.map(room => (
-                <div key={room.id} className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
-                  <div className="p-3 border-b border-r bg-background">
-                    <div className="font-medium">{room.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Room {room.room_number}
+              {rooms.map(room => {
+                const renderedDateIndices = new Set<number>();
+                
+                return (
+                  <div key={room.id} className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
+                    <div className="p-3 border-b border-r bg-background">
+                      <div className="font-medium">{room.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Room {room.room_number}
+                      </div>
                     </div>
-                  </div>
-                  {timelineDates.map((date, dateIndex) => {
-                    const roomBookings = getBookingsForRoom(room.id, date);
-                    const bookingWithStart = roomBookings.find(b => {
-                      const pos = getBookingPosition(b, date);
-                      return pos.start;
-                    });
-                    
-                    if (bookingWithStart) {
-                      const position = getBookingPosition(bookingWithStart, date);
+                    {timelineDates.map((date, dateIndex) => {
+                      // Skip if this date was already rendered as part of a span
+                      if (renderedDateIndices.has(dateIndex)) {
+                        return null;
+                      }
+
+                      const checkInBookings = getCheckInBookingsForRoom(room.id, date);
                       
-                      return (
-                        <div 
-                          key={date.toISOString()} 
-                          className="relative border-b border-r min-h-[80px]"
-                          style={{ gridColumn: `span ${position.span}` }}
-                        >
+                      if (checkInBookings.length > 0) {
+                        const booking = checkInBookings[0]; // Take first check-in
+                        const position = getBookingPosition(booking, date);
+                        
+                        // Mark the spanned dates as rendered
+                        for (let i = 0; i < position.span; i++) {
+                          renderedDateIndices.add(dateIndex + i);
+                        }
+                        
+                        return (
                           <div 
-                            className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
-                            style={{ 
-                              backgroundColor: `${getStatusColor(bookingWithStart.status)}20`,
-                              border: `2px solid ${getStatusColor(bookingWithStart.status)}`,
-                              color: getStatusColor(bookingWithStart.status),
-                              left: position.span === 1 ? '25%' : `${50 / position.span}%`,
-                              right: position.span === 1 ? '25%' : `${50 / position.span}%`,
-                              borderRadius: '8px',
-                            }}
-                            onClick={() => setSelectedBooking(bookingWithStart)}
+                            key={date.toISOString()} 
+                            className="relative border-b border-r min-h-[80px]"
+                            style={{ gridColumn: `span ${position.span}` }}
                           >
-                            <div className="font-semibold truncate">
-                              {bookingWithStart.guests?.name || bookingWithStart.guest_name}
-                            </div>
-                            <div className="text-[10px] opacity-90 truncate">
-                              {format(new Date(bookingWithStart.check_in), 'MMM dd')} - {format(new Date(bookingWithStart.check_out), 'MMM dd')}
+                            <div 
+                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
+                              style={{ 
+                                backgroundColor: `${getStatusColor(booking.status)}20`,
+                                border: `2px solid ${getStatusColor(booking.status)}`,
+                                color: getStatusColor(booking.status),
+                                left: position.span === 1 ? '25%' : '50%',
+                                right: position.span === 1 ? '25%' : '0',
+                                borderRadius: '8px',
+                              }}
+                              onClick={() => setSelectedBooking(booking)}
+                            >
+                              <div className="font-semibold truncate">
+                                {booking.guests?.name || booking.guest_name}
+                              </div>
+                              <div className="text-[10px] opacity-90 truncate">
+                                {format(new Date(booking.check_in), 'MMM dd')} - {format(new Date(booking.check_out), 'MMM dd')}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    } else if (!roomBookings.length) {
-                      return (
-                        <div key={date.toISOString()} className="border-b border-r min-h-[80px] hover:bg-accent/30 transition-colors" />
-                      );
-                    } else {
-                      return null;
-                    }
-                  })}
-                </div>
-              ))}
+                        );
+                      } else {
+                        renderedDateIndices.add(dateIndex);
+                        return (
+                          <div key={date.toISOString()} className="border-b border-r min-h-[80px] hover:bg-accent/30 transition-colors" />
+                        );
+                      }
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </Card>
