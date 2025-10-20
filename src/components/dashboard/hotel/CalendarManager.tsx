@@ -234,7 +234,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 return (
                   <div key={room.id} className="grid relative" style={{ gridTemplateColumns: '300px repeat(14, 1fr)' }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                      <div className="text-lg font-bold">{room.room_number} - {room.name}</div>
+                      <div className="text-sm font-bold">{room.room_number} {room.name}</div>
                       <div className="text-xs text-muted-foreground font-medium mt-1">
                         Room
                       </div>
