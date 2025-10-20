@@ -23,9 +23,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
-    );
+    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader);
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -34,20 +33,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify user is super admin
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleData?.role !== 'super_admin') {
+      return new Response(JSON.stringify({ error: 'Forbidden: Super admin access required' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { type, csvData } = await req.json();
-    console.log(`Processing ${type} import for user ${user.id}`);
+    console.log(`Super admin ${user.id} processing ${type} import`);
 
     let result: ImportResult;
 
     switch (type) {
       case 'hotels':
-        result = await importHotels(supabase, csvData, user.id);
+        result = await importHotels(supabase, csvData);
         break;
       case 'rooms':
-        result = await importRooms(supabase, csvData, user.id);
+        result = await importRooms(supabase, csvData);
         break;
       case 'reservations':
-        result = await importReservations(supabase, csvData, user.id);
+        result = await importReservations(supabase, csvData);
         break;
       default:
         return new Response(
@@ -68,105 +81,113 @@ Deno.serve(async (req) => {
   }
 });
 
-async function importHotels(supabase: any, csvData: any[], userId: string): Promise<ImportResult> {
+async function importHotels(supabase: any, csvData: any[]): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
 
-  // First, get or create hotel for this user
-  const { data: existingHotel } = await supabase
-    .from('hotels')
-    .select('id')
-    .eq('owner_id', userId)
-    .single();
+  // Import hotels in batches of 20
+  for (let i = 0; i < csvData.length; i += 20) {
+    const batch = csvData.slice(i, i + 20);
+    
+    for (const property of batch) {
+      try {
+        // Get or create owner user (you'll need to create auth users separately)
+        const ownerEmail = property.owner_email || property.email || `hotel_${Date.now()}_${Math.random()}@temp.com`;
+        
+        // For now, create hotel without linking to owner (super admin can assign later)
+        const { error } = await supabase.from('hotels').insert({
+          name: property.name || property.property_name || 'Unnamed Hotel',
+          address: property.address || property.location || '',
+          phone: property.phone || property.contact || '',
+          email: property.email || ownerEmail,
+          description: property.description || '',
+          status: 'active',
+          subscription_plan: property.subscription_plan || 'basic',
+          owner_id: '00000000-0000-0000-0000-000000000000' // Placeholder, update with actual user
+        });
 
-  if (existingHotel) {
-    // Update existing hotel with first property data
-    const property = csvData[0];
-    const { error } = await supabase
-      .from('hotels')
-      .update({
-        name: property.name || property.property_name || 'My Hotel',
-        address: property.address || property.location || '',
-        phone: property.phone || property.contact || '',
-        email: property.email || '',
-        description: property.description || '',
-        status: 'active'
-      })
-      .eq('id', existingHotel.id);
-
-    if (error) {
-      errors.push(`Failed to update hotel: ${error.message}`);
-    } else {
-      imported = 1;
-    }
-  } else {
-    // Create new hotel
-    const property = csvData[0];
-    const { error } = await supabase.from('hotels').insert({
-      owner_id: userId,
-      name: property.name || property.property_name || 'My Hotel',
-      address: property.address || property.location || '',
-      phone: property.phone || property.contact || '',
-      email: property.email || '',
-      description: property.description || '',
-      status: 'active'
-    });
-
-    if (error) {
-      errors.push(`Failed to create hotel: ${error.message}`);
-    } else {
-      imported = 1;
+        if (error) {
+          errors.push(`Failed to import hotel ${property.name}: ${error.message}`);
+        } else {
+          imported++;
+        }
+      } catch (err: any) {
+        errors.push(`Hotel import error: ${err.message}`);
+      }
     }
   }
 
   return {
     success: errors.length === 0,
-    message: errors.length === 0 ? `Successfully imported ${imported} hotel` : 'Import completed with errors',
+    message: errors.length === 0 ? `Successfully imported ${imported} hotels` : 'Import completed with errors',
     imported,
-    errors: errors.length > 0 ? errors : undefined
+    errors: errors.length > 0 ? errors.slice(0, 10) : undefined
   };
 }
 
-async function importRooms(supabase: any, csvData: any[], userId: string): Promise<ImportResult> {
+async function importRooms(supabase: any, csvData: any[]): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
 
-  // Get user's hotel
-  const { data: hotel, error: hotelError } = await supabase
+  // Get all hotels to map room data
+  const { data: hotels } = await supabase
     .from('hotels')
-    .select('id')
-    .eq('owner_id', userId)
-    .single();
+    .select('id, name');
 
-  if (hotelError || !hotel) {
+  if (!hotels || hotels.length === 0) {
     return {
       success: false,
-      message: 'No hotel found. Please import hotel first.',
-      errors: ['Hotel not found']
+      message: 'No hotels found. Please import hotels first.',
+      errors: ['No hotels in database']
     };
   }
+
+  // If CSV has hotel_name or property_name, try to match
+  const hotelMap = new Map(hotels.map((h: any) => [h.name.toLowerCase(), h.id]));
+  
+  // If only one hotel, use it as default
+  const defaultHotelId = hotels.length === 1 ? hotels[0].id : null;
 
   // Import rooms in batches of 50
   for (let i = 0; i < csvData.length; i += 50) {
     const batch = csvData.slice(i, i + 50);
-    const roomsToInsert = batch.map(room => ({
-      hotel_id: hotel.id,
-      name: room.name || room.room_name || `Room ${room.room_number || i + 1}`,
-      room_number: room.room_number || room.number || String(i + 1),
-      room_type: room.room_type || room.type || 'standard',
-      capacity: parseInt(room.capacity || room.max_guests || '2'),
-      price: parseFloat(room.price || room.rate || '0'),
-      description: room.description || '',
-      status: room.status || 'ready',
-      is_available: room.is_available !== 'false' && room.is_available !== '0'
-    }));
+    const roomsToInsert = [];
 
-    const { error } = await supabase.from('rooms').insert(roomsToInsert);
-    
-    if (error) {
-      errors.push(`Batch ${Math.floor(i / 50) + 1} failed: ${error.message}`);
-    } else {
-      imported += roomsToInsert.length;
+    for (const room of batch) {
+      let hotelId = defaultHotelId;
+      
+      // Try to match hotel by name if provided
+      if (room.hotel_name || room.property_name) {
+        const hotelName = (room.hotel_name || room.property_name).toLowerCase();
+        hotelId = hotelMap.get(hotelName) || defaultHotelId;
+      }
+
+      if (!hotelId) {
+        errors.push(`Room ${room.name} has no matching hotel`);
+        continue;
+      }
+
+      roomsToInsert.push({
+        hotel_id: hotelId,
+        name: room.name || room.room_name || `Room ${room.room_number || i + 1}`,
+        room_number: room.room_number || room.number || String(i + 1),
+        room_type: room.room_type || room.type || 'standard',
+        capacity: parseInt(room.capacity || room.max_guests || '2'),
+        price: parseFloat(room.price || room.rate || '0'),
+        description: room.description || '',
+        status: room.status || 'ready',
+        is_available: room.is_available !== 'false' && room.is_available !== '0'
+      });
+    }
+
+    if (roomsToInsert.length > 0) {
+      const { error } = await supabase.from('rooms').insert(roomsToInsert);
+      
+      if (error) {
+        errors.push(`Batch ${Math.floor(i / 50) + 1} failed: ${error.message}`);
+      } else {
+        imported += roomsToInsert.length;
+      }
     }
   }
 
@@ -174,54 +195,59 @@ async function importRooms(supabase: any, csvData: any[], userId: string): Promi
     success: errors.length === 0,
     message: errors.length === 0 ? `Successfully imported ${imported} rooms` : 'Import completed with errors',
     imported,
-    errors: errors.length > 0 ? errors : undefined
+    errors: errors.length > 0 ? errors.slice(0, 10) : undefined
   };
 }
 
-async function importReservations(supabase: any, csvData: any[], userId: string): Promise<ImportResult> {
+async function importReservations(supabase: any, csvData: any[]): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
 
-  // Get user's hotel
-  const { data: hotel, error: hotelError } = await supabase
-    .from('hotels')
-    .select('id')
-    .eq('owner_id', userId)
-    .single();
+  // Get all hotels and rooms
+  const { data: hotels } = await supabase.from('hotels').select('id, name');
+  const { data: rooms } = await supabase.from('rooms').select('id, room_number, hotel_id');
 
-  if (hotelError || !hotel) {
+  if (!hotels || hotels.length === 0) {
     return {
       success: false,
-      message: 'No hotel found. Please import hotel first.',
-      errors: ['Hotel not found']
+      message: 'No hotels found. Please import hotels first.',
+      errors: ['No hotels in database']
     };
   }
 
-  // Get all rooms for mapping
-  const { data: rooms } = await supabase
-    .from('rooms')
-    .select('id, room_number')
-    .eq('hotel_id', hotel.id);
+  const hotelMap = new Map(hotels.map((h: any) => [h.name.toLowerCase(), h.id]));
+  const roomMap = new Map(rooms?.map((r: any) => [`${r.hotel_id}_${r.room_number}`, r.id]) || []);
+  const defaultHotelId = hotels.length === 1 ? hotels[0].id : null;
 
-  const roomMap = new Map(rooms?.map((r: any) => [r.room_number, r.id]) || []);
-
-  // Import reservations in batches of 100
-  for (let i = 0; i < csvData.length; i += 100) {
-    const batch = csvData.slice(i, i + 100);
+  // Import reservations in batches of 50
+  for (let i = 0; i < csvData.length; i += 50) {
+    const batch = csvData.slice(i, i + 50);
     
     for (const reservation of batch) {
       try {
+        // Determine hotel
+        let hotelId = defaultHotelId;
+        if (reservation.hotel_name || reservation.property_name) {
+          const hotelName = (reservation.hotel_name || reservation.property_name).toLowerCase();
+          hotelId = hotelMap.get(hotelName) || defaultHotelId;
+        }
+
+        if (!hotelId) {
+          errors.push(`Reservation has no matching hotel`);
+          continue;
+        }
+
         // Find or create guest
         const guestName = reservation.guest_name || reservation.name || 'Guest';
-        const guestPhone = reservation.guest_phone || reservation.phone || '';
+        const guestPhone = reservation.guest_phone || reservation.phone || `temp_${Date.now()}_${Math.random()}`;
         const guestEmail = reservation.guest_email || reservation.email || '';
 
         let guestId;
-        if (guestPhone) {
+        if (guestPhone && !guestPhone.startsWith('temp_')) {
           const { data: existingGuest } = await supabase
             .from('guests')
             .select('id')
-            .eq('hotel_id', hotel.id)
+            .eq('hotel_id', hotelId)
             .eq('phone', guestPhone)
             .single();
 
@@ -231,7 +257,7 @@ async function importReservations(supabase: any, csvData: any[], userId: string)
             const { data: newGuest, error: guestError } = await supabase
               .from('guests')
               .insert({
-                hotel_id: hotel.id,
+                hotel_id: hotelId,
                 name: guestName,
                 phone: guestPhone,
                 email: guestEmail
@@ -246,13 +272,12 @@ async function importReservations(supabase: any, csvData: any[], userId: string)
             guestId = newGuest.id;
           }
         } else {
-          // Create guest without unique phone
           const { data: newGuest, error: guestError } = await supabase
             .from('guests')
             .insert({
-              hotel_id: hotel.id,
+              hotel_id: hotelId,
               name: guestName,
-              phone: `temp_${Date.now()}_${Math.random()}`,
+              phone: guestPhone,
               email: guestEmail
             })
             .select('id')
@@ -267,7 +292,7 @@ async function importReservations(supabase: any, csvData: any[], userId: string)
 
         // Find room
         const roomNumber = reservation.room_number || reservation.room;
-        const roomId = roomMap.get(roomNumber);
+        const roomId = roomMap.get(`${hotelId}_${roomNumber}`);
 
         if (!roomId) {
           errors.push(`Room ${roomNumber} not found for reservation`);
@@ -276,11 +301,11 @@ async function importReservations(supabase: any, csvData: any[], userId: string)
 
         // Create booking
         const { error: bookingError } = await supabase.from('bookings').insert({
-          hotel_id: hotel.id,
+          hotel_id: hotelId,
           room_id: roomId,
           guest_id: guestId,
           guest_name: guestName,
-          guest_phone: guestPhone || `temp_${Date.now()}`,
+          guest_phone: guestPhone,
           guest_email: guestEmail,
           check_in: reservation.check_in || reservation.checkin_date,
           check_out: reservation.check_out || reservation.checkout_date,
@@ -300,13 +325,13 @@ async function importReservations(supabase: any, csvData: any[], userId: string)
       }
     }
 
-    console.log(`Processed batch ${Math.floor(i / 100) + 1}, imported: ${imported}`);
+    console.log(`Processed batch ${Math.floor(i / 50) + 1}, imported: ${imported}`);
   }
 
   return {
     success: errors.length === 0,
     message: errors.length === 0 ? `Successfully imported ${imported} reservations` : 'Import completed with errors',
     imported,
-    errors: errors.length > 0 ? errors.slice(0, 10) : undefined // Limit errors shown
+    errors: errors.length > 0 ? errors.slice(0, 10) : undefined
   };
 }

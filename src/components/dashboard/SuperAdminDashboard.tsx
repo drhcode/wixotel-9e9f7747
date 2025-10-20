@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import ImportCSV from "./hotel/ImportCSV";
 
 interface Hotel {
   id: string;
@@ -133,134 +135,147 @@ const SuperAdminDashboard = () => {
           <p className="text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Hotels</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.totalHotels}</div>
-              <p className="text-xs text-muted-foreground mt-1">Registered on platform</p>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="import">Import Data</TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Hotels</CardTitle>
-              <Hotel className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-success">{stats.activeHotels}</div>
-              <p className="text-xs text-muted-foreground mt-1">Currently operational</p>
-            </CardContent>
-          </Card>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid md:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Total Hotels</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{stats.totalHotels}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Registered on platform</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-              <TrendingUp className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-warning">{stats.pendingHotels}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Active Hotels</CardTitle>
+                  <Hotel className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-success">{stats.activeHotels}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Currently operational</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">From subscriptions</p>
-            </CardContent>
-          </Card>
-        </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-warning">{stats.pendingHotels}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
+                </CardContent>
+              </Card>
 
-        {/* Hotels Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Hotels</CardTitle>
-            <CardDescription>Manage hotel registrations and subscriptions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Hotel Name</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {hotels.map((hotel) => (
-                  <TableRow key={hotel.id}>
-                    <TableCell className="font-medium">{hotel.name}</TableCell>
-                    <TableCell>{hotel.address}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{hotel.email}</div>
-                        <div className="text-muted-foreground">{hotel.phone}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(hotel.status)}</TableCell>
-                    <TableCell>{getPlanBadge(hotel.subscription_plan)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {hotel.status === 'pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-success hover:text-success"
-                              onClick={() => updateHotelStatus(hotel.id, 'active')}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => updateHotelStatus(hotel.id, 'suspended')}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {hotel.status === 'active' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => updateHotelStatus(hotel.id, 'suspended')}
-                          >
-                            Suspend
-                          </Button>
-                        )}
-                        {hotel.status === 'suspended' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-success hover:text-success"
-                            onClick={() => updateHotelStatus(hotel.id, 'active')}
-                          >
-                            Activate
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground mt-1">From subscriptions</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Hotels Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>All Hotels</CardTitle>
+                <CardDescription>Manage hotel registrations and subscriptions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Hotel Name</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {hotels.map((hotel) => (
+                      <TableRow key={hotel.id}>
+                        <TableCell className="font-medium">{hotel.name}</TableCell>
+                        <TableCell>{hotel.address}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div>{hotel.email}</div>
+                            <div className="text-muted-foreground">{hotel.phone}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(hotel.status)}</TableCell>
+                        <TableCell>{getPlanBadge(hotel.subscription_plan)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {hotel.status === 'pending' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-success hover:text-success"
+                                  onClick={() => updateHotelStatus(hotel.id, 'active')}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => updateHotelStatus(hotel.id, 'suspended')}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {hotel.status === 'active' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => updateHotelStatus(hotel.id, 'suspended')}
+                              >
+                                Suspend
+                              </Button>
+                            )}
+                            {hotel.status === 'suspended' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-success hover:text-success"
+                                onClick={() => updateHotelStatus(hotel.id, 'active')}
+                              >
+                                Activate
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="import">
+            <ImportCSV hotelId="" />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
