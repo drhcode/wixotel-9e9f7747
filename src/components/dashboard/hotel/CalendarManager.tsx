@@ -231,11 +231,9 @@ const CalendarManager = ({ hotelId }: Props) => {
                               backgroundColor: `${getStatusColor(bookingWithStart.status)}20`,
                               border: `2px solid ${getStatusColor(bookingWithStart.status)}`,
                               color: getStatusColor(bookingWithStart.status),
-                              left: position.span === 1 ? '25%' : '50%',
-                              right: position.span === 1 ? '25%' : '0',
-                              borderRadius: position.span === 1 ? '8px' : '0 8px 8px 0',
-                              borderTopLeftRadius: position.span === 1 ? '8px' : position.isFirstDay ? '8px' : '0',
-                              borderBottomLeftRadius: position.span === 1 ? '8px' : position.isFirstDay ? '8px' : '0',
+                              left: position.span === 1 ? '25%' : `${50 / position.span}%`,
+                              right: position.span === 1 ? '25%' : `${50 / position.span}%`,
+                              borderRadius: '8px',
                             }}
                             onClick={() => setSelectedBooking(bookingWithStart)}
                           >
