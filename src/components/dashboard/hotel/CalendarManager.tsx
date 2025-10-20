@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths, subMonths, addDays, startOfDay, differenceInDays, isSameDay } from "date-fns";
 import BookingModal from "./BookingModal";
@@ -22,6 +22,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchBookings();
@@ -29,6 +30,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   }, [hotelId, currentMonth, timelineStartDate]);
 
   const fetchRooms = async () => {
+    setIsLoading(true);
     const { data, error } = await supabase
       .from('rooms')
       .select('*')
@@ -37,12 +39,14 @@ const CalendarManager = ({ hotelId }: Props) => {
     
     if (error) {
       toast.error("Failed to load rooms");
+      setIsLoading(false);
       return;
     }
     setRooms(data || []);
   };
 
   const fetchBookings = async () => {
+    setIsLoading(true);
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
     const timelineEnd = addDays(timelineStartDate, 14);
@@ -55,9 +59,11 @@ const CalendarManager = ({ hotelId }: Props) => {
     
     if (error) {
       toast.error("Failed to load bookings");
+      setIsLoading(false);
       return;
     }
     setBookings(data || []);
+    setIsLoading(false);
   };
 
   const getBookingsForDate = (date: Date) => {
@@ -170,8 +176,28 @@ const CalendarManager = ({ hotelId }: Props) => {
     }
   };
 
+  if (isLoading && bookings.length === 0 && rooms.length === 0) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading calendar data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6 relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+          <div className="text-center space-y-3">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">Updating...</p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Reservation Calendar</h2>
