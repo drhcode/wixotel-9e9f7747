@@ -5,7 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, addDays, startOfDay, differenceInDays, isSameDay } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
 import { Badge } from "@/components/ui/badge";
@@ -16,25 +16,42 @@ interface Props {
 
 const CalendarManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [timelineStartDate, setTimelineStartDate] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchBookings();
-  }, [hotelId, currentMonth]);
+    fetchRooms();
+  }, [hotelId, currentMonth, timelineStartDate]);
+
+  const fetchRooms = async () => {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('hotel_id', hotelId)
+      .order('room_number');
+    
+    if (error) {
+      toast.error("Failed to load rooms");
+      return;
+    }
+    setRooms(data || []);
+  };
 
   const fetchBookings = async () => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
+    const timelineEnd = addDays(timelineStartDate, 14);
     
     const { data, error } = await supabase
       .from('bookings')
       .select('*, rooms(name, room_number), guests(name)')
       .eq('hotel_id', hotelId)
-      .gte('check_in', format(start, 'yyyy-MM-dd'))
-      .lte('check_out', format(end, 'yyyy-MM-dd'));
+      .or(`and(check_in.gte.${format(start, 'yyyy-MM-dd')},check_in.lte.${format(end, 'yyyy-MM-dd')}),and(check_out.gte.${format(start, 'yyyy-MM-dd')},check_out.lte.${format(end, 'yyyy-MM-dd')}),and(check_in.lte.${format(start, 'yyyy-MM-dd')},check_out.gte.${format(end, 'yyyy-MM-dd')}),and(check_in.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_in.lte.${format(timelineEnd, 'yyyy-MM-dd')}),and(check_out.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_out.lte.${format(timelineEnd, 'yyyy-MM-dd')})`);
     
     if (error) {
       toast.error("Failed to load bookings");
@@ -56,13 +73,44 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-green-500';
-      case 'checked_in': return 'bg-blue-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'checked_out': return 'bg-gray-500';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'confirmed': return 'hsl(var(--success))';
+      case 'checked_in': return 'hsl(var(--info))';
+      case 'pending': return 'hsl(var(--warning))';
+      case 'checked_out': return 'hsl(var(--muted))';
+      case 'cancelled': return 'hsl(var(--destructive))';
+      default: return 'hsl(var(--muted))';
     }
+  };
+
+  const getBookingsForRoom = (roomId: string, date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return bookings.filter(booking => 
+      booking.room_id === roomId &&
+      dateStr >= booking.check_in && 
+      dateStr <= booking.check_out
+    );
+  };
+
+  const generateTimelineDates = () => {
+    const dates = [];
+    for (let i = 0; i < 14; i++) {
+      dates.push(addDays(timelineStartDate, i));
+    }
+    return dates;
+  };
+
+  const timelineDates = generateTimelineDates();
+
+  const getBookingPosition = (booking: any, date: Date) => {
+    const checkIn = new Date(booking.check_in);
+    const checkOut = new Date(booking.check_out);
+    const currentDate = startOfDay(date);
+    
+    if (isSameDay(checkIn, currentDate)) {
+      const duration = differenceInDays(checkOut, checkIn) + 1;
+      return { start: true, span: Math.min(duration, 14 - differenceInDays(currentDate, timelineStartDate)) };
+    }
+    return { start: false, span: 0 };
   };
 
   const modifiers = {
@@ -91,7 +139,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Reservation Calendar</h2>
-          <p className="text-muted-foreground text-sm">Select a date to view bookings</p>
+          <p className="text-muted-foreground text-sm">Manage your hotel bookings</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
@@ -99,8 +147,109 @@ const CalendarManager = ({ hotelId }: Props) => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-        {/* Calendar Section */}
+      {/* Desktop Timeline View */}
+      <div className="hidden lg:block">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg">
+              Timeline View
+            </h3>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -7))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setTimelineStartDate(new Date())}
+              >
+                Today
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setTimelineStartDate(addDays(timelineStartDate, 7))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <div className="min-w-[1200px]">
+              {/* Header */}
+              <div className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
+                <div className="p-3 border-b border-r font-semibold bg-muted/30">
+                  Room
+                </div>
+                {timelineDates.map(date => (
+                  <div key={date.toISOString()} className="p-3 border-b border-r text-center bg-muted/30">
+                    <div className="text-xs font-semibold">{format(date, 'EEE')}</div>
+                    <div className="text-sm">{format(date, 'dd')}</div>
+                    <div className="text-xs text-muted-foreground">{format(date, 'MMM')}</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Room Rows */}
+              {rooms.map(room => (
+                <div key={room.id} className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
+                  <div className="p-3 border-b border-r bg-background">
+                    <div className="font-medium">{room.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Room {room.room_number}
+                    </div>
+                  </div>
+                  {timelineDates.map((date, dateIndex) => {
+                    const roomBookings = getBookingsForRoom(room.id, date);
+                    const bookingWithStart = roomBookings.find(b => {
+                      const pos = getBookingPosition(b, date);
+                      return pos.start;
+                    });
+                    
+                    if (bookingWithStart) {
+                      const position = getBookingPosition(bookingWithStart, date);
+                      return (
+                        <div 
+                          key={date.toISOString()} 
+                          className="relative border-b border-r min-h-[80px] p-1"
+                          style={{ gridColumn: `span ${position.span}` }}
+                        >
+                          <div 
+                            className="absolute inset-1 rounded p-2 text-white text-xs cursor-pointer hover:opacity-90 transition-opacity flex flex-col justify-center overflow-hidden"
+                            style={{ backgroundColor: getStatusColor(bookingWithStart.status) }}
+                            onClick={() => setSelectedBooking(bookingWithStart)}
+                          >
+                            <div className="font-semibold truncate">
+                              {bookingWithStart.guests?.name || bookingWithStart.guest_name}
+                            </div>
+                            <div className="text-[10px] opacity-90">
+                              {format(new Date(bookingWithStart.check_in), 'MMM dd')} - {format(new Date(bookingWithStart.check_out), 'MMM dd')}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else if (!roomBookings.length) {
+                      return (
+                        <div key={date.toISOString()} className="border-b border-r min-h-[80px] hover:bg-accent/30 transition-colors" />
+                      );
+                    } else {
+                      return null;
+                    }
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Mobile Calendar View */}
+      <div className="lg:hidden grid md:grid-cols-2 gap-4 md:gap-6">
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">
@@ -135,7 +284,6 @@ const CalendarManager = ({ hotelId }: Props) => {
           />
         </Card>
 
-        {/* Bookings List Section */}
         <Card className="p-4">
           <h3 className="font-semibold text-lg mb-4">
             Bookings for {format(selectedDate, 'MMM dd, yyyy')}
@@ -159,7 +307,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                         Room {booking.rooms?.room_number || booking.rooms?.name}
                       </p>
                     </div>
-                    <Badge className={getStatusColor(booking.status)}>
+                    <Badge style={{ backgroundColor: getStatusColor(booking.status) }} className="text-white">
                       {booking.status}
                     </Badge>
                   </div>
