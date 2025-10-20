@@ -259,18 +259,15 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return (
                           <div 
                             key={date.toISOString()} 
-                            className="relative border-b border-r min-h-[80px] bg-background"
+                            className="border-b border-r min-h-[80px] bg-background p-2"
                             style={{ gridColumn: `span ${position.span}` }}
                           >
                             <div 
-                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm z-0"
+                              className="h-full text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
                                 backgroundColor: `${getStatusColor(booking.status)}20`,
                                 border: `2px solid ${getStatusColor(booking.status)}`,
                                 color: getStatusColor(booking.status),
-                                left: `${50 / position.span}%`,
-                                right: `${50 / position.span}%`,
-                                borderRadius: '8px',
                               }}
                               onClick={() => setSelectedBooking(booking)}
                             >
