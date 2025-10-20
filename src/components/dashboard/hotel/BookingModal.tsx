@@ -66,7 +66,14 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     try {
       let guestId = selectedGuest;
 
-      if (!guestId && guestName) {
+      // If "new" is selected or no guest selected, create a new guest
+      if (selectedGuest === 'new' || !selectedGuest) {
+        if (!guestName || !guestPhone) {
+          toast.error("Guest name and phone are required");
+          setLoading(false);
+          return;
+        }
+
         const { data: newGuest, error: guestError } = await supabase
           .from('guests')
           .insert({ hotel_id: hotelId, name: guestName, phone: guestPhone, email: guestEmail })
@@ -78,13 +85,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       }
 
       const room = availableRooms.find(r => r.id === selectedRoom);
+      const existingGuest = guests.find(g => g.id === guestId);
+      
       const { error } = await supabase.from('bookings').insert({
         hotel_id: hotelId,
         room_id: selectedRoom,
         guest_id: guestId,
-        guest_name: guestName || guests.find(g => g.id === guestId)?.name,
-        guest_phone: guestPhone || guests.find(g => g.id === guestId)?.phone,
-        guest_email: guestEmail || guests.find(g => g.id === guestId)?.email,
+        guest_name: guestName || existingGuest?.name,
+        guest_phone: guestPhone || existingGuest?.phone,
+        guest_email: guestEmail || existingGuest?.email,
         check_in: format(checkIn, 'yyyy-MM-dd'),
         check_out: format(checkOut, 'yyyy-MM-dd'),
         total_amount: room?.price || 0,
