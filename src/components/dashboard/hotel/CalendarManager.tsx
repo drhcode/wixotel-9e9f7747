@@ -51,7 +51,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       .from('bookings')
       .select('*, rooms(name, room_number), guests(name)')
       .eq('hotel_id', hotelId)
-      .or(`and(check_in.gte.${format(start, 'yyyy-MM-dd')},check_in.lte.${format(end, 'yyyy-MM-dd')}),and(check_out.gte.${format(start, 'yyyy-MM-dd')},check_out.lte.${format(end, 'yyyy-MM-dd')}),and(check_in.lte.${format(start, 'yyyy-MM-dd')},check_out.gte.${format(end, 'yyyy-MM-dd')}),and(check_in.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_in.lte.${format(timelineEnd, 'yyyy-MM-dd')}),and(check_out.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_out.lte.${format(timelineEnd, 'yyyy-MM-dd')})`);
+      .or(`and(check_in.gte.${format(start, 'yyyy-MM-dd')},check_in.lte.${format(end, 'yyyy-MM-dd')}),and(check_out.gte.${format(start, 'yyyy-MM-dd')},check_out.lte.${format(end, 'yyyy-MM-dd')}),and(check_in.lte.${format(start, 'yyyy-MM-dd')},check_out.gte.${format(end, 'yyyy-MM-dd')}),and(check_in.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_in.lte.${format(timelineEnd, 'yyyy-MM-dd')}),and(check_out.gte.${format(timelineStartDate, 'yyyy-MM-dd')},check_out.lte.${format(timelineEnd, 'yyyy-MM-dd')}),and(check_in.lte.${format(timelineStartDate, 'yyyy-MM-dd')},check_out.gte.${format(timelineEnd, 'yyyy-MM-dd')})`);
     
     if (error) {
       toast.error("Failed to load bookings");
