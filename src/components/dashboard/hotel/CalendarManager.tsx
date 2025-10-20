@@ -196,7 +196,7 @@ const CalendarManager = ({ hotelId }: Props) => {
           <div className="overflow-x-auto">
             <div className="min-w-[1200px]">
               {/* Header */}
-              <div className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
+              <div className="grid" style={{ gridTemplateColumns: '250px repeat(14, 1fr)' }}>
                 <div className="p-3 border-b border-r font-semibold bg-muted/30">
                   Room
                 </div>
@@ -230,9 +230,9 @@ const CalendarManager = ({ hotelId }: Props) => {
                 const renderedDateIndices = new Set<number>();
                 
                 return (
-                  <div key={room.id} className="grid" style={{ gridTemplateColumns: '200px repeat(14, 1fr)' }}>
+                  <div key={room.id} className="grid" style={{ gridTemplateColumns: '250px repeat(14, 1fr)' }}>
                     <div className="p-3 border-b border-r bg-background">
-                      <div className="font-medium">{room.name}</div>
+                      <div className="text-lg font-medium">{room.name}</div>
                       <div className="text-xs text-muted-foreground">
                         Room {room.room_number}
                       </div>
