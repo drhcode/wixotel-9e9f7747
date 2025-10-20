@@ -33,22 +33,59 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify user is super admin
+    // Check user role
     const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (roleData?.role !== 'super_admin') {
-      return new Response(JSON.stringify({ error: 'Forbidden: Super admin access required' }), {
+    const isSuperAdmin = roleData?.role === 'super_admin';
+    const isHotelAdmin = roleData?.role === 'hotel_admin';
+
+    if (!isSuperAdmin && !isHotelAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { type, csvData } = await req.json();
-    console.log(`Super admin ${user.id} processing ${type} import`);
+    // Get hotel ID for hotel admins
+    let userHotelId = null;
+    if (isHotelAdmin) {
+      const { data: hotelData } = await supabase
+        .from('hotels')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+      
+      if (!hotelData) {
+        return new Response(JSON.stringify({ error: 'No hotel found for user' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      userHotelId = hotelData.id;
+    }
+
+    const { type, csvData, hotelId } = await req.json();
+    
+    // Hotel admins can only import for their own hotel
+    if (isHotelAdmin && type === 'reservations') {
+      if (!userHotelId) {
+        return new Response(JSON.stringify({ error: 'No hotel found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else if (isHotelAdmin && (type === 'hotels' || type === 'rooms')) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Only super admins can import hotels and rooms' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`User ${user.id} (${roleData?.role}) processing ${type} import`);
 
     let result: ImportResult;
 
@@ -60,7 +97,7 @@ Deno.serve(async (req) => {
         result = await importRooms(supabase, csvData);
         break;
       case 'reservations':
-        result = await importReservations(supabase, csvData);
+        result = await importReservations(supabase, csvData, userHotelId);
         break;
       default:
         return new Response(
@@ -199,25 +236,39 @@ async function importRooms(supabase: any, csvData: any[]): Promise<ImportResult>
   };
 }
 
-async function importReservations(supabase: any, csvData: any[]): Promise<ImportResult> {
+async function importReservations(supabase: any, csvData: any[], userHotelId: string | null = null): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
 
-  // Get all hotels and rooms
-  const { data: hotels } = await supabase.from('hotels').select('id, name');
-  const { data: rooms } = await supabase.from('rooms').select('id, room_number, hotel_id');
-
-  if (!hotels || hotels.length === 0) {
-    return {
-      success: false,
-      message: 'No hotels found. Please import hotels first.',
-      errors: ['No hotels in database']
-    };
+  // If userHotelId is provided, only import for that hotel (hotel admin)
+  let hotelId: string;
+  
+  if (userHotelId) {
+    hotelId = userHotelId;
+  } else {
+    // Super admin: get all hotels
+    const { data: hotels } = await supabase.from('hotels').select('id, name');
+    
+    if (!hotels || hotels.length === 0) {
+      return {
+        success: false,
+        message: 'No hotels found. Please import hotels first.',
+        errors: ['No hotels in database']
+      };
+    }
+    
+    const hotelMap = new Map(hotels.map((h: any) => [h.name.toLowerCase(), h.id]));
+    hotelId = hotels.length === 1 ? hotels[0].id : '';
   }
 
-  const hotelMap = new Map(hotels.map((h: any) => [h.name.toLowerCase(), h.id]));
+  // Get rooms for the hotel
+  const roomQuery = supabase.from('rooms').select('id, room_number, hotel_id');
+  if (userHotelId) {
+    roomQuery.eq('hotel_id', userHotelId);
+  }
+  
+  const { data: rooms } = await roomQuery;
   const roomMap = new Map(rooms?.map((r: any) => [`${r.hotel_id}_${r.room_number}`, r.id]) || []);
-  const defaultHotelId = hotels.length === 1 ? hotels[0].id : null;
 
   // Import reservations in batches of 50
   for (let i = 0; i < csvData.length; i += 50) {
@@ -225,14 +276,24 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
     
     for (const reservation of batch) {
       try {
-        // Determine hotel
-        let hotelId = defaultHotelId;
-        if (reservation.hotel_name || reservation.property_name) {
+        // Use the determined hotelId (either from user or from CSV)
+        let reservationHotelId = hotelId;
+        
+        if (!userHotelId && (reservation.hotel_name || reservation.property_name)) {
+          // Super admin can specify hotel in CSV
           const hotelName = (reservation.hotel_name || reservation.property_name).toLowerCase();
-          hotelId = hotelMap.get(hotelName) || defaultHotelId;
+          const { data: hotelData } = await supabase
+            .from('hotels')
+            .select('id')
+            .ilike('name', hotelName)
+            .single();
+          
+          if (hotelData) {
+            reservationHotelId = hotelData.id;
+          }
         }
 
-        if (!hotelId) {
+        if (!reservationHotelId) {
           errors.push(`Reservation has no matching hotel`);
           continue;
         }
@@ -241,15 +302,18 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
         const guestName = reservation.guest_name || reservation.name || 'Guest';
         const guestPhone = reservation.guest_phone || reservation.phone || `temp_${Date.now()}_${Math.random()}`;
         const guestEmail = reservation.guest_email || reservation.email || '';
+        const guestCountry = reservation.guest_country || reservation.country || '';
+        const guestCity = reservation.guest_city || reservation.city || '';
+        const guestAddress = reservation.guest_address || reservation.address || '';
 
         let guestId;
         if (guestPhone && !guestPhone.startsWith('temp_')) {
           const { data: existingGuest } = await supabase
             .from('guests')
             .select('id')
-            .eq('hotel_id', hotelId)
+            .eq('hotel_id', reservationHotelId)
             .eq('phone', guestPhone)
-            .single();
+            .maybeSingle();
 
           if (existingGuest) {
             guestId = existingGuest.id;
@@ -257,10 +321,13 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
             const { data: newGuest, error: guestError } = await supabase
               .from('guests')
               .insert({
-                hotel_id: hotelId,
+                hotel_id: reservationHotelId,
                 name: guestName,
                 phone: guestPhone,
-                email: guestEmail
+                email: guestEmail,
+                country: guestCountry,
+                city: guestCity,
+                address: guestAddress
               })
               .select('id')
               .single();
@@ -275,10 +342,13 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
           const { data: newGuest, error: guestError } = await supabase
             .from('guests')
             .insert({
-              hotel_id: hotelId,
+              hotel_id: reservationHotelId,
               name: guestName,
               phone: guestPhone,
-              email: guestEmail
+              email: guestEmail,
+              country: guestCountry,
+              city: guestCity,
+              address: guestAddress
             })
             .select('id')
             .single();
@@ -292,7 +362,7 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
 
         // Find room
         const roomNumber = reservation.room_number || reservation.room;
-        const roomId = roomMap.get(`${hotelId}_${roomNumber}`);
+        const roomId = roomMap.get(`${reservationHotelId}_${roomNumber}`);
 
         if (!roomId) {
           errors.push(`Room ${roomNumber} not found for reservation`);
@@ -301,7 +371,7 @@ async function importReservations(supabase: any, csvData: any[]): Promise<Import
 
         // Create booking
         const { error: bookingError } = await supabase.from('bookings').insert({
-          hotel_id: hotelId,
+          hotel_id: reservationHotelId,
           room_id: roomId,
           guest_id: guestId,
           guest_name: guestName,

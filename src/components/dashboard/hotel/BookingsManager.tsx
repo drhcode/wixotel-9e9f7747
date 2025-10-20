@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Calendar, Search, Trash2 } from "lucide-react";
+import { Calendar, Search, Trash2, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -28,6 +28,7 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -78,6 +79,64 @@ const BookingsManager = ({ hotelId }: Props) => {
     setDeletePassword("");
   };
 
+  const parseCSV = (text: string): any[] => {
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+    const data = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      data.push(row);
+    }
+
+    return data;
+  };
+
+  const handleCSVImport = async (file: File) => {
+    setImporting(true);
+    
+    try {
+      const text = await file.text();
+      const csvData = parseCSV(text);
+
+      if (csvData.length === 0) {
+        toast.error("CSV file is empty or invalid");
+        return;
+      }
+
+      toast.info(`Processing ${csvData.length} reservations...`);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { data, error } = await supabase.functions.invoke('import-csv', {
+        body: { type: 'reservations', csvData, hotelId },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchBookings();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error('Import error:', error);
+      toast.error(error.message || "Failed to import reservations");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deletingBooking) return;
 
@@ -123,10 +182,44 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
-        <p className="text-muted-foreground">View and manage all bookings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
+          <p className="text-muted-foreground">View and manage all bookings</p>
+        </div>
+        <label htmlFor="csv-upload">
+          <input
+            id="csv-upload"
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleCSVImport(file);
+            }}
+            disabled={importing}
+          />
+          <Button
+            variant="outline"
+            disabled={importing}
+            onClick={() => document.getElementById('csv-upload')?.click()}
+          >
+            {importing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+            Import CSV
+          </Button>
+        </label>
       </div>
+
+      <Card className="border-muted">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">CSV Format</CardTitle>
+          <CardDescription className="text-xs">
+            Required columns: guest_name, guest_phone, guest_email, room_number, check_in, check_out, total_amount, status
+            <br />
+            Optional: guest_country, guest_city, guest_address, payment_status, notes
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       <Card>
         <CardHeader>
