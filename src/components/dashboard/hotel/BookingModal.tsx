@@ -176,6 +176,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                     onSelect={(date) => {
                       if (date) {
                         setCheckIn(date);
+                        // Auto-adjust checkout if it's not after the new check-in
+                        if (checkOut <= date) {
+                          const nextDay = new Date(date);
+                          nextDay.setDate(nextDay.getDate() + 1);
+                          setCheckOut(nextDay);
+                        }
                         setCheckInOpen(false);
                         setCheckOutOpen(true);
                       }
@@ -203,7 +209,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                         setCheckOut(date);
                         setCheckOutOpen(false);
                       }
-                    }} 
+                    }}
+                    disabled={(date) => date <= checkIn}
                   />
                 </PopoverContent>
               </Popover>
