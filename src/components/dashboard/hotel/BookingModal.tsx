@@ -35,6 +35,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestCountry, setGuestCountry] = useState("");
   const [guestCity, setGuestCity] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
+  const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -132,6 +133,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         check_in: format(checkIn, 'yyyy-MM-dd'),
         check_out: format(checkOut, 'yyyy-MM-dd'),
         total_amount: room?.price || 0,
+        guest_count: guestCount,
         notes,
         status: 'confirmed'
       });
@@ -263,6 +265,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               </div>
             </>
           )}
+
+          <div>
+            <Label>Number of Guests</Label>
+            <Input 
+              type="number" 
+              min="1" 
+              value={guestCount} 
+              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)} 
+            />
+          </div>
 
           <div>
             <Label>Notes</Label>
