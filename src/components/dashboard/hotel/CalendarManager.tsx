@@ -73,10 +73,10 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'hsl(var(--success))';
-      case 'checked_in': return 'hsl(var(--info))';
-      case 'pending': return 'hsl(var(--warning))';
-      case 'checked_out': return 'hsl(var(--muted))';
+      case 'confirmed': return '#7C3BED';
+      case 'pending': return '#7C3BED';
+      case 'checked_in': return '#16A249';
+      case 'checked_out': return '#C06969';
       case 'cancelled': return 'hsl(var(--destructive))';
       default: return 'hsl(var(--muted))';
     }
