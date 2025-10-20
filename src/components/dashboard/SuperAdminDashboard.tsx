@@ -13,6 +13,7 @@ import HotelManagement from "./superadmin/HotelManagement";
 import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
 import AllReservations from "./superadmin/AllReservations";
 import AllGuests from "./superadmin/AllGuests";
+import SubscriptionPlansManagement from "./superadmin/SubscriptionPlansManagement";
 
 interface Hotel {
   id: string;
@@ -140,9 +141,10 @@ const SuperAdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="hotels">Hotels</TabsTrigger>
+            <TabsTrigger value="plans">Plans</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="reservations">Reservations</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
@@ -282,6 +284,10 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="hotels">
             <HotelManagement />
+          </TabsContent>
+
+          <TabsContent value="plans">
+            <SubscriptionPlansManagement />
           </TabsContent>
 
           <TabsContent value="subscriptions">
