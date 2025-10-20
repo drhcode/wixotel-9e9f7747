@@ -207,7 +207,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                       key={date.toISOString()} 
                       className={`p-3 border-b border-r text-center ${
                         isToday 
-                          ? 'bg-primary/20 ring-1 ring-primary ring-inset' 
+                          ? 'bg-primary/20' 
                           : 'bg-muted/30'
                       }`}
                     >
