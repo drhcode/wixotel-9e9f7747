@@ -218,9 +218,18 @@ const CalendarManager = ({ hotelId }: Props) => {
                     
                     if (bookingWithStart) {
                       const position = getBookingPosition(bookingWithStart, date);
-                      const checkInDate = new Date(bookingWithStart.check_in);
-                      const checkOutDate = new Date(bookingWithStart.check_out);
-                      const isLastDayInView = timelineDates.findIndex(d => isSameDay(d, checkOutDate)) === dateIndex + position.span - 1;
+                      
+                      // Calculate clipPath for midday check-in/check-out
+                      let clipPath = undefined;
+                      if (position.span === 1) {
+                        // Same day check-in and check-out: show only middle portion
+                        clipPath = 'polygon(25% 0, 75% 0, 75% 100%, 25% 100%)';
+                      } else {
+                        // Multi-day booking: clip first half of first day and last half of last day
+                        const clipStart = (50 / position.span);
+                        const clipEnd = 100 - (50 / position.span);
+                        clipPath = `polygon(${clipStart}% 0, ${clipEnd}% 0, ${clipEnd}% 100%, ${clipStart}% 100%)`;
+                      }
                       
                       return (
                         <div 
@@ -232,13 +241,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                             className="absolute inset-1 rounded p-2 text-white text-xs cursor-pointer hover:opacity-90 transition-opacity flex flex-col justify-center overflow-hidden"
                             style={{ 
                               backgroundColor: getStatusColor(bookingWithStart.status),
-                              clipPath: position.isLastDay 
-                                ? 'polygon(50% 0, 50% 100%, 50% 100%, 50% 0)' 
-                                : isLastDayInView 
-                                  ? 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' 
-                                  : position.isFirstDay 
-                                    ? 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' 
-                                    : undefined
+                              clipPath: clipPath
                             }}
                             onClick={() => setSelectedBooking(bookingWithStart)}
                           >
