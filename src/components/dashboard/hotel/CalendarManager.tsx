@@ -113,17 +113,18 @@ const CalendarManager = ({ hotelId }: Props) => {
     const checkIn = new Date(booking.check_in);
     const checkOut = new Date(booking.check_out);
     const currentDate = startOfDay(date);
-    
+
     if (isSameDay(checkIn, currentDate)) {
-      const duration = differenceInDays(checkOut, checkIn) + 1;
-      return { 
-        start: true, 
-        span: Math.min(duration, 14 - differenceInDays(currentDate, timelineStartDate)),
-        isFirstDay: true,
-        isLastDay: differenceInDays(checkOut, checkIn) === 0 // check if check-in and check-out are on the same day
+      // span excludes checkout day so back-to-back bookings can share the day cell
+      const rawSpan = Math.max(1, differenceInDays(checkOut, checkIn));
+      const daysFromStart = differenceInDays(currentDate, timelineStartDate);
+      const remainingInTimeline = Math.max(0, 14 - daysFromStart);
+      return {
+        start: true,
+        span: Math.min(rawSpan, remainingInTimeline),
       };
     }
-    return { start: false, span: 0, isFirstDay: false, isLastDay: false };
+    return { start: false, span: 0 };
   };
 
   const modifiers = {
@@ -249,8 +250,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 backgroundColor: `${getStatusColor(booking.status)}20`,
                                 border: `2px solid ${getStatusColor(booking.status)}`,
                                 color: getStatusColor(booking.status),
-                                left: position.span === 1 ? '25%' : '50%',
-                                right: position.span === 1 ? '25%' : `calc(${100 / position.span}% - 50%)`,
+                                left: position.span === 1 ? '25%' : `${50 / position.span}%`,
+                                right: position.span === 1 ? '25%' : `${-50 / position.span}%`,
                                 borderRadius: '8px',
                               }}
                               onClick={() => setSelectedBooking(booking)}

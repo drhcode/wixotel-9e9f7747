@@ -55,6 +55,9 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
 
     if (!error) {
       setAvailableRooms(data || []);
+      if (selectedRoom && !(data || []).some((r: any) => r.id === selectedRoom)) {
+        setSelectedRoom("");
+      }
     }
   };
 

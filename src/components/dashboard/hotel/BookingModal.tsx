@@ -58,7 +58,13 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       p_check_out: format(checkOut, 'yyyy-MM-dd')
     });
     
-    if (!error) setAvailableRooms(data || []);
+    if (!error) {
+      setAvailableRooms(data || []);
+      // If current selected room is no longer available for the chosen dates, clear it
+      if (selectedRoom && !(data || []).some((r: any) => r.id === selectedRoom)) {
+        setSelectedRoom("");
+      }
+    }
   };
 
   const handleSubmit = async () => {
