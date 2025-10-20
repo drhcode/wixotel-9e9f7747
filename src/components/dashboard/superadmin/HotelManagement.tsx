@@ -30,7 +30,6 @@ const HotelManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,14 +37,13 @@ const HotelManagement = () => {
     email: "",
     phone: "",
     description: "",
+    password: "",
     status: "pending" as "pending" | "active" | "suspended",
-    subscription_plan: "basic" as "basic" | "pro" | "premium",
-    owner_id: ""
+    subscription_plan: "basic" as "basic" | "pro" | "premium"
   });
 
   useEffect(() => {
     fetchHotels();
-    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -56,13 +54,6 @@ const HotelManagement = () => {
     );
     setFilteredHotels(filtered);
   }, [searchTerm, hotels]);
-
-  const fetchUsers = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('user_id, full_name');
-    setUsers(data || []);
-  };
 
   const fetchHotels = async () => {
     const { data } = await supabase
@@ -75,27 +66,61 @@ const HotelManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.owner_id) {
-      toast.error("Please select a hotel owner");
-      return;
-    }
-
     try {
       if (editingHotel) {
+        // Update existing hotel (no password change)
         const { error } = await supabase
           .from('hotels')
-          .update(formData)
+          .update({
+            name: formData.name,
+            address: formData.address,
+            email: formData.email,
+            phone: formData.phone,
+            description: formData.description,
+            status: formData.status,
+            subscription_plan: formData.subscription_plan
+          })
           .eq('id', editingHotel.id);
 
         if (error) throw error;
         toast.success("Hotel updated successfully");
       } else {
-        const { error } = await supabase
-          .from('hotels')
-          .insert(formData);
+        // Create new hotel with user account
+        if (!formData.password) {
+          toast.error("Password is required");
+          return;
+        }
 
-        if (error) throw error;
-        toast.success("Hotel created successfully");
+        // Create user account
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name
+            }
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Failed to create user account");
+
+        // Create hotel with the new user as owner
+        const { error: hotelError } = await supabase
+          .from('hotels')
+          .insert({
+            name: formData.name,
+            address: formData.address,
+            email: formData.email,
+            phone: formData.phone,
+            description: formData.description,
+            status: formData.status,
+            subscription_plan: formData.subscription_plan,
+            owner_id: authData.user.id
+          });
+
+        if (hotelError) throw hotelError;
+        toast.success("Hotel and admin account created successfully");
       }
 
       setIsModalOpen(false);
@@ -130,9 +155,9 @@ const HotelManagement = () => {
       email: hotel.email,
       phone: hotel.phone,
       description: hotel.description,
+      password: "",
       status: hotel.status as "pending" | "active" | "suspended",
-      subscription_plan: hotel.subscription_plan as "basic" | "pro" | "premium",
-      owner_id: hotel.owner_id
+      subscription_plan: hotel.subscription_plan as "basic" | "pro" | "premium"
     });
     setIsModalOpen(true);
   };
@@ -145,9 +170,9 @@ const HotelManagement = () => {
       email: "",
       phone: "",
       description: "",
+      password: "",
       status: "pending" as "pending" | "active" | "suspended",
-      subscription_plan: "basic" as "basic" | "pro" | "premium",
-      owner_id: ""
+      subscription_plan: "basic" as "basic" | "pro" | "premium"
     });
   };
 
@@ -181,22 +206,6 @@ const HotelManagement = () => {
               </div>
 
               <div>
-                <Label htmlFor="owner">Owner *</Label>
-                <Select value={formData.owner_id} onValueChange={(value) => setFormData({ ...formData, owner_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map(user => (
-                      <SelectItem key={user.user_id} value={user.user_id}>
-                        {user.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
                 <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
@@ -204,8 +213,23 @@ const HotelManagement = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  disabled={!!editingHotel}
                 />
               </div>
+
+              {!editingHotel && (
+                <div>
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    minLength={6}
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="phone">Phone</Label>
