@@ -331,7 +331,7 @@ const CalendarManager = ({ hotelId }: Props) => {
             onMonthChange={setCurrentMonth}
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
-            className="w-full [&_.rdp-months]:w-full [&_.rdp-month]:w-full [&_.rdp-caption]:w-full [&_table]:w-full"
+            className="w-full"
           />
           </Card>
 
