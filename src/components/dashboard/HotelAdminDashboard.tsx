@@ -12,6 +12,7 @@ import RoomsManager from "./hotel/RoomsManager";
 import BookingsManager from "./hotel/BookingsManager";
 import GuestsManager from "./hotel/GuestsManager";
 import CalendarManager from "./hotel/CalendarManager";
+import ImportCSV from "./hotel/ImportCSV";
 
 interface HotelData {
   id: string;
@@ -185,12 +186,13 @@ const HotelAdminDashboard = () => {
 
       <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
+            <TabsTrigger value="import">Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -211,6 +213,10 @@ const HotelAdminDashboard = () => {
 
           <TabsContent value="guests">
             <GuestsManager hotelId={hotel.id} />
+          </TabsContent>
+
+          <TabsContent value="import">
+            <ImportCSV hotelId={hotel.id} />
           </TabsContent>
         </Tabs>
       </div>
