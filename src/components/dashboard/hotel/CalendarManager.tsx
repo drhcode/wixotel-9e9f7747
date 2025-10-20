@@ -165,7 +165,7 @@ const CalendarManager = ({ hotelId }: Props) => {
 
       {/* Desktop Timeline View */}
       <div className="hidden lg:block">
-        <Card className="p-4">
+        <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">
               Timeline View
@@ -195,8 +195,8 @@ const CalendarManager = ({ hotelId }: Props) => {
             </div>
           </div>
           
-          <div className="overflow-x-auto relative">
-            <div className="min-w-[1200px]">
+          <div className="overflow-x-auto relative rounded-lg border">
+            <div className="min-w-[1200px] bg-background">
               {/* Header */}
               <div className="grid relative" style={{ gridTemplateColumns: '300px repeat(14, 1fr)' }}>
                 <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
@@ -259,11 +259,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                         return (
                           <div 
                             key={date.toISOString()} 
-                            className="relative border-b border-r min-h-[80px]"
+                            className="relative border-b border-r min-h-[80px] bg-background"
                             style={{ gridColumn: `span ${position.span}` }}
                           >
                             <div 
-                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm"
+                              className="absolute top-2 bottom-2 text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm z-0"
                               style={{ 
                                 backgroundColor: `${getStatusColor(booking.status)}20`,
                                 border: `2px solid ${getStatusColor(booking.status)}`,
@@ -286,7 +286,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                       } else {
                         renderedDateIndices.add(dateIndex);
                         return (
-                          <div key={date.toISOString()} className="border-b border-r min-h-[80px] hover:bg-accent/30 transition-colors" />
+                          <div key={date.toISOString()} className="border-b border-r min-h-[80px] bg-background hover:bg-accent/30 transition-colors" />
                         );
                       }
                     })}
