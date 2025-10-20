@@ -268,8 +268,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 backgroundColor: `${getStatusColor(booking.status)}20`,
                                 border: `2px solid ${getStatusColor(booking.status)}`,
                                 color: getStatusColor(booking.status),
-                                left: '50%',
-                                right: '50%',
+                                left: `${50 / position.span}%`,
+                                right: `${50 / position.span}%`,
                                 borderRadius: '8px',
                               }}
                               onClick={() => setSelectedBooking(booking)}
