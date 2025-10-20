@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Edit2 } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, Edit2, AlertTriangle } from "lucide-react";
+import { format, isToday } from "date-fns";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
 
   useEffect(() => {
     if (booking) {
@@ -61,7 +65,25 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
   };
 
+  const canCheckIn = () => {
+    return isToday(new Date(booking.check_in));
+  };
+
+  const canCheckOut = () => {
+    return isToday(new Date(booking.check_out));
+  };
+
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
+    if (newStatus === 'checked_in' && !canCheckIn()) {
+      toast.error("Check-in can only be done on the reservation date");
+      return;
+    }
+
+    if (newStatus === 'checked_out' && !canCheckOut()) {
+      toast.error("Check-out can only be done on the reservation checkout date");
+      return;
+    }
+
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })
@@ -102,8 +124,38 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
   };
 
+  const handleDeleteAttempt = () => {
+    setShowDeleteConfirm(true);
+  };
+
   const handleDelete = async () => {
-    if (!confirm("Delete this booking?")) return;
+    if (!deletePassword) {
+      toast.error("Please enter deletion password");
+      return;
+    }
+
+    // Get current user's profile to check password
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('deletion_password')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile?.deletion_password) {
+      toast.error("Please set up a deletion password in your profile settings first");
+      return;
+    }
+
+    if (profile.deletion_password !== deletePassword) {
+      toast.error("Incorrect password");
+      return;
+    }
     
     const { error } = await supabase
       .from('bookings')
@@ -205,29 +257,68 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <p className="text-sm text-muted-foreground">Status</p>
             <Badge>{booking.status}</Badge>
           </div>
+
+          {booking.status === 'confirmed' && !canCheckIn() && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Check-in is only available on the reservation date ({format(new Date(booking.check_in), 'PPP')})
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {booking.status === 'checked_in' && !canCheckOut() && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'PPP')})
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {showDeleteConfirm && (
+            <div className="space-y-2 p-4 border rounded-lg bg-destructive/10">
+              <Label>Enter deletion password to confirm</Label>
+              <Input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Deletion password"
+              />
+            </div>
+          )}
           
           <div className="flex gap-2 flex-wrap">
-            {!isEditing ? (
+            {!isEditing && !showDeleteConfirm ? (
               <>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
                   <Edit2 className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
                 {booking.status === 'confirmed' && (
-                  <Button size="sm" onClick={() => handleStatusUpdate('checked_in')}>
+                  <Button size="sm" onClick={() => handleStatusUpdate('checked_in')} disabled={!canCheckIn()}>
                     Check In
                   </Button>
                 )}
                 {booking.status === 'checked_in' && (
-                  <Button size="sm" onClick={() => handleStatusUpdate('checked_out')}>
+                  <Button size="sm" onClick={() => handleStatusUpdate('checked_out')} disabled={!canCheckOut()}>
                     Check Out
                   </Button>
                 )}
-                <Button size="sm" variant="destructive" onClick={handleDelete}>
+                <Button size="sm" variant="destructive" onClick={handleDeleteAttempt}>
                   Delete
                 </Button>
                 <Button size="sm" variant="outline" onClick={onClose}>
                   Close
+                </Button>
+              </>
+            ) : showDeleteConfirm ? (
+              <>
+                <Button size="sm" variant="destructive" onClick={handleDelete}>
+                  Confirm Delete
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}>
+                  Cancel
                 </Button>
               </>
             ) : (
