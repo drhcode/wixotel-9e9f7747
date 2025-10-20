@@ -19,6 +19,7 @@ interface HotelData {
   name: string;
   status: string;
   subscription_plan: string;
+  logo_url: string | null;
 }
 
 const HotelAdminDashboard = () => {
@@ -167,8 +168,16 @@ const HotelAdminDashboard = () => {
       <header className="border-b bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Hotel className="h-8 w-8 text-primary" />
+            <div className="flex items-center gap-3">
+              {hotel.logo_url ? (
+                <img 
+                  src={hotel.logo_url} 
+                  alt={`${hotel.name} logo`}
+                  className="h-12 w-12 object-contain rounded-lg"
+                />
+              ) : (
+                <Hotel className="h-8 w-8 text-primary" />
+              )}
               <div>
                 <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                   {hotel.name}
