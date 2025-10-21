@@ -15,6 +15,8 @@ import {
   startOfDay,
   differenceInDays,
   isSameDay,
+  min,
+  max,
 } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
@@ -37,7 +39,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   useEffect(() => {
     fetchRooms();
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotelId, currentMonth, timelineStartDate]);
 
   const fetchRooms = async () => {
@@ -50,27 +51,29 @@ const CalendarManager = ({ hotelId }: Props) => {
       return;
     }
     setRooms(data || []);
+    setIsLoading(false);
   };
 
   const fetchBookings = async () => {
     setIsLoading(true);
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
-    const timelineEnd = addDays(timelineStartDate, 13); // 14 days total (0..13)
+    const timelineEnd = addDays(timelineStartDate, 13);
 
-    // Fetch bookings that intersect the current month OR the timeline window
-    // The last OR cond checks intersection with the timeline window inclusive
-    const orQuery =
-      `and(check_in.gte.${format(start, "yyyy-MM-dd")},check_in.lte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_out.gte.${format(start, "yyyy-MM-dd")},check_out.lte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_in.lte.${format(start, "yyyy-MM-dd")},check_out.gte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_in.lte.${format(timelineEnd, "yyyy-MM-dd")},check_out.gte.${format(timelineStartDate, "yyyy-MM-dd")})`;
-
+    // Fetch bookings that intersect the current month OR the timeline
     const { data, error } = await supabase
       .from("bookings")
       .select("*, rooms(name, room_number), guests(name)")
       .eq("hotel_id", hotelId)
-      .or(orQuery);
+      .or(
+        `and(check_in.lte.${format(end, "yyyy-MM-dd")},check_out.gte.${format(
+          start,
+          "yyyy-MM-dd",
+        )}),and(check_in.lte.${format(timelineEnd, "yyyy-MM-dd")},check_out.gte.${format(
+          timelineStartDate,
+          "yyyy-MM-dd",
+        )})`,
+      );
 
     if (error) {
       toast.error("Failed to load bookings");
@@ -82,11 +85,10 @@ const CalendarManager = ({ hotelId }: Props) => {
   };
 
   const getBookingsForDate = (date: Date) => {
-    const d = format(startOfDay(date), "yyyy-MM-dd");
-    return bookings.filter((booking) => {
-      const checkIn = format(startOfDay(new Date(booking.check_in)), "yyyy-MM-dd");
-      const checkOut = format(startOfDay(new Date(booking.check_out)), "yyyy-MM-dd");
-      // Occupied for dates >= checkIn and < checkOut (checkout day is free)
+    const d = startOfDay(date).getTime();
+    return bookings.filter((b) => {
+      const checkIn = startOfDay(new Date(b.check_in)).getTime();
+      const checkOut = startOfDay(new Date(b.check_out)).getTime();
       return d >= checkIn && d < checkOut;
     });
   };
@@ -96,7 +98,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "#7C3BED";
       case "pending":
         return "#7C3BED";
       case "checked_in":
@@ -110,43 +111,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     }
   };
 
-  const getBookingsForRoom = (roomId: string, date: Date) => {
-    const d = format(startOfDay(date), "yyyy-MM-dd");
-    return bookings.filter(
-      (booking) =>
-        booking.room_id === roomId &&
-        d >= format(startOfDay(new Date(booking.check_in)), "yyyy-MM-dd") &&
-        d < format(startOfDay(new Date(booking.check_out)), "yyyy-MM-dd"),
-    );
-  };
-
-  const getStartCellBookingForRoom = (roomId: string, date: Date) => {
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
-    const windowStart = startOfDay(timelineStartDate);
-    const dateStr = format(startOfDay(date), "yyyy-MM-dd");
-
-    for (const booking of bookings) {
-      if (booking.room_id !== roomId) continue;
-
-      const bStart = startOfDay(new Date(booking.check_in));
-      const bEnd = startOfDay(new Date(booking.check_out));
-
-      // Overlaps the window (inclusive) — we want to show bookings that touch the window edges
-      const overlaps = bStart.getTime() <= lastVisibleDate.getTime() && bEnd.getTime() >= windowStart.getTime();
-      if (!overlaps) continue;
-
-      // Start cell is the later of booking start and window start
-      const startCellDate = new Date(Math.max(bStart.getTime(), windowStart.getTime()));
-      const startCellStr = format(startCellDate, "yyyy-MM-dd");
-
-      if (startCellStr === dateStr) {
-        return booking;
-      }
-    }
-
-    return null;
-  };
-
   const generateTimelineDates = () => {
     const dates: Date[] = [];
     for (let i = 0; i < 14; i++) {
@@ -157,34 +121,20 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const timelineDates = generateTimelineDates();
 
-  const getBookingPosition = (booking: any, date: Date) => {
-    const checkIn = startOfDay(new Date(booking.check_in));
-    const checkOut = startOfDay(new Date(booking.check_out));
-    const currentDate = startOfDay(date);
-    const windowStart = startOfDay(timelineStartDate);
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
-
-    // Start cell for this booking within current window
-    const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
-
-    if (isSameDay(startCell, currentDate)) {
-      // End cell within current window (we include the check-out cell so blocks can end mid-cell)
-      const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
-      const span = differenceInDays(endCell, startCell) + 1; // includes both start and end cells
-
-      // compute percent offsets: middle of first cell and middle of last cell relative to container
-      // If span === 1, leftPercent and rightPercent will both be 50 (so element is centered).
-      const leftPercent = 50 / span;
-      const rightPercent = 50 / span;
-
-      return {
-        start: true,
-        span: Math.max(1, span),
-        leftPercent,
-        rightPercent,
-      };
-    }
-    return { start: false, span: 0, leftPercent: 0, rightPercent: 0 };
+  const getBookingsForRoomInTimeline = (roomId: string) => {
+    return bookings
+      .filter(
+        (b) =>
+          b.room_id === roomId &&
+          new Date(b.check_out) > timelineStartDate &&
+          new Date(b.check_in) <= addDays(timelineStartDate, 13),
+      )
+      .map((b) => {
+        const start = max([timelineStartDate, startOfDay(new Date(b.check_in))]);
+        const end = min([addDays(timelineStartDate, 13), startOfDay(new Date(b.check_out))]);
+        const span = differenceInDays(end, start);
+        return { ...b, start, end, span };
+      });
   };
 
   const modifiers = {
@@ -193,7 +143,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         const dates: Date[] = [];
         let current = startOfDay(new Date(b.check_in));
         const end = startOfDay(new Date(b.check_out));
-        while (current <= end) {
+        while (current < end) {
           dates.push(new Date(current));
           current = addDays(current, 1);
         }
@@ -267,7 +217,6 @@ const CalendarManager = ({ hotelId }: Props) => {
 
           <div className="overflow-x-auto relative rounded-lg border">
             <div className="min-w-[1200px] bg-background">
-              {/* Header */}
               <div className="grid relative" style={{ gridTemplateColumns: "300px repeat(14, 1fr)" }}>
                 <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                   Room
@@ -291,10 +240,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                 })}
               </div>
 
-              {/* Room Rows */}
               {rooms.map((room) => {
-                const renderedDateIndices = new Set<number>();
-
+                const roomBookings = getBookingsForRoomInTimeline(room.id);
                 return (
                   <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "300px repeat(14, 1fr)" }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
@@ -305,64 +252,41 @@ const CalendarManager = ({ hotelId }: Props) => {
                     </div>
 
                     {timelineDates.map((date, dateIndex) => {
-                      // Skip if this date was already rendered as part of a span
-                      if (renderedDateIndices.has(dateIndex)) {
-                        return null;
-                      }
-
-                      const startBooking = getStartCellBookingForRoom(room.id, date);
-
-                      if (startBooking) {
-                        const position = getBookingPosition(startBooking, date);
-
-                        // Mark the spanned dates as rendered
-                        for (let i = 0; i < position.span; i++) {
-                          renderedDateIndices.add(dateIndex + i);
-                        }
-
-                        // compute grid columns
-                        const gridStart = 2 + dateIndex;
-                        const gridEnd = 2 + dateIndex + position.span;
-
-                        const leftOffset = `${position.leftPercent}%`;
-                        const rightOffset = `${position.rightPercent}%`;
-
+                      const booking = roomBookings.find((b) => isSameDay(b.start, date));
+                      if (booking) {
                         return (
                           <div
                             key={date.toISOString()}
                             className="border-b border-r min-h-[80px] bg-background p-2 relative"
-                            style={{ gridColumnStart: gridStart, gridColumnEnd: gridEnd }}
+                            style={{
+                              gridColumnStart: 2 + dateIndex,
+                              gridColumnEnd: 2 + dateIndex + booking.span,
+                            }}
                           >
                             <div
                               className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{
-                                backgroundColor: `${getStatusColor(startBooking.status)}20`,
-                                border: `2px solid ${getStatusColor(startBooking.status)}`,
-                                color: getStatusColor(startBooking.status),
-                                left: leftOffset,
-                                right: rightOffset,
+                                backgroundColor: `${getStatusColor(booking.status)}20`,
+                                border: `2px solid ${getStatusColor(booking.status)}`,
+                                color: getStatusColor(booking.status),
                                 top: "8px",
                                 bottom: "8px",
+                                left: 0,
+                                right: 0,
                               }}
-                              onClick={() => setSelectedBooking(startBooking)}
+                              onClick={() => setSelectedBooking(booking)}
                             >
-                              <div className="font-semibold truncate">
-                                {startBooking.guests?.name || startBooking.guest_name}
-                              </div>
+                              <div className="font-semibold truncate">{booking.guests?.name || booking.guest_name}</div>
                               <div className="text-[10px] opacity-90 truncate">
-                                {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
-                                {format(new Date(startBooking.check_out), "MMM dd")}
+                                {format(new Date(booking.check_in), "MMM dd")} -{" "}
+                                {format(new Date(booking.check_out), "MMM dd")}
                               </div>
                             </div>
                           </div>
                         );
                       } else {
-                        renderedDateIndices.add(dateIndex);
                         return (
-                          <div
-                            key={date.toISOString()}
-                            className="border-b border-r min-h-[80px] bg-background hover:bg-accent/30 transition-colors"
-                          />
+                          <div key={date.toISOString()} className="border-b border-r min-h-[80px] bg-background" />
                         );
                       }
                     })}
@@ -388,22 +312,16 @@ const CalendarManager = ({ hotelId }: Props) => {
               </Button>
             </div>
           </div>
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              modifiers={modifiers}
-              modifiersStyles={modifiersStyles}
-              className="w-full max-w-full"
-            />
-          </div>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            modifiers={modifiers}
+            modifiersStyles={modifiersStyles}
+            className="w-full max-w-full"
+          />
         </Card>
 
         <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
