@@ -75,19 +75,20 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     setGuests(data || []);
   };
 
-  // ✅ Custom room availability logic (hotel-style)
+  // ✅ Updated hotel-style room availability logic
   const fetchAvailableRooms = async () => {
     try {
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
+      const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const ci = normalize(checkIn);
+      const co = normalize(checkOut);
 
       // Fetch all rooms of this hotel
       const { data: allRooms, error: roomError } = await supabase.from("rooms").select("*").eq("hotel_id", hotelId);
 
       if (roomError) throw roomError;
 
-      // Fetch all bookings (not cancelled) for this hotel
-      const { data: bookings, error: bookingError } = await supabase
+      // Fetch all existing bookings of this hotel
+      const { data: allBookings, error: bookingError } = await supabase
         .from("bookings")
         .select("room_id, check_in, check_out, status")
         .eq("hotel_id", hotelId)
@@ -95,20 +96,18 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
       if (bookingError) throw bookingError;
 
-      const availableRooms = allRooms.filter((room) => {
-        const roomBookings = bookings.filter((b) => b.room_id === room.id);
+      const available = allRooms.filter((room) => {
+        const roomBookings = allBookings.filter((b) => b.room_id === room.id);
 
         for (const b of roomBookings) {
           const existingIn = new Date(b.check_in);
           const existingOut = new Date(b.check_out);
 
-          // Overlap occurs if:
-          // new.checkIn < existingOut && new.checkOut > existingIn
-          // but we allow checkIn == existingOut or checkOut == existingIn
+          // ❌ Overlap check: only block if truly overlapping
           const overlap =
-            checkInDate < existingOut &&
-            checkOutDate > existingIn &&
-            !(checkInDate.getTime() === existingOut.getTime() || checkOutDate.getTime() === existingIn.getTime());
+            ci < existingOut &&
+            co > existingIn &&
+            !(ci.getTime() === existingOut.getTime() || co.getTime() === existingIn.getTime());
 
           if (overlap) return false;
         }
@@ -116,14 +115,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         return true;
       });
 
-      setAvailableRooms(availableRooms);
+      setAvailableRooms(available);
 
-      // Reset selected room if not in available list
-      if (selectedRoom && !availableRooms.some((r) => r.id === selectedRoom)) {
+      // Clear selection if no longer available
+      if (selectedRoom && !available.some((r) => r.id === selectedRoom)) {
         setSelectedRoom("");
       }
     } catch (error: any) {
-      toast.error("Failed to load available rooms: " + error.message);
+      console.error(error);
+      toast.error("Failed to load available rooms");
     }
   };
 
@@ -180,6 +180,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       });
 
       if (error) throw error;
+
       toast.success("Reservation created");
       onSuccess();
       onClose();
@@ -198,6 +199,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-in</Label>
@@ -255,6 +257,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </div>
           </div>
 
+          {/* Rooms */}
           <div>
             <Label>Available Rooms</Label>
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -271,6 +274,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </Select>
           </div>
 
+          {/* Guests */}
           <div>
             <Label>Guest</Label>
             <div className="space-y-2">
@@ -293,14 +297,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       {guest.name}
                     </SelectItem>
                   ))}
-                  {guests.length === 0 && guestSearchTerm && (
-                    <div className="text-sm text-muted-foreground p-2">No guests found</div>
-                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* Guest Info for New Guest */}
           {(!selectedGuest || selectedGuest === "new") && (
             <>
               <div>
