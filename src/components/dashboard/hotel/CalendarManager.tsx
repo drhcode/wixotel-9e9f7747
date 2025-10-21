@@ -137,29 +137,31 @@ const CalendarManager = ({ hotelId }: Props) => {
     const checkOut = startOfDay(new Date(booking.check_out));
     const currentDate = startOfDay(date);
     const windowStart = startOfDay(timelineStartDate);
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 14)); // 14 because we want to include the end boundary
+    const windowEndExclusive = startOfDay(addDays(timelineStartDate, 14)); // the day after the last visible day
 
     // Start cell for this booking within current window
     const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
 
     if (isSameDay(startCell, currentDate)) {
-      // Calculate actual span: the booking covers from check-in (inclusive) to check-out (exclusive)
-      // We need to know how many day cells it spans in the timeline
-      const visibleCheckOut = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
-      
-      // Number of full days the booking occupies
-      const span = differenceInDays(visibleCheckOut, startCell);
+      // Booking covers from check-in (inclusive) to check-out (exclusive)
+      // Clamp check-out to window end exclusive for calculations
+      const visibleCheckOutExclusive = new Date(Math.min(checkOut.getTime(), windowEndExclusive.getTime()));
+
+      // Number of full day cells occupied in the window
+      const spanDays = Math.max(1, differenceInDays(visibleCheckOutExclusive, startCell));
+
+      // We render from mid check-in cell to mid check-out cell, which requires +1 extra cell in the container
+      const columns = spanDays + 1;
 
       return {
         start: true,
-        span: Math.max(1, span), // At least 1 cell
-        actualCheckIn: checkIn,
-        actualCheckOut: checkOut,
+        span: spanDays, // used only for marking indices in the loop
+        columns,
         startsAtWindowStart: checkIn.getTime() < windowStart.getTime(),
-        endsAtWindowEnd: checkOut.getTime() > lastVisibleDate.getTime()
+        endsAtWindowEnd: checkOut.getTime() >= windowEndExclusive.getTime(),
       };
     }
-    return { start: false, span: 0 };
+    return { start: false, span: 0, columns: 0 };
   };
 
   const modifiers = {
@@ -312,27 +314,19 @@ const CalendarManager = ({ hotelId }: Props) => {
                         // Each grid cell represents 100% width
                         // We want blocks to start at 50% of first cell and end at 50% of last cell
                         
-                        // For a booking that spans N cells in the grid:
-                        // - Total grid width = N * 100%
-                        // - We want to inset by 0.5 cell from left and 0.5 cell from right
-                        // - Left offset = 50% of one cell = 50% / N of total span width
-                        // - Right offset = 50% of one cell = 50% / N of total span width
+                        // For a booking that spans N container columns (N = days + 1):
+                        // - Total container width = N cells
+                        // - We inset by 0.5 cell on both sides => offset = 50% / N
+                        const baseOffset = `calc(50% / ${position.columns})`;
                         
-                        let leftOffset = '50%';  // Default for single cell
-                        let rightOffset = '50%';
+                        let leftOffset = baseOffset;
+                        let rightOffset = baseOffset;
                         
-                        if (position.span > 1) {
-                          // Multi-cell booking: start at middle of first cell, end at middle of last cell
-                          leftOffset = `calc(50% / ${position.span})`;
-                          rightOffset = `calc(50% / ${position.span})`;
-                        }
-                        
-                        // However, if the booking starts before the window, don't apply left offset
+                        // If the booking starts before the window, the left edge should align with the day boundary
                         if (position.startsAtWindowStart) {
                           leftOffset = '0%';
                         }
-                        
-                        // If the booking ends after the window, don't apply right offset
+                        // If the booking ends after the window, the right edge should align with the day boundary
                         if (position.endsAtWindowEnd) {
                           rightOffset = '0%';
                         }
@@ -341,7 +335,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                           <div 
                             key={date.toISOString()} 
                             className="border-b border-r min-h-[80px] bg-background p-2 relative"
-                            style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.span, 16) }}
+                            style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: Math.min(2 + dateIndex + position.columns, 16) }}
                           >
                             <div 
                               className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
