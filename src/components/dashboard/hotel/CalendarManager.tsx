@@ -4,22 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  addMonths,
-  subMonths,
-  addDays,
-  startOfDay,
-  differenceInDays,
-  isSameDay,
-  min,
-  max,
-} from "date-fns";
+import { format, startOfMonth, endOfMonth, addDays, startOfDay, differenceInDays, isSameDay, min, max } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
-import { Badge } from "@/components/ui/badge";
 
 interface Props {
   hotelId: string;
@@ -30,7 +17,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfMonth(new Date()));
+  const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
 
   // Drag state
@@ -41,21 +28,8 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [prefilledDates, setPrefilledDates] = useState<{ start: Date; end: Date } | null>(null);
   const [prefilledRoomId, setPrefilledRoomId] = useState<string | null>(null);
 
-  // Generate full month dates
-  const generateTimelineDates = () => {
-    const start = startOfMonth(timelineStartDate);
-    const end = endOfMonth(timelineStartDate);
-    const dates: Date[] = [];
-    let current = start;
-    while (current <= end) {
-      dates.push(current);
-      current = addDays(current, 1);
-    }
-    return dates;
-  };
-  const timelineDates = generateTimelineDates();
+  const DEFAULT_WINDOW_DAYS = 12;
 
-  // Fetch rooms
   const fetchRooms = async () => {
     setIsLoading(true);
     const { data, error } = await supabase.from("rooms").select("*").eq("hotel_id", hotelId).order("room_number");
@@ -68,7 +42,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     setIsLoading(false);
   };
 
-  // Fetch bookings
   const fetchBookings = async () => {
     setIsLoading(true);
     const start = startOfMonth(timelineStartDate);
@@ -110,6 +83,31 @@ const CalendarManager = ({ hotelId }: Props) => {
     }
   };
 
+  // Generate full month dates
+  const generateFullMonthDates = () => {
+    const start = startOfMonth(timelineStartDate);
+    const end = endOfMonth(timelineStartDate);
+    const dates: Date[] = [];
+    let current = start;
+    while (current <= end) {
+      dates.push(current);
+      current = addDays(current, 1);
+    }
+    return dates;
+  };
+
+  // Generate visible window dates
+  const generateTimelineWindowDates = () => {
+    const dates: Date[] = [];
+    for (let i = 0; i < DEFAULT_WINDOW_DAYS; i++) {
+      dates.push(addDays(timelineStartDate, i));
+    }
+    return dates;
+  };
+
+  const fullMonthDates = generateFullMonthDates();
+  const timelineDates = generateTimelineWindowDates();
+
   const getBookingsForRoom = (roomId: string) => {
     return bookings
       .filter(
@@ -135,8 +133,8 @@ const CalendarManager = ({ hotelId }: Props) => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 relative">
-      {/* Header & New Reservation Button */}
+    <div className="space-y-4 relative">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reservation Calendar</h2>
         <Button onClick={() => setIsModalOpen(true)}>
@@ -152,7 +150,7 @@ const CalendarManager = ({ hotelId }: Props) => {
             <div className="p-4 border-b border-r font-bold bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
               Room
             </div>
-            {timelineDates.map((date) => (
+            {fullMonthDates.map((date) => (
               <div key={date.toISOString()} className="p-2 border-b border-r text-center sticky top-0 bg-muted z-10">
                 <div className="text-xs font-semibold">{format(date, "EEE")}</div>
                 <div className="text-sm font-bold">{format(date, "dd")}</div>
@@ -180,7 +178,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                     </div>
                   </div>
 
-                  {/* Date Cells */}
+                  {/* Timeline Window Cells */}
                   {timelineDates.map((date, idx) => {
                     if (rendered.has(idx)) return null;
 
@@ -218,49 +216,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                       );
                     }
 
-                    // Drag-to-create cell
-                    const handleMouseDown = () => {
-                      setDragStartIndex(idx);
-                      setDragEndIndex(idx);
-                      setIsDragging(true);
-                      setDragPreview({ roomId: room.id, start: idx, end: idx });
-                    };
-                    const handleMouseEnter = () => {
-                      if (isDragging && dragStartIndex !== null) {
-                        setDragEndIndex(idx);
-                        setDragPreview({ roomId: room.id, start: dragStartIndex, end: idx });
-                      }
-                    };
-                    const handleMouseUp = () => {
-                      if (dragStartIndex !== null && dragEndIndex !== null) {
-                        const start = timelineDates[Math.min(dragStartIndex, dragEndIndex)];
-                        const end = addDays(timelineDates[Math.max(dragStartIndex, dragEndIndex)], 1);
-                        setPrefilledDates({ start, end });
-                        setPrefilledRoomId(room.id);
-                        setIsModalOpen(true);
-                      }
-                      setDragStartIndex(null);
-                      setDragEndIndex(null);
-                      setIsDragging(false);
-                      setDragPreview(null);
-                    };
-
-                    return (
-                      <div
-                        key={date.toISOString()}
-                        className="border-b border-r min-h-[80px] bg-background hover:bg-accent/20 transition-colors relative"
-                        onMouseDown={handleMouseDown}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseUp={handleMouseUp}
-                      >
-                        {isDragging &&
-                          dragPreview?.roomId === room.id &&
-                          idx >= Math.min(dragPreview.start, dragPreview.end) &&
-                          idx <= Math.max(dragPreview.start, dragPreview.end) && (
-                            <div className="absolute inset-1/4 bg-primary/20 border-2 border-primary rounded-lg" />
-                          )}
-                      </div>
-                    );
+                    return <div key={date.toISOString()} className="border-b border-r min-h-[80px] bg-background" />;
                   })}
                 </div>
               );
@@ -269,7 +225,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         </div>
       </div>
 
-      {/* Booking Modal */}
+      {/* Booking Modals */}
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -278,7 +234,6 @@ const CalendarManager = ({ hotelId }: Props) => {
         prefilledRoomId={prefilledRoomId}
         onSuccess={fetchBookings}
       />
-
       {selectedBooking && (
         <BookingDetailsModal
           booking={selectedBooking}
