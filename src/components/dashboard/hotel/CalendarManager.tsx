@@ -196,19 +196,14 @@ const CalendarManager = ({ hotelId }: Props) => {
           </div>
 
           <div className="overflow-x-auto border rounded-lg">
-            <div className="min-w-[1200px]">
-              {/* Header */}
-              <div className="grid relative" style={{ gridTemplateColumns: "300px repeat(12, 1fr)" }}>
-                <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+            <div className="inline-block min-w-max relative">
+              {/* Full Month Header on Top */}
+              <div className="grid relative" style={{ gridTemplateColumns: "300px repeat(30, 1fr)" }}>
+                <div className="p-4 font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                   Room
                 </div>
-                {timelineDates.map((date) => (
-                  <div
-                    key={date.toISOString()}
-                    className={`p-3 border-b border-r text-center ${
-                      isSameDay(date, new Date()) ? "bg-primary/20" : "bg-muted/30"
-                    }`}
-                  >
+                {fullMonthDates.map((date) => (
+                  <div key={date.toISOString()} className="border-b border-r p-2 text-center">
                     <div className="text-xs font-semibold">{format(date, "EEE")}</div>
                     <div className="text-sm">{format(date, "dd")}</div>
                     <div className="text-xs text-muted-foreground">{format(date, "MMM")}</div>
@@ -216,11 +211,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                 ))}
               </div>
 
-              {/* Rooms */}
+              {/* Room Rows */}
               {rooms.map((room) => {
                 const renderedIndices = new Set<number>();
                 return (
-                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "300px repeat(12, 1fr)" }}>
+                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "300px repeat(30, 1fr)" }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                       <div className="text-sm font-bold">
                         {room.room_number} {room.name}
@@ -228,7 +223,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                       <div className="text-xs text-muted-foreground font-medium mt-1">Room</div>
                     </div>
 
-                    {timelineDates.map((date, idx) => {
+                    {fullMonthDates.map((date, idx) => {
                       if (renderedIndices.has(idx)) return null;
                       const booking = getStartCellBookingForRoom(room.id, date);
                       if (booking) {
