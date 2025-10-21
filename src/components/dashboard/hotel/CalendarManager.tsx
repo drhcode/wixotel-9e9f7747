@@ -36,6 +36,13 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
 
+  // Drag states
+  const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
+  const [dragEndIndex, setDragEndIndex] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [prefilledDates, setPrefilledDates] = useState<{ start: Date; end: Date } | null>(null);
+  const [prefilledRoomId, setPrefilledRoomId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchRooms();
     fetchBookings();
@@ -60,7 +67,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     const end = endOfMonth(currentMonth);
     const timelineEnd = addDays(timelineStartDate, 13);
 
-    // Fetch bookings that intersect the current month OR the timeline
     const { data, error } = await supabase
       .from("bookings")
       .select("*, rooms(name, room_number), guests(name)")
@@ -193,7 +199,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         </Button>
       </div>
 
-      {/* Desktop Timeline View */}
+      {/* Desktop Timeline */}
       <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
@@ -240,8 +246,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                 })}
               </div>
 
+              {/* Room Rows */}
               {rooms.map((room) => {
+                const renderedDateIndices = new Set<number>();
                 const roomBookings = getBookingsForRoomInTimeline(room.id);
+
                 return (
                   <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "300px repeat(14, 1fr)" }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
@@ -252,16 +261,16 @@ const CalendarManager = ({ hotelId }: Props) => {
                     </div>
 
                     {timelineDates.map((date, dateIndex) => {
+                      if (renderedDateIndices.has(dateIndex)) return null;
+
                       const booking = roomBookings.find((b) => isSameDay(b.start, date));
                       if (booking) {
+                        for (let i = 0; i <= booking.span; i++) renderedDateIndices.add(dateIndex + i);
                         return (
                           <div
                             key={date.toISOString()}
                             className="border-b border-r min-h-[80px] bg-background p-2 relative"
-                            style={{
-                              gridColumnStart: 2 + dateIndex,
-                              gridColumnEnd: 2 + dateIndex + booking.span,
-                            }}
+                            style={{ gridColumnStart: 2 + dateIndex, gridColumnEnd: 2 + dateIndex + booking.span + 1 }}
                           >
                             <div
                               className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
@@ -271,8 +280,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 color: getStatusColor(booking.status),
                                 top: "8px",
                                 bottom: "8px",
-                                left: 0,
-                                right: 0,
+                                left: "25%",
+                                right: "25%",
                               }}
                               onClick={() => setSelectedBooking(booking)}
                             >
@@ -284,11 +293,39 @@ const CalendarManager = ({ hotelId }: Props) => {
                             </div>
                           </div>
                         );
-                      } else {
-                        return (
-                          <div key={date.toISOString()} className="border-b border-r min-h-[80px] bg-background" />
-                        );
                       }
+
+                      const handleMouseDown = () => {
+                        setDragStartIndex(dateIndex);
+                        setDragEndIndex(dateIndex);
+                        setIsDragging(true);
+                      };
+                      const handleMouseEnter = () => {
+                        if (isDragging) setDragEndIndex(dateIndex);
+                      };
+                      const handleMouseUp = () => {
+                        if (dragStartIndex !== null && dragEndIndex !== null) {
+                          const start = timelineDates[Math.min(dragStartIndex, dragEndIndex)];
+                          const end = addDays(timelineDates[Math.max(dragStartIndex, dragEndIndex)], 1);
+                          setPrefilledDates({ start, end });
+                          setPrefilledRoomId(room.id);
+                          setIsModalOpen(true);
+                        }
+                        setDragStartIndex(null);
+                        setDragEndIndex(null);
+                        setIsDragging(false);
+                      };
+
+                      renderedDateIndices.add(dateIndex);
+                      return (
+                        <div
+                          key={date.toISOString()}
+                          className={`border-b border-r min-h-[80px] bg-background hover:bg-accent/20 transition-colors`}
+                          onMouseDown={handleMouseDown}
+                          onMouseEnter={handleMouseEnter}
+                          onMouseUp={handleMouseUp}
+                        />
+                      );
                     })}
                   </div>
                 );
@@ -298,7 +335,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         </Card>
       </div>
 
-      {/* Mobile Calendar View */}
+      {/* Mobile Calendar */}
       <div className="lg:hidden space-y-4">
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
@@ -312,16 +349,18 @@ const CalendarManager = ({ hotelId }: Props) => {
               </Button>
             </div>
           </div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
-            className="w-full max-w-full"
-          />
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              modifiers={modifiers}
+              modifiersStyles={modifiersStyles}
+              className="w-full max-w-full"
+            />
+          </div>
         </Card>
 
         <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
@@ -369,8 +408,8 @@ const CalendarManager = ({ hotelId }: Props) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         hotelId={hotelId}
-        prefilledDates={null}
-        prefilledRoomId={null}
+        prefilledDates={prefilledDates}
+        prefilledRoomId={prefilledRoomId}
         onSuccess={fetchBookings}
       />
 
