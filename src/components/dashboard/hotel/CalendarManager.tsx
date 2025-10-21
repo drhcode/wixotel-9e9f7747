@@ -301,6 +301,12 @@ const CalendarManager = ({ hotelId }: Props) => {
                           renderedDateIndices.add(dateIndex + i);
                         }
                         
+                        // Calculate offsets to start at middle of check-in and end at middle of check-out
+                        // Each cell represents 100% / span of the container width
+                        // We want to start at 0.5 cells in and end at 0.5 cells before the end
+                        const leftOffset = position.span > 1 ? `${50 / position.span}%` : '25%';
+                        const rightOffset = position.span > 1 ? `${50 / position.span}%` : '25%';
+                        
                         return (
                           <div 
                             key={date.toISOString()} 
@@ -313,8 +319,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
                                 color: getStatusColor(startBooking.status),
-                                left: '50%',
-                                right: `calc(-${(position.span - 1) * 100}% - 50%)`,
+                                left: leftOffset,
+                                right: rightOffset,
                                 top: '8px',
                                 bottom: '8px',
                               }}
