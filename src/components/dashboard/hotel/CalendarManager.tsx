@@ -137,19 +137,26 @@ const CalendarManager = ({ hotelId }: Props) => {
     const checkOut = startOfDay(new Date(booking.check_out));
     const currentDate = startOfDay(date);
     const windowStart = startOfDay(timelineStartDate);
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
+    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 14)); // 14 because we want to include the end boundary
 
     // Start cell for this booking within current window
     const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
 
     if (isSameDay(startCell, currentDate)) {
-      // End cell within current window (inclusive for "middle to middle")
-      const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
-      const span = differenceInDays(endCell, startCell) + 1;
+      // Calculate actual span: the booking covers from check-in (inclusive) to check-out (exclusive)
+      // We need to know how many day cells it spans in the timeline
+      const visibleCheckOut = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
+      
+      // Number of full days the booking occupies
+      const span = differenceInDays(visibleCheckOut, startCell);
 
       return {
         start: true,
-        span: Math.max(1, span),
+        span: Math.max(1, span), // At least 1 cell
+        actualCheckIn: checkIn,
+        actualCheckOut: checkOut,
+        startsAtWindowStart: checkIn.getTime() < windowStart.getTime(),
+        endsAtWindowEnd: checkOut.getTime() > lastVisibleDate.getTime()
       };
     }
     return { start: false, span: 0 };
@@ -301,11 +308,34 @@ const CalendarManager = ({ hotelId }: Props) => {
                           renderedDateIndices.add(dateIndex + i);
                         }
                         
-                        // Calculate offsets to start at middle of check-in and end at middle of check-out
-                        // Each cell represents 100% / span of the container width
-                        // We want to start at 0.5 cells in and end at 0.5 cells before the end
-                        const leftOffset = position.span > 1 ? `${50 / position.span}%` : '25%';
-                        const rightOffset = position.span > 1 ? `${50 / position.span}%` : '25%';
+                        // Calculate offsets for mid-cell alignment
+                        // Each grid cell represents 100% width
+                        // We want blocks to start at 50% of first cell and end at 50% of last cell
+                        
+                        // For a booking that spans N cells in the grid:
+                        // - Total grid width = N * 100%
+                        // - We want to inset by 0.5 cell from left and 0.5 cell from right
+                        // - Left offset = 50% of one cell = 50% / N of total span width
+                        // - Right offset = 50% of one cell = 50% / N of total span width
+                        
+                        let leftOffset = '50%';  // Default for single cell
+                        let rightOffset = '50%';
+                        
+                        if (position.span > 1) {
+                          // Multi-cell booking: start at middle of first cell, end at middle of last cell
+                          leftOffset = `calc(50% / ${position.span})`;
+                          rightOffset = `calc(50% / ${position.span})`;
+                        }
+                        
+                        // However, if the booking starts before the window, don't apply left offset
+                        if (position.startsAtWindowStart) {
+                          leftOffset = '0%';
+                        }
+                        
+                        // If the booking ends after the window, don't apply right offset
+                        if (position.endsAtWindowEnd) {
+                          rightOffset = '0%';
+                        }
                         
                         return (
                           <div 
