@@ -15,6 +15,8 @@ import {
   startOfDay,
   differenceInDays,
   isSameDay,
+  isBefore,
+  isAfter,
 } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
@@ -37,7 +39,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   useEffect(() => {
     fetchRooms();
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotelId, currentMonth, timelineStartDate]);
 
   const fetchRooms = async () => {
@@ -56,10 +57,8 @@ const CalendarManager = ({ hotelId }: Props) => {
     setIsLoading(true);
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
-    const timelineEnd = addDays(timelineStartDate, 13); // 14 days total (0..13)
+    const timelineEnd = addDays(timelineStartDate, 13);
 
-    // Fetch bookings that intersect the current month OR the timeline window
-    // The last OR cond checks intersection with the timeline window inclusive
     const orQuery =
       `and(check_in.gte.${format(start, "yyyy-MM-dd")},check_in.lte.${format(end, "yyyy-MM-dd")}),` +
       `and(check_out.gte.${format(start, "yyyy-MM-dd")},check_out.lte.${format(end, "yyyy-MM-dd")}),` +
@@ -86,7 +85,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     return bookings.filter((booking) => {
       const checkIn = format(startOfDay(new Date(booking.check_in)), "yyyy-MM-dd");
       const checkOut = format(startOfDay(new Date(booking.check_out)), "yyyy-MM-dd");
-      // Occupied for dates >= checkIn and < checkOut (checkout day is free)
       return d >= checkIn && d < checkOut;
     });
   };
@@ -96,7 +94,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "#7C3BED";
       case "pending":
         return "#7C3BED";
       case "checked_in":
@@ -110,16 +107,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     }
   };
 
-  const getBookingsForRoom = (roomId: string, date: Date) => {
-    const d = format(startOfDay(date), "yyyy-MM-dd");
-    return bookings.filter(
-      (booking) =>
-        booking.room_id === roomId &&
-        d >= format(startOfDay(new Date(booking.check_in)), "yyyy-MM-dd") &&
-        d < format(startOfDay(new Date(booking.check_out)), "yyyy-MM-dd"),
-    );
-  };
-
   const getStartCellBookingForRoom = (roomId: string, date: Date) => {
     const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
     const windowStart = startOfDay(timelineStartDate);
@@ -131,19 +118,14 @@ const CalendarManager = ({ hotelId }: Props) => {
       const bStart = startOfDay(new Date(booking.check_in));
       const bEnd = startOfDay(new Date(booking.check_out));
 
-      // Overlaps window or starts exactly on the cell
-      const overlaps = (bStart <= lastVisibleDate && bEnd > windowStart) || isSameDay(bStart, date);
+      const overlaps = bStart.getTime() <= lastVisibleDate.getTime() && bEnd.getTime() >= windowStart.getTime();
       if (!overlaps) continue;
 
-      // Start cell is either the max(windowStart, check-in) OR current date
-      const startCellDate = isBefore(bStart, windowStart) ? windowStart : bStart;
-      const startCellStr = format(startCellDate, "yyyy-MM-dd");
-
-      if (startCellStr === dateStr) {
+      const startCellDate = new Date(Math.max(bStart.getTime(), windowStart.getTime()));
+      if (format(startCellDate, "yyyy-MM-dd") === dateStr) {
         return booking;
       }
     }
-
     return null;
   };
 
@@ -157,30 +139,25 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const timelineDates = generateTimelineDates();
 
+  // ✅ Calculate booking block positions with half-cell logic
   const getBookingPosition = (booking: any, date: Date) => {
     const checkIn = startOfDay(new Date(booking.check_in));
     const checkOut = startOfDay(new Date(booking.check_out));
     const windowStart = startOfDay(timelineStartDate);
     const windowEnd = startOfDay(addDays(timelineStartDate, 13));
 
-    // Skip if completely outside window
     if (isAfter(checkIn, windowEnd) || isBefore(checkOut, windowStart)) return null;
 
     const startCell = isBefore(checkIn, windowStart) ? windowStart : checkIn;
     const endCell = isAfter(checkOut, windowEnd) ? windowEnd : checkOut;
 
-    const spanDays = differenceInDays(endCell, startCell) + 1;
+    const span = differenceInDays(endCell, startCell) + 1;
 
-    // Half-cell offsets
-    const leftOffsetPercent = 50; // always start in middle of check-in
-    const rightOffsetPercent = 50; // always end in middle of check-out
+    // Half-cell offsets for first and last cell
+    const leftPercent = isBefore(checkIn, windowStart) ? 0 : 50;
+    const rightPercent = isAfter(checkOut, windowEnd) ? 0 : 50;
 
-    return {
-      startCell,
-      spanDays,
-      leftOffsetPercent,
-      rightOffsetPercent,
-    };
+    return { start: true, span, leftPercent, rightPercent };
   };
 
   const modifiers = {
@@ -301,27 +278,18 @@ const CalendarManager = ({ hotelId }: Props) => {
                     </div>
 
                     {timelineDates.map((date, dateIndex) => {
-                      // Skip if this date was already rendered as part of a span
-                      if (renderedDateIndices.has(dateIndex)) {
-                        return null;
-                      }
+                      if (renderedDateIndices.has(dateIndex)) return null;
 
                       const startBooking = getStartCellBookingForRoom(room.id, date);
 
                       if (startBooking) {
                         const position = getBookingPosition(startBooking, date);
+                        if (!position) return null;
 
-                        // Mark the spanned dates as rendered
-                        for (let i = 0; i < position.span; i++) {
-                          renderedDateIndices.add(dateIndex + i);
-                        }
+                        for (let i = 0; i < position.span; i++) renderedDateIndices.add(dateIndex + i);
 
-                        // compute grid columns
                         const gridStart = 2 + dateIndex;
                         const gridEnd = 2 + dateIndex + position.span;
-
-                        const leftOffset = `${position.leftPercent}%`;
-                        const rightOffset = `${position.rightPercent}%`;
 
                         return (
                           <div
@@ -335,8 +303,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
                                 color: getStatusColor(startBooking.status),
-                                left: leftOffset,
-                                right: rightOffset,
+                                left: `${position.leftPercent}%`,
+                                right: `${position.rightPercent}%`,
                                 top: "8px",
                                 bottom: "8px",
                               }}
@@ -388,11 +356,7 @@ const CalendarManager = ({ hotelId }: Props) => {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
+              onSelect={(date) => date && setSelectedDate(date)}
               month={currentMonth}
               onMonthChange={setCurrentMonth}
               modifiers={modifiers}
