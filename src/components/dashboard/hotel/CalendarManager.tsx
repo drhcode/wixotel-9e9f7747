@@ -311,7 +311,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                               className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
                               style={{ 
                                 left: '50%',
-                                right: `calc(-${(position.span - 1) * 100}% - 50%)`,
+                                right: '50%',
                                 top: '8px',
                                 bottom: '8px',
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
