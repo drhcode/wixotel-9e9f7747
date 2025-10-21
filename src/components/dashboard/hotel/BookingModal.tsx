@@ -52,10 +52,10 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
   const fetchGuests = async () => {
     const { data } = await supabase
-      .from('guests')
-      .select('*')
-      .eq('hotel_id', hotelId)
-      .order('created_at', { ascending: false })
+      .from("guests")
+      .select("*")
+      .eq("hotel_id", hotelId)
+      .order("created_at", { ascending: false })
       .limit(9);
     setGuests(data || []);
   };
@@ -65,43 +65,74 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       fetchGuests();
       return;
     }
-    
+
     const { data } = await supabase
-      .from('guests')
-      .select('*')
-      .eq('hotel_id', hotelId)
+      .from("guests")
+      .select("*")
+      .eq("hotel_id", hotelId)
       .or(`name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`)
-      .order('created_at', { ascending: false });
+      .order("created_at", { ascending: false });
     setGuests(data || []);
   };
 
+  // ✅ Custom room availability logic (hotel-style)
   const fetchAvailableRooms = async () => {
-    // Normalize to start of day to avoid any TZ/time component issues
-    const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const ci = normalize(checkIn);
-    const co = normalize(checkOut);
+    try {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
 
-    const { data, error } = await supabase.rpc('get_available_rooms', {
-      p_hotel_id: hotelId,
-      p_check_in: format(ci, 'yyyy-MM-dd'),
-      p_check_out: format(co, 'yyyy-MM-dd')
-    });
-    
-    if (!error) {
-      setAvailableRooms(data || []);
-      // If current selected room is no longer available for the chosen dates, clear it
-      if (selectedRoom && !(data || []).some((r: any) => r.id === selectedRoom)) {
+      // Fetch all rooms of this hotel
+      const { data: allRooms, error: roomError } = await supabase.from("rooms").select("*").eq("hotel_id", hotelId);
+
+      if (roomError) throw roomError;
+
+      // Fetch all bookings (not cancelled) for this hotel
+      const { data: bookings, error: bookingError } = await supabase
+        .from("bookings")
+        .select("room_id, check_in, check_out, status")
+        .eq("hotel_id", hotelId)
+        .not("status", "eq", "cancelled");
+
+      if (bookingError) throw bookingError;
+
+      const availableRooms = allRooms.filter((room) => {
+        const roomBookings = bookings.filter((b) => b.room_id === room.id);
+
+        for (const b of roomBookings) {
+          const existingIn = new Date(b.check_in);
+          const existingOut = new Date(b.check_out);
+
+          // Overlap occurs if:
+          // new.checkIn < existingOut && new.checkOut > existingIn
+          // but we allow checkIn == existingOut or checkOut == existingIn
+          const overlap =
+            checkInDate < existingOut &&
+            checkOutDate > existingIn &&
+            !(checkInDate.getTime() === existingOut.getTime() || checkOutDate.getTime() === existingIn.getTime());
+
+          if (overlap) return false;
+        }
+
+        return true;
+      });
+
+      setAvailableRooms(availableRooms);
+
+      // Reset selected room if not in available list
+      if (selectedRoom && !availableRooms.some((r) => r.id === selectedRoom)) {
         setSelectedRoom("");
       }
+    } catch (error: any) {
+      toast.error("Failed to load available rooms: " + error.message);
     }
   };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
       let guestId = selectedGuest;
 
-      // If "new" is selected or no guest selected, create a new guest
-      if (selectedGuest === 'new' || !selectedGuest) {
+      if (selectedGuest === "new" || !selectedGuest) {
         if (!guestName || !guestPhone) {
           toast.error("Guest name and phone are required");
           setLoading(false);
@@ -109,15 +140,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         }
 
         const { data: newGuest, error: guestError } = await supabase
-          .from('guests')
-          .insert({ 
-            hotel_id: hotelId, 
-            name: guestName, 
-            phone: guestPhone, 
+          .from("guests")
+          .insert({
+            hotel_id: hotelId,
+            name: guestName,
+            phone: guestPhone,
             email: guestEmail,
             country: guestCountry,
             city: guestCity,
-            address: guestAddress
+            address: guestAddress,
           })
           .select()
           .single();
@@ -126,28 +157,28 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         guestId = newGuest.id;
       }
 
-      const room = availableRooms.find(r => r.id === selectedRoom);
-      const existingGuest = guests.find(g => g.id === guestId);
+      const room = availableRooms.find((r) => r.id === selectedRoom);
+      const existingGuest = guests.find((g) => g.id === guestId);
 
-      // Normalize dates before saving
       const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
       const ci = normalize(checkIn);
       const co = normalize(checkOut);
-      
-      const { error } = await supabase.from('bookings').insert({
+
+      const { error } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
         room_id: selectedRoom,
         guest_id: guestId,
         guest_name: guestName || existingGuest?.name,
         guest_phone: guestPhone || existingGuest?.phone,
         guest_email: guestEmail || existingGuest?.email,
-        check_in: format(ci, 'yyyy-MM-dd'),
-        check_out: format(co, 'yyyy-MM-dd'),
+        check_in: format(ci, "yyyy-MM-dd"),
+        check_out: format(co, "yyyy-MM-dd"),
         total_amount: room?.price || 0,
         guest_count: guestCount,
         notes,
-        status: 'confirmed'
+        status: "confirmed",
       });
+
       if (error) throw error;
       toast.success("Reservation created");
       onSuccess();
@@ -165,7 +196,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         <DialogHeader>
           <DialogTitle>New Reservation</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -174,17 +205,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(checkIn, 'PPP')}
+                    {format(checkIn, "PPP")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar 
-                    mode="single" 
-                    selected={checkIn} 
+                  <Calendar
+                    mode="single"
+                    selected={checkIn}
                     onSelect={(date) => {
                       if (date) {
                         setCheckIn(date);
-                        // Auto-adjust checkout if it's not after the new check-in
                         if (checkOut <= date) {
                           const nextDay = new Date(date);
                           nextDay.setDate(nextDay.getDate() + 1);
@@ -193,25 +223,25 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                         setCheckInOpen(false);
                         setCheckOutOpen(true);
                       }
-                    }} 
+                    }}
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            
+
             <div>
               <Label>Check-out</Label>
               <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(checkOut, 'PPP')}
+                    {format(checkOut, "PPP")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar 
-                    mode="single" 
-                    selected={checkOut} 
+                  <Calendar
+                    mode="single"
+                    selected={checkOut}
                     onSelect={(date) => {
                       if (date) {
                         setCheckOut(date);
@@ -232,7 +262,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 <SelectValue placeholder="Select room" />
               </SelectTrigger>
               <SelectContent>
-                {availableRooms.map(room => (
+                {availableRooms.map((room) => (
                   <SelectItem key={room.id} value={room.id}>
                     {room.room_number || room.name} - €{room.price}/night
                   </SelectItem>
@@ -258,8 +288,10 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="new">+ Add New Guest</SelectItem>
-                  {guests.map(guest => (
-                    <SelectItem key={guest.id} value={guest.id}>{guest.name}</SelectItem>
+                  {guests.map((guest) => (
+                    <SelectItem key={guest.id} value={guest.id}>
+                      {guest.name}
+                    </SelectItem>
                   ))}
                   {guests.length === 0 && guestSearchTerm && (
                     <div className="text-sm text-muted-foreground p-2">No guests found</div>
@@ -269,7 +301,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </div>
           </div>
 
-          {(!selectedGuest || selectedGuest === 'new') && (
+          {(!selectedGuest || selectedGuest === "new") && (
             <>
               <div>
                 <Label>Guest Name *</Label>
@@ -304,11 +336,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
           <div>
             <Label>Number of Guests</Label>
-            <Input 
-              type="number" 
-              min="1" 
-              value={guestCount} 
-              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)} 
+            <Input
+              type="number"
+              min="1"
+              value={guestCount}
+              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)}
             />
           </div>
 
@@ -321,7 +353,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             <Button onClick={handleSubmit} disabled={loading || !selectedRoom}>
               {loading ? "Creating..." : "Create Reservation"}
             </Button>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
           </div>
         </div>
       </DialogContent>
