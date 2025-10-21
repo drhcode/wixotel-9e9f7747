@@ -20,14 +20,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
 
-  // Drag state
-  const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
-  const [dragEndIndex, setDragEndIndex] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragPreview, setDragPreview] = useState<{ roomId: string; start: number; end: number } | null>(null);
-  const [prefilledDates, setPrefilledDates] = useState<{ start: Date; end: Date } | null>(null);
-  const [prefilledRoomId, setPrefilledRoomId] = useState<string | null>(null);
-
   const DEFAULT_WINDOW_DAYS = 12;
 
   const fetchRooms = async () => {
@@ -83,7 +75,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     }
   };
 
-  // Generate full month dates
   const generateFullMonthDates = () => {
     const start = startOfMonth(timelineStartDate);
     const end = endOfMonth(timelineStartDate);
@@ -96,7 +87,6 @@ const CalendarManager = ({ hotelId }: Props) => {
     return dates;
   };
 
-  // Generate visible window dates
   const generateTimelineWindowDates = () => {
     const dates: Date[] = [];
     for (let i = 0; i < DEFAULT_WINDOW_DAYS; i++) {
@@ -142,9 +132,25 @@ const CalendarManager = ({ hotelId }: Props) => {
         </Button>
       </div>
 
+      {/* Timeline Navigation */}
+      <div className="flex items-center gap-2 mb-2">
+        <Button size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, -DEFAULT_WINDOW_DAYS))}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button size="icon" onClick={() => setTimelineStartDate(startOfDay(new Date()))}>
+          Today
+        </Button>
+        <Button size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, DEFAULT_WINDOW_DAYS))}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-muted-foreground ml-2">
+          Window: {format(timelineDates[0], "MMM dd")} - {format(timelineDates[timelineDates.length - 1], "MMM dd")}
+        </span>
+      </div>
+
       {/* Timeline Table */}
       <div className="overflow-x-auto border rounded-lg">
-        <div className="min-w-[1000px]">
+        <div className="min-w-[1200px]">
           {/* Header Row */}
           <div className="grid" style={{ gridTemplateColumns: "300px repeat(auto-fill, minmax(80px,1fr))" }}>
             <div className="p-4 border-b border-r font-bold bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
@@ -230,8 +236,8 @@ const CalendarManager = ({ hotelId }: Props) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         hotelId={hotelId}
-        prefilledDates={prefilledDates}
-        prefilledRoomId={prefilledRoomId}
+        prefilledDates={null}
+        prefilledRoomId={null}
         onSuccess={fetchBookings}
       />
       {selectedBooking && (
