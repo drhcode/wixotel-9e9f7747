@@ -49,11 +49,16 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const fetchAvailableRooms = async () => {
     if (!checkIn || !checkOut) return;
     
+    // Normalize to start of day to avoid TZ issues
+    const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const ci = normalize(checkIn);
+    const co = normalize(checkOut);
+    
     const { data, error } = await supabase
       .rpc('get_available_rooms', {
         p_hotel_id: booking.hotel_id,
-        p_check_in: format(checkIn, 'yyyy-MM-dd'),
-        p_check_out: format(checkOut, 'yyyy-MM-dd')
+        p_check_in: format(ci, 'yyyy-MM-dd'),
+        p_check_out: format(co, 'yyyy-MM-dd')
       });
 
     if (!error) {
@@ -63,7 +68,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       }
     }
   };
-
   const canCheckIn = () => {
     return isToday(new Date(booking.check_in));
   };
@@ -104,15 +108,19 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
 
     setLoading(true);
+    // Normalize dates before updating
+    const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const ci = normalize(checkIn);
+    const co = normalize(checkOut);
+
     const { error } = await supabase
       .from('bookings')
       .update({
-        check_in: format(checkIn, 'yyyy-MM-dd'),
-        check_out: format(checkOut, 'yyyy-MM-dd'),
+        check_in: format(ci, 'yyyy-MM-dd'),
+        check_out: format(co, 'yyyy-MM-dd'),
         room_id: selectedRoom
       })
       .eq('id', booking.id);
-
     setLoading(false);
     if (error) {
       toast.error("Failed to update booking");

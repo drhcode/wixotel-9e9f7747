@@ -76,10 +76,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   };
 
   const fetchAvailableRooms = async () => {
+    // Normalize to start of day to avoid any TZ/time component issues
+    const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const ci = normalize(checkIn);
+    const co = normalize(checkOut);
+
     const { data, error } = await supabase.rpc('get_available_rooms', {
       p_hotel_id: hotelId,
-      p_check_in: format(checkIn, 'yyyy-MM-dd'),
-      p_check_out: format(checkOut, 'yyyy-MM-dd')
+      p_check_in: format(ci, 'yyyy-MM-dd'),
+      p_check_out: format(co, 'yyyy-MM-dd')
     });
     
     if (!error) {
@@ -90,7 +95,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       }
     }
   };
-
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -124,6 +128,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
       const room = availableRooms.find(r => r.id === selectedRoom);
       const existingGuest = guests.find(g => g.id === guestId);
+
+      // Normalize dates before saving
+      const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const ci = normalize(checkIn);
+      const co = normalize(checkOut);
       
       const { error } = await supabase.from('bookings').insert({
         hotel_id: hotelId,
@@ -132,14 +141,13 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         guest_name: guestName || existingGuest?.name,
         guest_phone: guestPhone || existingGuest?.phone,
         guest_email: guestEmail || existingGuest?.email,
-        check_in: format(checkIn, 'yyyy-MM-dd'),
-        check_out: format(checkOut, 'yyyy-MM-dd'),
+        check_in: format(ci, 'yyyy-MM-dd'),
+        check_out: format(co, 'yyyy-MM-dd'),
         total_amount: room?.price || 0,
         guest_count: guestCount,
         notes,
         status: 'confirmed'
       });
-
       if (error) throw error;
       toast.success("Reservation created");
       onSuccess();
