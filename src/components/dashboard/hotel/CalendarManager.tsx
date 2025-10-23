@@ -166,25 +166,21 @@ const CalendarManager = ({ hotelId }: Props) => {
 
     // Start cell for this booking within current window
     const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
+    
+    // End cell is one day before check-out (check-out day is not occupied)
+    const lastOccupiedDay = addDays(checkOut, -1);
+    const endCell = new Date(Math.min(lastOccupiedDay.getTime(), lastVisibleDate.getTime()));
 
     if (isSameDay(startCell, currentDate)) {
-      // End cell within current window (we include the check-out cell so blocks can end mid-cell)
-      const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
-      const span = Math.max(1, differenceInDays(endCell, startCell)); // includes both start and end cells
-
-      // compute percent offsets: middle of first cell and middle of last cell relative to container
-      // If span === 1, leftPercent and rightPercent will both be 50 (so element is centered).
-      const leftPercent = 50 / span;
-      const rightPercent = 50 / span;
+      // Calculate span as number of occupied cells
+      const span = Math.max(1, differenceInDays(endCell, startCell) + 1);
 
       return {
         start: true,
-        span: Math.max(1, span),
-        leftPercent,
-        rightPercent,
+        span,
       };
     }
-    return { start: false, span: 0, leftPercent: 0, rightPercent: 0 };
+    return { start: false, span: 0 };
   };
 
   const modifiers = {
@@ -324,9 +320,6 @@ const CalendarManager = ({ hotelId }: Props) => {
                         const gridStart = 2 + dateIndex;
                         const gridEnd = 2 + dateIndex + position.span;
 
-                        const leftOffset = `${position.leftPercent}%`;
-                        const rightOffset = `${position.rightPercent}%`;
-
                         return (
                           <div
                             key={date.toISOString()}
@@ -334,18 +327,18 @@ const CalendarManager = ({ hotelId }: Props) => {
                             style={{ gridColumnStart: gridStart, gridColumnEnd: gridEnd }}
                           >
                             <div
-  className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
-  style={{
-    backgroundColor: `${getStatusColor(startBooking.status)}20`,
-    border: `2px solid ${getStatusColor(startBooking.status)}`,
-    color: getStatusColor(startBooking.status),
-    left: leftOffset,
-    right: rightOffset,
-    top: "8px",
-    bottom: "8px",
-  }}
-  onClick={() => setSelectedBooking(startBooking)}
->
+                              className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+                              style={{
+                                backgroundColor: `${getStatusColor(startBooking.status)}20`,
+                                border: `2px solid ${getStatusColor(startBooking.status)}`,
+                                color: getStatusColor(startBooking.status),
+                                left: "8px",
+                                right: "8px",
+                                top: "8px",
+                                bottom: "8px",
+                              }}
+                              onClick={() => setSelectedBooking(startBooking)}
+                            >
                               <div className="font-semibold truncate">
                                 {startBooking.guests?.name || startBooking.guest_name}
                               </div>
