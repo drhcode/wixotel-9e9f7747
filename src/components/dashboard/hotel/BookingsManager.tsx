@@ -75,6 +75,36 @@ const BookingsManager = ({ hotelId }: Props) => {
     }
   };
 
+  const exportToCSV = () => {
+    const headers = ['Guest Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
+    const csvData = filteredBookings.map(booking => [
+      booking.guest_name || '',
+      booking.guest_email || '',
+      booking.guest_phone || '',
+      booking.rooms?.name || '',
+      new Date(booking.check_in).toLocaleDateString(),
+      new Date(booking.check_out).toLocaleDateString(),
+      `€${booking.total_amount}`,
+      booking.status,
+      booking.payment_status,
+      booking.notes || ''
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().split('T')[0];
+    a.download = `reservations-${date}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -293,6 +323,14 @@ const BookingsManager = ({ hotelId }: Props) => {
               Clear All Data
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={exportToCSV}
+            disabled={filteredBookings.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
           <Button
             variant="outline"
             onClick={downloadTemplate}

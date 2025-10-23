@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Download } from "lucide-react";
 import { format } from "date-fns";
 import BookingDetailsModal from "../hotel/BookingDetailsModal";
 import {
@@ -52,6 +53,36 @@ const AllReservations = () => {
     setBookings(data || []);
   };
 
+  const exportToCSV = () => {
+    const headers = ['Hotel', 'Guest Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
+    const csvData = filteredBookings.map(booking => [
+      booking.hotels?.name || '',
+      booking.guests?.name || booking.guest_name || '',
+      booking.guest_email || booking.guests?.email || '',
+      booking.guest_phone || booking.guests?.phone || '',
+      `Room ${booking.rooms?.room_number || booking.rooms?.name || ''}`,
+      format(new Date(booking.check_in), 'MMM dd, yyyy'),
+      format(new Date(booking.check_out), 'MMM dd, yyyy'),
+      `€${booking.total_amount}`,
+      booking.status,
+      booking.payment_status,
+      booking.notes || ''
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reservations-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'reserved': return '#7C3BED';
@@ -71,9 +102,15 @@ const AllReservations = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">All Reservations</h2>
-        <p className="text-muted-foreground">View and search all bookings across hotels · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold">All Reservations</h2>
+          <p className="text-muted-foreground">View and search all bookings across hotels · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" disabled={filteredBookings.length === 0}>
+          <Download className="h-4 w-4 mr-2" />
+          Export CSV
+        </Button>
       </div>
 
       <Card>
