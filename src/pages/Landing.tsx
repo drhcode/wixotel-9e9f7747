@@ -13,6 +13,7 @@ const Landing = () => {
     });
   }, [navigate]);
   const features = [
+    {
       icon: Hotel,
       title: "Hotel Management",
       description: "Manage multiple properties, rooms, and amenities from one central dashboard"
