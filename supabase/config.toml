@@ -1,1 +1,10 @@
 project_id = "vzxviibhpbzuiucgodiw"
+
+[functions.verify-recaptcha]
+verify_jwt = false
+
+[functions.import-csv]
+verify_jwt = true
+
+[functions.clear-hotel-data]
+verify_jwt = true

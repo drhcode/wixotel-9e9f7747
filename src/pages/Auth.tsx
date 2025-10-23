@@ -8,10 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { executeRecaptcha } = useRecaptcha();
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -30,6 +32,20 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Execute reCAPTCHA
+      const recaptchaToken = await executeRecaptcha('signup');
+      if (recaptchaToken) {
+        const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
+          body: { token: recaptchaToken }
+        });
+
+        if (!verifyData?.success) {
+          toast.error("reCAPTCHA verification failed. Please try again.");
+          setLoading(false);
+          return;
+        }
+      }
+
       // Sign up the user
       const { data: authData, error: signupError } = await supabase.auth.signUp({
         email: signupData.email,
@@ -73,6 +89,20 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Execute reCAPTCHA
+      const recaptchaToken = await executeRecaptcha('login');
+      if (recaptchaToken) {
+        const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
+          body: { token: recaptchaToken }
+        });
+
+        if (!verifyData?.success) {
+          toast.error("reCAPTCHA verification failed. Please try again.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email: loginData.email,
         password: loginData.password
