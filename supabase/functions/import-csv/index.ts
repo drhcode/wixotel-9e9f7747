@@ -296,7 +296,9 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   for (let i = 0; i < csvData.length; i += 50) {
     const batch = csvData.slice(i, i + 50);
     
-    for (const reservation of batch) {
+    for (let j = 0; j < batch.length; j++) {
+      const reservation = batch[j];
+      const rowNumber = i + j + 1;
       try {
         // Use the determined hotelId (either from user or from CSV)
         let reservationHotelId = hotelId;
@@ -316,7 +318,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
 
         if (!reservationHotelId) {
-          errors.push(`Reservation has no matching hotel`);
+          errors.push(`Row ${rowNumber}: Reservation has no matching hotel`);
           continue;
         }
 
@@ -355,7 +357,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
               .single();
 
             if (guestError) {
-              errors.push(`Failed to create guest ${guestName}: ${guestError.message}`);
+              errors.push(`Row ${rowNumber}: Failed to create guest ${guestName}: ${guestError.message}`);
               continue;
             }
             guestId = newGuest.id;
@@ -376,7 +378,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
             .single();
 
           if (guestError) {
-            errors.push(`Failed to create guest ${guestName}: ${guestError.message}`);
+            errors.push(`Row ${rowNumber}: Failed to create guest ${guestName}: ${guestError.message}`);
             continue;
           }
           guestId = newGuest.id;
@@ -392,7 +394,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
 
         if (!roomId) {
-          errors.push(`Room "${roomNumber}" not found for reservation`);
+          errors.push(`Row ${rowNumber}: Room "${roomNumber}" not found for guest ${guestName}`);
           continue;
         }
 
@@ -413,22 +415,28 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         });
 
         if (bookingError) {
-          errors.push(`Failed to create booking: ${bookingError.message}`);
+          errors.push(`Row ${rowNumber}: Failed to create booking for guest ${guestName}: ${bookingError.message}`);
         } else {
           imported++;
         }
       } catch (err: any) {
-        errors.push(`Reservation import error: ${err.message}`);
+        errors.push(`Row ${rowNumber}: Reservation import error: ${err.message}`);
       }
     }
 
     console.log(`Processed batch ${Math.floor(i / 50) + 1}, imported: ${imported}`);
   }
 
+  console.log(`Import complete. Total imported: ${imported} out of ${csvData.length}`);
+  if (errors.length > 0) {
+    console.log(`Total errors: ${errors.length}`);
+    errors.forEach(error => console.log(error));
+  }
+
   return {
     success: errors.length === 0,
-    message: errors.length === 0 ? `Successfully imported ${imported} reservations` : 'Import completed with errors',
+    message: errors.length === 0 ? `Successfully imported ${imported} reservations` : `Import completed with errors. Imported ${imported} out of ${csvData.length}`,
     imported,
-    errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+    errors: errors.length > 0 ? errors : undefined
   };
 }
