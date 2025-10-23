@@ -42,7 +42,7 @@ const Landing = () => {
   const plans = [
     {
       name: "Basic",
-      price: "€9",
+      price: "€15.99",
       period: "/month",
       features: [
         "Up to 10 rooms",
@@ -54,7 +54,7 @@ const Landing = () => {
     },
     {
       name: "Pro",
-      price: "€12.99",
+      price: "€19.99",
       period: "/month",
       popular: true,
       features: [
@@ -68,7 +68,7 @@ const Landing = () => {
     },
     {
       name: "Premium",
-      price: "€19.99",
+      price: "€22.99",
       period: "/month",
       features: [
         "Unlimited rooms",

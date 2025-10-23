@@ -38,6 +38,7 @@ const RoomsManager = ({ hotelId }: Props) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [deletingRoom, setDeletingRoom] = useState<string | null>(null);
+  const [hotelPlan, setHotelPlan] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -47,7 +48,36 @@ const RoomsManager = ({ hotelId }: Props) => {
 
   useEffect(() => {
     fetchRooms();
+    fetchHotelPlan();
   }, [hotelId]);
+
+  const getRoomLimit = (plan: string | null) => {
+    switch (plan) {
+      case 'basic':
+        return 10;
+      case 'pro':
+        return 25;
+      case 'premium':
+        return null; // unlimited
+      default:
+        return 10; // default to basic
+    }
+  };
+
+  const fetchHotelPlan = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hotels')
+        .select('subscription_plan')
+        .eq('id', hotelId)
+        .single();
+
+      if (error) throw error;
+      setHotelPlan(data.subscription_plan);
+    } catch (error: any) {
+      console.error(error);
+    }
+  };
 
   const fetchRooms = async () => {
     try {
@@ -83,6 +113,13 @@ const RoomsManager = ({ hotelId }: Props) => {
         if (error) throw error;
         toast.success("Room updated successfully");
       } else {
+        // Check room limit before adding new room
+        const roomLimit = getRoomLimit(hotelPlan);
+        if (roomLimit !== null && rooms.length >= roomLimit) {
+          toast.error(`Room limit reached for your ${hotelPlan} plan (${roomLimit} rooms max). Upgrade to add more rooms.`);
+          return;
+        }
+
         const { error } = await supabase
           .from('rooms')
           .insert({
@@ -162,7 +199,14 @@ const RoomsManager = ({ hotelId }: Props) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">Rooms Management</h2>
-          <p className="text-muted-foreground">Manage your hotel rooms and availability</p>
+          <p className="text-muted-foreground">
+            Manage your hotel rooms and availability
+            {hotelPlan && (
+              <span className="ml-2">
+                ({rooms.length}/{getRoomLimit(hotelPlan) || '∞'} rooms used - {hotelPlan} plan)
+              </span>
+            )}
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>

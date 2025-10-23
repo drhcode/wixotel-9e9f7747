@@ -254,10 +254,6 @@ const CalendarManager = ({ hotelId }: Props) => {
             <div className="w-4 h-4 rounded" style={{ backgroundColor: "#C06969" }}></div>
             <span className="text-sm font-medium">Checked Out</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-destructive"></div>
-            <span className="text-sm font-medium">Cancelled</span>
-          </div>
         </div>
       </Card>
 
