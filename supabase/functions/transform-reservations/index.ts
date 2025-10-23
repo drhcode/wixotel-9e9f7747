@@ -110,7 +110,10 @@ function cleanValue(value: string): string {
 }
 
 function transformReservations(oldData: OldReservation[]): NewReservation[] {
+  const problematicRows = [144, 157, 169, 174, 186, 194, 229, 254, 257, 258, 263, 268, 282, 296, 297, 298];
+  
   return oldData.map((old, index) => {
+    const rowNum = index + 1;
     const firstName = cleanValue(old.first_name);
     const lastName = cleanValue(old.last_name);
     const guestName = [firstName, lastName].filter(n => n).join(' ') || 'Guest';
@@ -122,9 +125,9 @@ function transformReservations(oldData: OldReservation[]): NewReservation[] {
     
     const roomNumber = cleanValue(old.room_name);
     
-    // Log if room_name is missing or empty
-    if (!roomNumber || roomNumber === 'undefined') {
-      console.log(`Row ${index + 1}: Missing room_name. Guest: ${guestName}, Raw room_name: "${old.room_name}"`);
+    // Log problematic rows in detail
+    if (problematicRows.includes(rowNum)) {
+      console.log(`Row ${rowNum}: Guest="${guestName}", room_name raw="${old.room_name}", cleaned="${roomNumber}"`);
     }
     
     const status = mapStatus(old.reservation_status);
