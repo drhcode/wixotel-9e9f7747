@@ -425,6 +425,7 @@ const CalendarManager = ({ hotelId }: Props) => {
               row: "flex w-full mt-2",
               cell: "flex-1 text-center text-sm p-1 relative",
               day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
+              day_selected: "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
             }}
           />
         </Card>
