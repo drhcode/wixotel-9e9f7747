@@ -237,6 +237,11 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Badge>{booking.status}</Badge>
           </div>
 
+          <div>
+            <p className="text-sm text-muted-foreground">Total Price</p>
+            <p className="font-medium">€{booking.total_amount}</p>
+          </div>
+
           {booking.notes && (
             <div>
               <p className="text-sm text-muted-foreground">Notes</p>

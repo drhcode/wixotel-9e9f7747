@@ -40,6 +40,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [loading, setLoading] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -95,6 +96,17 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       }
     }
   };
+
+  // Calculate nights and auto-update price
+  useEffect(() => {
+    if (selectedRoom && checkIn && checkOut) {
+      const room = availableRooms.find(r => r.id === selectedRoom);
+      if (room) {
+        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+        setTotalPrice(room.price * nights);
+      }
+    }
+  }, [selectedRoom, checkIn, checkOut, availableRooms]);
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -143,7 +155,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         guest_email: guestEmail || existingGuest?.email,
         check_in: format(ci, 'yyyy-MM-dd'),
         check_out: format(co, 'yyyy-MM-dd'),
-        total_amount: room?.price || 0,
+        total_amount: totalPrice,
         guest_count: guestCount,
         notes,
         status: 'confirmed'
@@ -239,6 +251,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 ))}
               </SelectContent>
             </Select>
+            {selectedRoom && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Room price: €{availableRooms.find(r => r.id === selectedRoom)?.price}/night
+              </p>
+            )}
           </div>
 
           <div>
@@ -310,6 +327,21 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               value={guestCount} 
               onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)} 
             />
+          </div>
+
+          <div>
+            <Label>Total Price (€)</Label>
+            <Input 
+              type="number" 
+              min="0" 
+              step="0.01"
+              value={totalPrice} 
+              onChange={(e) => setTotalPrice(parseFloat(e.target.value) || 0)} 
+              placeholder="Auto-calculated"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Auto-calculated based on nights. You can adjust for custom rates.
+            </p>
           </div>
 
           <div>
