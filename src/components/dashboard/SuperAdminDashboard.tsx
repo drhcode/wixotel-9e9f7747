@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut, Shield } from "lucide-react";
+import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SuperAdminSidebar } from "./superadmin/SuperAdminSidebar";
 import HotelManagement from "./superadmin/HotelManagement";
 import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
 import AllReservations from "./superadmin/AllReservations";
@@ -39,6 +40,7 @@ const SuperAdminDashboard = () => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [stats, setStats] = useState<Stats>({ totalHotels: 0, activeHotels: 0, pendingHotels: 0, totalRevenue: 0 });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchData();
@@ -131,44 +133,11 @@ const SuperAdminDashboard = () => {
     return <Badge className={colors[plan] || ""}>{plan}</Badge>;
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Hotel className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                HotelManager
-              </span>
-              <Badge variant="secondary" className="ml-2">Super Admin</Badge>
-            </div>
-            <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Platform Overview</h1>
-          <p className="text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="hotels">Hotels</TabsTrigger>
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="reservations">Reservations</TabsTrigger>
-            <TabsTrigger value="guests">Guests</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return (
+          <>
             {/* Stats Grid */}
             <div className="grid md:grid-cols-4 gap-6">
               <Card>
@@ -309,30 +278,66 @@ const SuperAdminDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+          </>
+        );
+      case "hotels":
+        return <HotelManagement />;
+      case "plans":
+        return <SubscriptionPlansManagement />;
+      case "subscriptions":
+        return <SubscriptionsManagement />;
+      case "reservations":
+        return <AllReservations />;
+      case "guests":
+        return <AllGuests />;
+      default:
+        return null;
+    }
+  };
 
-          <TabsContent value="hotels">
-            <HotelManagement />
-          </TabsContent>
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <SuperAdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <header className="border-b bg-card sticky top-0 z-10">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <SidebarTrigger />
+                  <div className="flex items-center gap-2">
+                    <Hotel className="h-8 w-8 text-primary" />
+                    <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                      HotelManager
+                    </span>
+                    <Badge variant="secondary" className="ml-2">Super Admin</Badge>
+                  </div>
+                </div>
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </header>
 
-          <TabsContent value="plans">
-            <SubscriptionPlansManagement />
-          </TabsContent>
+          <div className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-8">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-2">Platform Overview</h1>
+                <p className="text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
+              </div>
 
-          <TabsContent value="subscriptions">
-            <SubscriptionsManagement />
-          </TabsContent>
-
-          <TabsContent value="reservations">
-            <AllReservations />
-          </TabsContent>
-
-          <TabsContent value="guests">
-            <AllGuests />
-          </TabsContent>
-        </Tabs>
+              <div className="space-y-6">
+                {renderContent()}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

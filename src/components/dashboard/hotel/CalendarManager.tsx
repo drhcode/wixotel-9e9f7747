@@ -399,22 +399,20 @@ const CalendarManager = ({ hotelId }: Props) => {
               </Button>
             </div>
           </div>
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              modifiers={modifiers}
-              modifiersStyles={modifiersStyles}
-              className="w-full max-w-full"
-            />
-          </div>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            modifiers={modifiers}
+            modifiersStyles={modifiersStyles}
+            className="w-full"
+          />
         </Card>
 
         <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
