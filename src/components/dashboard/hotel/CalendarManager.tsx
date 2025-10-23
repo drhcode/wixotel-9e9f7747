@@ -170,7 +170,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     if (isSameDay(startCell, currentDate)) {
       // End cell within current window (we include the check-out cell so blocks can end mid-cell)
       const endCell = new Date(Math.min(checkOut.getTime(), lastVisibleDate.getTime()));
-      const span = differenceInDays(endCell, startCell) + 1; // includes both start and end cells
+      const span = Math.max(1, differenceInDays(endCell, startCell)); // includes both start and end cells
 
       // compute percent offsets: middle of first cell and middle of last cell relative to container
       // If span === 1, leftPercent and rightPercent will both be 50 (so element is centered).
