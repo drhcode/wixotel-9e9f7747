@@ -131,14 +131,14 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
                 {REQUIRED_FIELDS.includes(field) && <span className="text-destructive ml-1">*</span>}
               </Label>
               <Select
-                value={mapping[field] || ""}
-                onValueChange={(v) => handleChange(field, v || null)}
+                value={mapping[field] || "__none__"}
+                onValueChange={(v) => handleChange(field, v === "__none__" ? null : v)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select CSV column" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">-- None --</SelectItem>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="__none__">-- None --</SelectItem>
                   {headers.map((h) => (
                     <SelectItem key={`${field}-${h}`} value={h}>{h}</SelectItem>
                   ))}
