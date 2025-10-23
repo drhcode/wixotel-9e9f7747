@@ -301,6 +301,12 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   const errors: string[] = [];
   let imported = 0;
 
+  // Log first row to debug CSV structure
+  if (csvData.length > 0) {
+    console.log('First CSV row sample:', JSON.stringify(csvData[0]));
+    console.log('CSV headers detected:', Object.keys(csvData[0]));
+  }
+
   // If userHotelId is provided, only import for that hotel (hotel admin)
   let hotelId: string;
   
@@ -378,23 +384,61 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
       try {
         let reservationHotelId = hotelId;
         
-        // Clean and normalize all fields
-        const guestName = cleanValue(reservation.guest_name) || cleanValue(reservation.name) || 'Guest';
-        const guestPhone = cleanValue(reservation.guest_phone) || cleanValue(reservation.phone) || '';
-        const guestEmail = cleanValue(reservation.guest_email) || cleanValue(reservation.email) || null;
-        const guestCountry = cleanValue(reservation.guest_country) || cleanValue(reservation.country) || null;
-        const guestCity = cleanValue(reservation.guest_city) || cleanValue(reservation.city) || null;
-        const guestAddress = cleanValue(reservation.guest_address) || cleanValue(reservation.address) || null;
-        const guestCount = parseInt(cleanValue(reservation.guest_count) || '1') || 1;
+        // Clean and normalize all fields - try multiple possible field names
+        const guestName = cleanValue(reservation.guest_name) 
+          || cleanValue(reservation.name) 
+          || cleanValue(reservation.Name)
+          || cleanValue(reservation.Guest)
+          || cleanValue(reservation['Guest Name'])
+          || 'Guest';
+        
+        const guestPhone = cleanValue(reservation.guest_phone) 
+          || cleanValue(reservation.phone) 
+          || cleanValue(reservation.Phone)
+          || cleanValue(reservation['Guest Phone'])
+          || '';
+        
+        const guestEmail = cleanValue(reservation.guest_email) 
+          || cleanValue(reservation.email) 
+          || cleanValue(reservation.Email)
+          || cleanValue(reservation['Guest Email'])
+          || null;
+        
+        const guestCountry = cleanValue(reservation.guest_country) 
+          || cleanValue(reservation.country) 
+          || cleanValue(reservation.Country)
+          || null;
+        
+        const guestCity = cleanValue(reservation.guest_city) 
+          || cleanValue(reservation.city) 
+          || cleanValue(reservation.City)
+          || null;
+        
+        const guestAddress = cleanValue(reservation.guest_address) 
+          || cleanValue(reservation.address) 
+          || cleanValue(reservation.Address)
+          || null;
+        
+        const guestCount = parseInt(cleanValue(reservation.guest_count) 
+          || cleanValue(reservation.guests) 
+          || cleanValue(reservation['Guest Count'])
+          || '1') || 1;
+        
+        // Log every 10th row to help debug
+        if (rowNumber % 10 === 0) {
+          console.log(`Row ${rowNumber} - Guest: ${guestName}, Room: ${cleanValue(reservation.room_number)}`);
+        }
         
         // Extract room number - try multiple field names
         const roomNumber = cleanValue(reservation.room_number) 
           || cleanValue(reservation.room) 
           || cleanValue(reservation.room_name)
-          || cleanValue(reservation.Room);
+          || cleanValue(reservation.Room)
+          || cleanValue(reservation['Room Number']);
         
         if (!roomNumber) {
           errors.push(`Row ${rowNumber}: Missing room_number - guest: ${guestName}`);
+          console.log(`Row ${rowNumber} full data:`, reservation);
           continue;
         }
 
@@ -462,12 +506,36 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
 
         // Parse dates and amounts
-        const checkIn = cleanValue(reservation.check_in) || cleanValue(reservation.checkin_date) || cleanValue(reservation.checkin);
-        const checkOut = cleanValue(reservation.check_out) || cleanValue(reservation.checkout_date) || cleanValue(reservation.checkout);
-        const totalAmount = parseFloat(cleanValue(reservation.total_amount) || cleanValue(reservation.total) || cleanValue(reservation.amount) || '0');
-        const status = normalizeStatus(cleanValue(reservation.status));
-        const paymentStatus = normalizePaymentStatus(cleanValue(reservation.payment_status));
-        const notes = cleanValue(reservation.notes) || null;
+        const checkIn = cleanValue(reservation.check_in) 
+          || cleanValue(reservation.checkin_date) 
+          || cleanValue(reservation.checkin)
+          || cleanValue(reservation['Check In'])
+          || cleanValue(reservation['Check-In']);
+        
+        const checkOut = cleanValue(reservation.check_out) 
+          || cleanValue(reservation.checkout_date) 
+          || cleanValue(reservation.checkout)
+          || cleanValue(reservation['Check Out'])
+          || cleanValue(reservation['Check-Out']);
+        
+        const totalAmount = parseFloat(cleanValue(reservation.total_amount) 
+          || cleanValue(reservation.total) 
+          || cleanValue(reservation.amount)
+          || cleanValue(reservation.Total)
+          || cleanValue(reservation['Total Amount']) 
+          || '0');
+        
+        const status = normalizeStatus(cleanValue(reservation.status) 
+          || cleanValue(reservation.Status)
+          || cleanValue(reservation['Booking Status']));
+        
+        const paymentStatus = normalizePaymentStatus(cleanValue(reservation.payment_status) 
+          || cleanValue(reservation['Payment Status'])
+          || cleanValue(reservation.Payment));
+        
+        const notes = cleanValue(reservation.notes) 
+          || cleanValue(reservation.Notes)
+          || null;
 
         if (!checkIn || !checkOut) {
           errors.push(`Row ${rowNumber}: Missing check_in or check_out dates - guest: ${guestName}`);
