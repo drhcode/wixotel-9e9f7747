@@ -130,7 +130,7 @@ const Auth = () => {
         <div className="flex items-center justify-center gap-2 mb-8">
           <Hotel className="h-8 w-8 text-primary" />
           <span className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            HotelManager
+            Wixotel
           </span>
         </div>
 
