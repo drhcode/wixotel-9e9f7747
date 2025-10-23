@@ -6,26 +6,16 @@ const corsHeaders = {
 };
 
 interface OldReservation {
-  id: string;
-  property_id: string;
   reservation_status: string;
   check_in_date: string;
   check_out_date: string;
   adults: string;
-  kids: string;
   room_name: string;
-  room_id: string;
-  cost_per_night: string;
-  total_nights: string;
-  guest_id: string;
   first_name: string;
   last_name: string;
   phone: string;
-  country: string;
   email: string;
   note: string;
-  created_at: string;
-  updated_at: string;
 }
 
 interface NewReservation {
@@ -127,12 +117,8 @@ function transformReservations(oldData: OldReservation[]): NewReservation[] {
     
     const phone = cleanValue(old.phone);
     const email = cleanValue(old.email);
-    const country = cleanValue(old.country) || 'Albania';
     const note = cleanValue(old.note);
-    
-    const costPerNight = parseFloat(old.cost_per_night) || 0;
-    const totalNights = parseInt(old.total_nights) || 1;
-    const totalAmount = (costPerNight * totalNights).toFixed(2);
+    const adults = parseInt(old.adults) || 1;
     
     const roomNumber = extractRoomNumber(old.room_name);
     const status = mapStatus(old.reservation_status);
@@ -142,13 +128,13 @@ function transformReservations(oldData: OldReservation[]): NewReservation[] {
       guest_name: guestName,
       guest_phone: phone,
       guest_email: email,
-      guest_country: country,
+      guest_country: '',
       guest_city: '',
       guest_address: '',
       room_number: roomNumber,
       check_in: old.check_in_date,
       check_out: old.check_out_date,
-      total_amount: totalAmount,
+      total_amount: '0',
       status: status,
       payment_status: paymentStatus,
       notes: note
