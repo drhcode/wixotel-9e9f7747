@@ -244,6 +244,48 @@ function cleanValue(value: any): string {
   return String(value).trim();
 }
 
+// Helper to normalize booking status
+function normalizeStatus(status: string): string {
+  if (!status) return 'pending';
+  
+  const normalized = status.toLowerCase().trim();
+  
+  // Map various formats to database enum values
+  const statusMap: { [key: string]: string } = {
+    'checked in': 'checked_in',
+    'checked_in': 'checked_in',
+    'checkedin': 'checked_in',
+    'checked out': 'checked_out',
+    'checked_out': 'checked_out',
+    'checkedout': 'checked_out',
+    'confirmed': 'reserved',
+    'reserved': 'reserved',
+    'pending': 'pending',
+    'cancelled': 'cancelled',
+    'canceled': 'cancelled'
+  };
+  
+  return statusMap[normalized] || 'pending';
+}
+
+// Helper to normalize payment status
+function normalizePaymentStatus(status: string): string {
+  if (!status) return 'pending';
+  
+  const normalized = status.toLowerCase().trim();
+  
+  const statusMap: { [key: string]: string } = {
+    'paid': 'paid',
+    'pending': 'pending',
+    'cancelled': 'cancelled',
+    'canceled': 'cancelled',
+    'refunded': 'refunded',
+    'failed': 'failed'
+  };
+  
+  return statusMap[normalized] || 'pending';
+}
+
 async function importReservations(supabase: any, csvData: any[], userHotelId: string | null = null): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
@@ -412,8 +454,8 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         const checkIn = cleanValue(reservation.check_in) || cleanValue(reservation.checkin_date) || cleanValue(reservation.checkin);
         const checkOut = cleanValue(reservation.check_out) || cleanValue(reservation.checkout_date) || cleanValue(reservation.checkout);
         const totalAmount = parseFloat(cleanValue(reservation.total_amount) || cleanValue(reservation.total) || cleanValue(reservation.amount) || '0');
-        const status = cleanValue(reservation.status) || 'confirmed';
-        const paymentStatus = cleanValue(reservation.payment_status) || 'pending';
+        const status = normalizeStatus(cleanValue(reservation.status));
+        const paymentStatus = normalizePaymentStatus(cleanValue(reservation.payment_status));
         const notes = cleanValue(reservation.notes) || null;
 
         if (!checkIn || !checkOut) {
