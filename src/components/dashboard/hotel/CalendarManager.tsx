@@ -346,9 +346,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   }}
   onClick={() => setSelectedBooking(startBooking)}
 >
-  ...
-</div>
-
                               <div className="font-semibold truncate">
                                 {startBooking.guests?.name || startBooking.guest_name}
                               </div>
