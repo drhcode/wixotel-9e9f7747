@@ -1,12 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
 import heroImage from "@/assets/hotel-hero.jpg";
-
 const Landing = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/dashboard");
+    });
+  }, [navigate]);
   const features = [
-    {
       icon: Hotel,
       title: "Hotel Management",
       description: "Manage multiple properties, rooms, and amenities from one central dashboard"

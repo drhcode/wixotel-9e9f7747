@@ -13,29 +13,44 @@ const Dashboard = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
+    const fetchRole = async (userId: string) => {
+      try {
+        const { data: roleData, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .single();
 
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (session?.user) {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            if (roleData && mounted) {
-              setUserRole(roleData.role);
-              setLoading(false);
-            }
-          }
-        } else if (event === 'SIGNED_OUT') {
+        if (error) throw error;
+        if (mounted && roleData?.role) {
+          setUserRole(roleData.role);
+          sessionStorage.setItem('user_role', roleData.role);
+        }
+      } catch (err) {
+        console.error('Failed to fetch role', err);
+        if (mounted) navigate("/auth");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          // Defer heavy work outside the callback
+          setTimeout(() => fetchRole(session.user!.id), 0);
+        } else {
+          setLoading(false);
           navigate("/auth");
         }
+      } else if (event === 'SIGNED_OUT') {
+        sessionStorage.removeItem('user_role');
+        navigate("/auth");
       }
-    );
+    });
 
     // Then check for existing session
     checkUserAndRole();
