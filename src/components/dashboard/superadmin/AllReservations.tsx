@@ -73,7 +73,7 @@ const AllReservations = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">All Reservations</h2>
-        <p className="text-muted-foreground">View and search all bookings across hotels</p>
+        <p className="text-muted-foreground">View and search all bookings across hotels · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
       </div>
 
       <Card>

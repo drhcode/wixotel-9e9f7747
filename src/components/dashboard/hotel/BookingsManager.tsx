@@ -248,7 +248,7 @@ const BookingsManager = ({ hotelId }: Props) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
-          <p className="text-muted-foreground">View and manage all bookings</p>
+          <p className="text-muted-foreground">View and manage all bookings · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
           <Button
