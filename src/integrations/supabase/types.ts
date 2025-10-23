@@ -459,7 +459,12 @@ export type Database = {
         Returns: boolean
       }
       get_available_rooms: {
-        Args: { p_check_in: string; p_check_out: string; p_hotel_id: string }
+        Args: {
+          p_booking_id?: string
+          p_check_in: string
+          p_check_out: string
+          p_hotel_id: string
+        }
         Returns: {
           capacity: number
           id: string

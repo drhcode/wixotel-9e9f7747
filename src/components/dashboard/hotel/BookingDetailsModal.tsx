@@ -58,13 +58,15 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       .rpc('get_available_rooms', {
         p_hotel_id: booking.hotel_id,
         p_check_in: format(ci, 'yyyy-MM-dd'),
-        p_check_out: format(co, 'yyyy-MM-dd')
+        p_check_out: format(co, 'yyyy-MM-dd'),
+        p_booking_id: booking.id
       });
 
     if (!error) {
       setAvailableRooms(data || []);
-      if (selectedRoom && !(data || []).some((r: any) => r.id === selectedRoom)) {
-        setSelectedRoom("");
+      // Keep current room selected even if dates changed, as we excluded it from overlap check
+      if (!selectedRoom) {
+        setSelectedRoom(booking.room_id);
       }
     }
   };
