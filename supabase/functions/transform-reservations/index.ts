@@ -107,7 +107,7 @@ function mapStatus(oldStatus: string): string {
 }
 
 function mapPaymentStatus(reservationStatus: string): string {
-  if (reservationStatus === 'Checked Out') return 'paid';
+  if (reservationStatus === 'Checked Out') return 'completed';
   if (reservationStatus === 'Cancelled') return 'pending';
   return 'pending';
 }
