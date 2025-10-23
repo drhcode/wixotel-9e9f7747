@@ -110,7 +110,7 @@ function cleanValue(value: string): string {
 }
 
 function transformReservations(oldData: OldReservation[]): NewReservation[] {
-  return oldData.map(old => {
+  return oldData.map((old, index) => {
     const firstName = cleanValue(old.first_name);
     const lastName = cleanValue(old.last_name);
     const guestName = [firstName, lastName].filter(n => n).join(' ') || 'Guest';
@@ -121,6 +121,12 @@ function transformReservations(oldData: OldReservation[]): NewReservation[] {
     const adults = parseInt(old.adults) || 1;
     
     const roomNumber = cleanValue(old.room_name);
+    
+    // Log if room_name is missing or empty
+    if (!roomNumber || roomNumber === 'undefined') {
+      console.log(`Row ${index + 1}: Missing room_name. Guest: ${guestName}, Raw room_name: "${old.room_name}"`);
+    }
+    
     const status = mapStatus(old.reservation_status);
     const paymentStatus = mapPaymentStatus(old.reservation_status);
 
