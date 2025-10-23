@@ -9,7 +9,6 @@ import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut, Shield } fr
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import ImportCSV from "./hotel/ImportCSV";
 import HotelManagement from "./superadmin/HotelManagement";
 import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
 import AllReservations from "./superadmin/AllReservations";
@@ -160,14 +159,13 @@ const SuperAdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="hotels">Hotels</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="reservations">Reservations</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="import">Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -331,10 +329,6 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="guests">
             <AllGuests />
-          </TabsContent>
-
-          <TabsContent value="import">
-            <ImportCSV hotelId="" />
           </TabsContent>
         </Tabs>
       </div>
