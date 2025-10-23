@@ -412,6 +412,10 @@ const CalendarManager = ({ hotelId }: Props) => {
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
             className="w-full"
+            classNames={{
+              caption: "hidden",
+              nav: "hidden",
+            }}
           />
         </Card>
 
