@@ -15,7 +15,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import TransformReservationsCSV from "./TransformReservationsCSV";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,11 +37,28 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [allowDataClear, setAllowDataClear] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBookings();
+    fetchHotelSettings();
   }, [hotelId]);
+
+  const fetchHotelSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hotels')
+        .select('allow_data_clear')
+        .eq('id', hotelId)
+        .single();
+      
+      if (error) throw error;
+      setAllowDataClear(data?.allow_data_clear || false);
+    } catch (error) {
+      console.error("Error fetching hotel settings:", error);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -261,22 +277,22 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   return (
     <div className="space-y-6">
-      <TransformReservationsCSV />
-      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
           <p className="text-muted-foreground">View and manage all bookings · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="destructive"
-            onClick={handleClearAll}
-            size="sm"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear All Data
-          </Button>
+          {allowDataClear && (
+            <Button
+              variant="destructive"
+              onClick={handleClearAll}
+              size="sm"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All Data
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={downloadTemplate}

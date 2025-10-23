@@ -149,6 +149,7 @@ export type Database = {
       hotels: {
         Row: {
           address: string
+          allow_data_clear: boolean
           amenities: string[] | null
           created_at: string
           description: string | null
@@ -167,6 +168,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          allow_data_clear?: boolean
           amenities?: string[] | null
           created_at?: string
           description?: string | null
@@ -185,6 +187,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          allow_data_clear?: boolean
           amenities?: string[] | null
           created_at?: string
           description?: string | null
@@ -466,10 +469,7 @@ export type Database = {
           room_type: string
         }[]
       }
-      get_user_hotel_id: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_hotel_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

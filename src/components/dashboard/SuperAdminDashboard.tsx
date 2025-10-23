@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut } from "lucide-react";
+import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 import ImportCSV from "./hotel/ImportCSV";
 import HotelManagement from "./superadmin/HotelManagement";
 import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
@@ -24,6 +25,7 @@ interface Hotel {
   status: string;
   subscription_plan: string;
   created_at: string;
+  allow_data_clear: boolean;
 }
 
 interface Stats {
@@ -86,6 +88,23 @@ const SuperAdminDashboard = () => {
       fetchData();
     } catch (error: any) {
       toast.error("Failed to update hotel status");
+      console.error(error);
+    }
+  };
+
+  const toggleDataClearPermission = async (hotelId: string, currentValue: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('hotels')
+        .update({ allow_data_clear: !currentValue })
+        .eq('id', hotelId);
+
+      if (error) throw error;
+
+      toast.success(`Data clear permission ${!currentValue ? 'enabled' : 'disabled'}`);
+      fetchData();
+    } catch (error: any) {
+      toast.error("Failed to update permission");
       console.error(error);
     }
   };
@@ -214,6 +233,7 @@ const SuperAdminDashboard = () => {
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Plan</TableHead>
+                      <TableHead>Clear Data</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -230,6 +250,17 @@ const SuperAdminDashboard = () => {
                         </TableCell>
                         <TableCell>{getStatusBadge(hotel.status)}</TableCell>
                         <TableCell>{getPlanBadge(hotel.subscription_plan)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={hotel.allow_data_clear}
+                              onCheckedChange={() => toggleDataClearPermission(hotel.id, hotel.allow_data_clear)}
+                            />
+                            <span className="text-sm text-muted-foreground">
+                              {hotel.allow_data_clear ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {hotel.status === 'pending' && (
