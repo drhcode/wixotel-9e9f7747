@@ -266,14 +266,14 @@ const CalendarManager = ({ hotelId }: Props) => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -7))}
+                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -14))}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(new Date())}>
                 Today
               </Button>
-              <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, 7))}>
+              <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, 14))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
