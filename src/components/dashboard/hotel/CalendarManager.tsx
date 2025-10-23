@@ -203,8 +203,8 @@ const CalendarManager = ({ hotelId }: Props) => {
       backgroundColor: "hsl(var(--primary) / 0.1)",
       color: "hsl(var(--primary))",
       fontWeight: "bold",
-      margin: "2px",
-      borderRadius: "6px",
+      margin: "4px",
+      borderRadius: "8px",
     },
   };
 
