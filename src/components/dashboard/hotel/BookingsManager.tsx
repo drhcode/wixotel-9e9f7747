@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Calendar, Search, Trash2, Upload, Loader2 } from "lucide-react";
+import { Calendar, Search, Trash2, Upload, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -241,6 +241,24 @@ const BookingsManager = ({ hotelId }: Props) => {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!confirm('⚠️ Are you sure you want to delete ALL bookings and guests? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('clear-hotel-data');
+      
+      if (error) throw error;
+      
+      toast.success(`Cleared ${data.bookingsDeleted} bookings and ${data.guestsDeleted} guests`);
+      fetchBookings();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to clear data');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <TransformReservationsCSV />
@@ -252,10 +270,18 @@ const BookingsManager = ({ hotelId }: Props) => {
         </div>
         <div className="flex gap-2">
           <Button
+            variant="destructive"
+            onClick={handleClearAll}
+            size="sm"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear All Data
+          </Button>
+          <Button
             variant="outline"
             onClick={downloadTemplate}
           >
-            <Upload className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2" />
             Download Template
           </Button>
           <label htmlFor="csv-upload">
