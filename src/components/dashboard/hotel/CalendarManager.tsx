@@ -200,11 +200,11 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const modifiersStyles = {
     booked: {
-      backgroundColor: "hsl(var(--primary) / 0.1)",
+      backgroundColor: "hsl(var(--primary) / 0.15)",
       color: "hsl(var(--primary))",
-      fontWeight: "bold",
-      margin: "4px",
-      borderRadius: "8px",
+      fontWeight: "600",
+      borderRadius: "10px",
+      border: "2px solid hsl(var(--primary) / 0.3)",
     },
   };
 
@@ -423,7 +423,7 @@ const CalendarManager = ({ hotelId }: Props) => {
               head_row: "flex w-full",
               head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
               row: "flex w-full mt-2",
-              cell: "flex-1 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              cell: "flex-1 text-center text-sm p-1 relative",
               day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
             }}
           />
