@@ -334,18 +334,21 @@ const CalendarManager = ({ hotelId }: Props) => {
                             style={{ gridColumnStart: gridStart, gridColumnEnd: gridEnd }}
                           >
                             <div
-                              className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
-                              style={{
-                                backgroundColor: `${getStatusColor(startBooking.status)}20`,
-                                border: `2px solid ${getStatusColor(startBooking.status)}`,
-                                color: getStatusColor(startBooking.status),
-                                left: leftOffset,
-                                right: rightOffset,
-                                top: "8px",
-                                bottom: "8px",
-                              }}
-                              onClick={() => setSelectedBooking(startBooking)}
-                            >
+  className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+  style={{
+    backgroundColor: `${getStatusColor(startBooking.status)}20`,
+    border: `2px solid ${getStatusColor(startBooking.status)}`,
+    color: getStatusColor(startBooking.status),
+    left: leftOffset,
+    right: rightOffset,
+    top: "8px",
+    bottom: "8px",
+  }}
+  onClick={() => setSelectedBooking(startBooking)}
+>
+  ...
+</div>
+
                               <div className="font-semibold truncate">
                                 {startBooking.guests?.name || startBooking.guest_name}
                               </div>
