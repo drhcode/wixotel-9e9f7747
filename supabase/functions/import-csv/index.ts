@@ -275,12 +275,23 @@ function normalizePaymentStatus(status: string): string {
   const normalized = status.toLowerCase().trim();
   
   const statusMap: { [key: string]: string } = {
-    'paid': 'paid',
+    'paid': 'completed',
+    'complete': 'completed',
+    'completed': 'completed',
+    'fully paid': 'completed',
+    'full paid': 'completed',
+    'partially paid': 'pending',
+    'partial': 'pending',
+    'unpaid': 'pending',
+    'due': 'pending',
+    'awaiting payment': 'pending',
     'pending': 'pending',
-    'cancelled': 'cancelled',
-    'canceled': 'cancelled',
     'refunded': 'refunded',
-    'failed': 'failed'
+    'refund': 'refunded',
+    'failed': 'failed',
+    'declined': 'failed',
+    'canceled': 'refunded',
+    'cancelled': 'refunded'
   };
   
   return statusMap[normalized] || 'pending';
