@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
 import heroImage from "@/assets/hotel-hero.jpg";
-import wixotelLogo from "@/assets/wixotel-logo.png";
 
 const Landing = () => {
   const features = [
@@ -88,7 +87,7 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src={wixotelLogo} alt="WIXOTEL" className="h-10" />
+              <span className="text-3xl font-playfair font-bold text-foreground">Wixotel</span>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/auth">
@@ -260,7 +259,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <img src={wixotelLogo} alt="WIXOTEL" className="h-8" />
+              <span className="text-2xl font-playfair font-bold text-foreground">Wixotel</span>
             </div>
             <p className="text-sm text-muted-foreground">
               © 2025 WIXOTEL. All rights reserved.
