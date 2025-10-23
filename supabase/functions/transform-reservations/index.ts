@@ -120,7 +120,7 @@ function transformReservations(oldData: OldReservation[]): NewReservation[] {
     const note = cleanValue(old.note);
     const adults = parseInt(old.adults) || 1;
     
-    const roomNumber = extractRoomNumber(old.room_name);
+    const roomNumber = cleanValue(old.room_name);
     const status = mapStatus(old.reservation_status);
     const paymentStatus = mapPaymentStatus(old.reservation_status);
 
