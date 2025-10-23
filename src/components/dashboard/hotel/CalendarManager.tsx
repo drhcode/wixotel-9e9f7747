@@ -189,7 +189,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         const dates: Date[] = [];
         let current = startOfDay(new Date(b.check_in));
         const end = startOfDay(new Date(b.check_out));
-        while (current <= end) {
+        while (current < end) {
           dates.push(new Date(current));
           current = addDays(current, 1);
         }
