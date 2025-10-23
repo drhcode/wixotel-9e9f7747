@@ -26,6 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import Papa from "papaparse";
+import { CsvMapper, REQUIRED_FIELDS } from "@/components/csv/CsvMapper";
 
 interface Props {
   hotelId: string;
@@ -38,6 +40,11 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [allowDataClear, setAllowDataClear] = useState(false);
+  // CSV mapping state
+  const [mapperOpen, setMapperOpen] = useState(false);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvRows, setCsvRows] = useState<any[]>([]);
+  const [fileName, setFileName] = useState<string>("");
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -140,23 +147,18 @@ const BookingsManager = ({ hotelId }: Props) => {
     setDeletingBooking(bookingId);
   };
 
+  // Replaced by robust PapaParse flow with column mapping
   const parseCSV = (text: string): any[] => {
+    // Fallback simple parser (kept for safety); main flow uses PapaParse
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length < 2) return [];
-
     const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+    return lines.slice(1).map((line) => {
+      const values = line.split(',').map(v => v.trim().replace(/['"]/g, ''));
       const row: any = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] || '';
-      });
-      data.push(row);
-    }
-
-    return data;
+      headers.forEach((h, i) => (row[h] = values[i] || ''));
+      return row;
+    });
   };
 
   const downloadTemplate = () => {
@@ -228,31 +230,20 @@ const BookingsManager = ({ hotelId }: Props) => {
     toast.success('Template downloaded successfully');
   };
 
-  const handleCSVImport = async (file: File) => {
+  const handleCSVImport = async (normalizedRows: any[]) => {
     setImporting(true);
-    
     try {
-      const text = await file.text();
-      const csvData = parseCSV(text);
-
-      if (csvData.length === 0) {
-        toast.error("CSV file is empty or invalid");
+      if (normalizedRows.length === 0) {
+        toast.error("No rows to import after mapping");
         return;
       }
-
-      toast.info(`Processing ${csvData.length} reservations...`);
-
+      toast.info(`Processing ${normalizedRows.length} reservations...`);
       const { data: { session } } = await supabase.auth.getSession();
-      
       const { data, error } = await supabase.functions.invoke('import-csv', {
-        body: { type: 'reservations', csvData, hotelId },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { type: 'reservations', csvData: normalizedRows, hotelId, strict: true },
+        headers: { Authorization: `Bearer ${session?.access_token}` }
       });
-
       if (error) throw error;
-
       if (data.success) {
         toast.success(data.message);
         fetchBookings();
@@ -264,7 +255,46 @@ const BookingsManager = ({ hotelId }: Props) => {
       toast.error(error.message || "Failed to import reservations");
     } finally {
       setImporting(false);
+      setMapperOpen(false);
     }
+  };
+
+  const handleFileSelected = async (file: File) => {
+    setFileName(file.name);
+    // Robust CSV parse with PapaParse
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (h) => h.trim().replace(/^\ufeff/, ''),
+      complete: (results) => {
+        const rows = (results.data as any[]).filter(Boolean);
+        if (rows.length === 0) {
+          toast.error("CSV file is empty or invalid");
+          return;
+        }
+        const headers = results.meta.fields as string[] || Object.keys(rows[0]);
+        setCsvHeaders(headers);
+        setCsvRows(rows);
+        setMapperOpen(true);
+      },
+      error: (err) => {
+        console.error('CSV parse error', err);
+        toast.error("Failed to parse CSV");
+      }
+    });
+  };
+
+  const buildNormalizedRows = (mapping: Record<string, string | null>) => {
+    const required = new Set(REQUIRED_FIELDS);
+    const normalized = csvRows.map((row) => {
+      const out: any = {};
+      Object.entries(mapping).forEach(([canonical, src]) => {
+        if (!src) return;
+        out[canonical] = row[src];
+      });
+      return out;
+    }).filter((row) => Array.from(required).every((f) => row[f] !== undefined && row[f] !== null && String(row[f]).trim() !== ""));
+    return normalized;
   };
 
   const handleDelete = async () => {
@@ -346,7 +376,7 @@ const BookingsManager = ({ hotelId }: Props) => {
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) handleCSVImport(file);
+                if (file) handleFileSelected(file);
               }}
               disabled={importing}
             />
@@ -541,6 +571,21 @@ const BookingsManager = ({ hotelId }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CsvMapper
+        open={mapperOpen}
+        headers={csvHeaders}
+        previewRows={csvRows}
+        onCancel={() => setMapperOpen(false)}
+        onConfirm={(mapping) => {
+          const normalized = buildNormalizedRows(mapping as any);
+          if (normalized.length === 0) {
+            toast.error("No valid rows after mapping. Ensure required fields are mapped and not empty.");
+            return;
+          }
+          handleCSVImport(normalized);
+        }}
+      />
     </div>
   );
 };

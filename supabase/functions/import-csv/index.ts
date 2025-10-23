@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       userHotelId = hotelData.id;
     }
 
-    const { type, csvData, hotelId } = await req.json();
+    const { type, csvData, hotelId, strict = false } = await req.json();
     
     // Hotel admins can only import for their own hotel
     if (isHotelAdmin && type === 'reservations') {
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
         result = await importRooms(supabase, csvData);
         break;
       case 'reservations':
-        result = await importReservations(supabase, csvData, userHotelId);
+        result = await importReservations(supabase, csvData, userHotelId, strict);
         break;
       default:
         return new Response(
@@ -297,7 +297,7 @@ function normalizePaymentStatus(status: string): string {
   return statusMap[normalized] || 'pending';
 }
 
-async function importReservations(supabase: any, csvData: any[], userHotelId: string | null = null): Promise<ImportResult> {
+async function importReservations(supabase: any, csvData: any[], userHotelId: string | null = null, strict: boolean = false): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
 
@@ -307,15 +307,34 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
     console.log('CSV headers detected:', Object.keys(csvData[0]));
   }
 
+  // Strict header validation
+  if (strict && csvData.length > 0) {
+    const allowed = new Set([
+      'guest_name','guest_phone','guest_email','guest_country','guest_city','guest_address','guest_count','room_number','check_in','check_out','total_amount','status','payment_status','notes'
+    ]);
+    const required = ['guest_name','room_number','check_in','check_out','total_amount'];
+    const headers = Object.keys(csvData[0] || {});
+    const unknown = headers.filter((h) => !allowed.has(h));
+    const missing = required.filter((r) => !headers.includes(r));
+    if (unknown.length > 0 || missing.length > 0) {
+      return {
+        success: false,
+        message: `Invalid CSV headers${missing.length ? ' - missing: ' + missing.join(', ') : ''}${unknown.length ? ' - unknown: ' + unknown.join(', ') : ''}`,
+        errors: [
+          missing.length ? `Missing required headers: ${missing.join(', ')}` : '',
+          unknown.length ? `Unknown headers present: ${unknown.join(', ')}` : ''
+        ].filter(Boolean) as string[]
+      };
+    }
+  }
+
   // If userHotelId is provided, only import for that hotel (hotel admin)
   let hotelId: string;
-  
   if (userHotelId) {
     hotelId = userHotelId;
   } else {
     // Super admin: get all hotels
     const { data: hotels } = await supabase.from('hotels').select('id, name');
-    
     if (!hotels || hotels.length === 0) {
       return {
         success: false,
@@ -323,7 +342,6 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         errors: ['No hotels in database']
       };
     }
-    
     hotelId = hotels.length === 1 ? hotels[0].id : '';
   }
 
