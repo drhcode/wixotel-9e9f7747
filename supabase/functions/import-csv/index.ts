@@ -281,8 +281,8 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
     const nameKey = `${r.hotel_id}_${r.name.toLowerCase()}`;
     roomByNameMap.set(nameKey, r.id);
     
-    // Extract number from name for flexible matching (e.g., "201" from "Deluxe Room 201")
-    const numberMatch = r.name.match(/\d{3}/);
+    // Extract number from name for flexible matching (e.g., "102" from "102 - Standard Double Room")
+    const numberMatch = r.name.match(/^\d+/); // Get number at start of name
     if (numberMatch) {
       const extractedNumber = numberMatch[0];
       const numberKey = `${r.hotel_id}_${extractedNumber}`;
@@ -384,13 +384,21 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           guestId = newGuest.id;
         }
 
-        // Find room - try by room_number first, then by name
+        // Find room - try multiple matching strategies
         const roomNumber = reservation.room_number || reservation.room;
         let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomNumber}`);
         
-        // If not found by number, try by name
+        // If not found, try extracting just the room number from the string (e.g., "102" from "102 - Double Room")
         if (!roomId && roomNumber) {
-          roomId = roomByNameMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+          const extractedNumber = String(roomNumber).match(/^\d+/);
+          if (extractedNumber) {
+            roomId = roomByNumberMap.get(`${reservationHotelId}_${extractedNumber[0]}`);
+          }
+        }
+        
+        // Last resort: try by full name match
+        if (!roomId && roomNumber) {
+          roomId = roomByNameMap.get(`${reservationHotelId}_${String(roomNumber).toLowerCase()}`);
         }
 
         if (!roomId) {
