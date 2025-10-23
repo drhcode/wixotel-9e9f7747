@@ -236,6 +236,14 @@ async function importRooms(supabase: any, csvData: any[]): Promise<ImportResult>
   };
 }
 
+// Helper to clean and normalize values
+function cleanValue(value: any): string {
+  if (!value || value === '0' || value === 0 || value === 'null' || value === 'NULL') {
+    return '';
+  }
+  return String(value).trim();
+}
+
 async function importReservations(supabase: any, csvData: any[], userHotelId: string | null = null): Promise<ImportResult> {
   const errors: string[] = [];
   let imported = 0;
@@ -257,7 +265,6 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
       };
     }
     
-    const hotelMap = new Map(hotels.map((h: any) => [h.name.toLowerCase(), h.id]));
     hotelId = hotels.length === 1 ? hotels[0].id : '';
   }
 
@@ -269,28 +276,43 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   
   const { data: rooms } = await roomQuery;
   
+  if (!rooms || rooms.length === 0) {
+    return {
+      success: false,
+      message: 'No rooms found. Please create rooms first.',
+      errors: ['No rooms in database for the hotel']
+    };
+  }
+  
   // Create flexible matching maps
   const roomByNumberMap = new Map();
   const roomByNameMap = new Map();
   
-  rooms?.forEach((r: any) => {
-    const key = `${r.hotel_id}_${r.room_number}`;
-    roomByNumberMap.set(key, r.id);
+  rooms.forEach((r: any) => {
+    if (r.room_number) {
+      const key = `${r.hotel_id}_${String(r.room_number).trim().toLowerCase()}`;
+      roomByNumberMap.set(key, r.id);
+    }
     
-    // Also map by full name (lowercase)
-    const nameKey = `${r.hotel_id}_${r.name.toLowerCase()}`;
-    roomByNameMap.set(nameKey, r.id);
+    if (r.name) {
+      const nameKey = `${r.hotel_id}_${String(r.name).trim().toLowerCase()}`;
+      roomByNameMap.set(nameKey, r.id);
+    }
     
     // Extract number from name for flexible matching (e.g., "102" from "102 - Standard Double Room")
-    const numberMatch = r.name.match(/^\d+/); // Get number at start of name
-    if (numberMatch) {
-      const extractedNumber = numberMatch[0];
-      const numberKey = `${r.hotel_id}_${extractedNumber}`;
-      if (!roomByNumberMap.has(numberKey)) {
-        roomByNumberMap.set(numberKey, r.id);
+    if (r.name) {
+      const numberMatch = String(r.name).match(/^\d+/);
+      if (numberMatch) {
+        const extractedNumber = numberMatch[0];
+        const numberKey = `${r.hotel_id}_${extractedNumber}`;
+        if (!roomByNumberMap.has(numberKey)) {
+          roomByNumberMap.set(numberKey, r.id);
+        }
       }
     }
   });
+
+  console.log(`Found ${rooms.length} rooms for import`);
 
   // Import reservations in batches of 50
   for (let i = 0; i < csvData.length; i += 50) {
@@ -299,39 +321,58 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
     for (let j = 0; j < batch.length; j++) {
       const reservation = batch[j];
       const rowNumber = i + j + 1;
+      
       try {
-        // Use the determined hotelId (either from user or from CSV)
         let reservationHotelId = hotelId;
         
-        if (!userHotelId && (reservation.hotel_name || reservation.property_name)) {
-          // Super admin can specify hotel in CSV
-          const hotelName = (reservation.hotel_name || reservation.property_name).toLowerCase();
-          const { data: hotelData } = await supabase
-            .from('hotels')
-            .select('id')
-            .ilike('name', hotelName)
-            .single();
-          
-          if (hotelData) {
-            reservationHotelId = hotelData.id;
-          }
-        }
-
-        if (!reservationHotelId) {
-          errors.push(`Row ${rowNumber}: Reservation has no matching hotel`);
+        // Clean and normalize all fields
+        const guestName = cleanValue(reservation.guest_name) || cleanValue(reservation.name) || 'Guest';
+        const guestPhone = cleanValue(reservation.guest_phone) || cleanValue(reservation.phone) || '';
+        const guestEmail = cleanValue(reservation.guest_email) || cleanValue(reservation.email) || null;
+        const guestCountry = cleanValue(reservation.guest_country) || cleanValue(reservation.country) || null;
+        const guestCity = cleanValue(reservation.guest_city) || cleanValue(reservation.city) || null;
+        const guestAddress = cleanValue(reservation.guest_address) || cleanValue(reservation.address) || null;
+        const guestCount = parseInt(cleanValue(reservation.guest_count) || '1') || 1;
+        
+        // Extract room number - try multiple field names
+        const roomNumber = cleanValue(reservation.room_number) 
+          || cleanValue(reservation.room) 
+          || cleanValue(reservation.room_name)
+          || cleanValue(reservation.Room);
+        
+        if (!roomNumber) {
+          errors.push(`Row ${rowNumber}: Missing room_number - guest: ${guestName}`);
           continue;
         }
 
-        // Find or create guest
-        const guestName = reservation.guest_name || reservation.name || 'Guest';
-        const guestPhone = reservation.guest_phone || reservation.phone || `temp_${Date.now()}_${Math.random()}`;
-        const guestEmail = reservation.guest_email || reservation.email || '';
-        const guestCountry = reservation.guest_country || reservation.country || '';
-        const guestCity = reservation.guest_city || reservation.city || '';
-        const guestAddress = reservation.guest_address || reservation.address || '';
+        // Find room using flexible matching
+        let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+        
+        // Try extracting just numbers (e.g., "102" from "Room 102" or "102 - Double")
+        if (!roomId) {
+          const numberMatch = roomNumber.match(/\d+/);
+          if (numberMatch) {
+            const extractedNumber = numberMatch[0];
+            roomId = roomByNumberMap.get(`${reservationHotelId}_${extractedNumber}`);
+          }
+        }
+        
+        // Try by full name match
+        if (!roomId) {
+          roomId = roomByNameMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+        }
 
+        if (!roomId) {
+          errors.push(`Row ${rowNumber}: Room "${roomNumber}" not found - guest: ${guestName}`);
+          continue;
+        }
+
+        // Find or create guest - use temporary phone if none provided
+        const finalGuestPhone = guestPhone || `temp_${Date.now()}_${Math.random()}`;
+        
         let guestId;
-        if (guestPhone && !guestPhone.startsWith('temp_')) {
+        if (guestPhone) {
+          // Try to find existing guest by phone
           const { data: existingGuest } = await supabase
             .from('guests')
             .select('id')
@@ -341,34 +382,17 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
 
           if (existingGuest) {
             guestId = existingGuest.id;
-          } else {
-            const { data: newGuest, error: guestError } = await supabase
-              .from('guests')
-              .insert({
-                hotel_id: reservationHotelId,
-                name: guestName,
-                phone: guestPhone,
-                email: guestEmail,
-                country: guestCountry,
-                city: guestCity,
-                address: guestAddress
-              })
-              .select('id')
-              .single();
-
-            if (guestError) {
-              errors.push(`Row ${rowNumber}: Failed to create guest ${guestName}: ${guestError.message}`);
-              continue;
-            }
-            guestId = newGuest.id;
           }
-        } else {
+        }
+        
+        // Create new guest if not found
+        if (!guestId) {
           const { data: newGuest, error: guestError } = await supabase
             .from('guests')
             .insert({
               hotel_id: reservationHotelId,
               name: guestName,
-              phone: guestPhone,
+              phone: finalGuestPhone,
               email: guestEmail,
               country: guestCountry,
               city: guestCity,
@@ -384,25 +408,16 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           guestId = newGuest.id;
         }
 
-        // Find room - try multiple matching strategies
-        const roomNumber = reservation.room_number || reservation.room;
-        let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomNumber}`);
-        
-        // If not found, try extracting just the room number from the string (e.g., "102" from "102 - Double Room")
-        if (!roomId && roomNumber) {
-          const extractedNumber = String(roomNumber).match(/^\d+/);
-          if (extractedNumber) {
-            roomId = roomByNumberMap.get(`${reservationHotelId}_${extractedNumber[0]}`);
-          }
-        }
-        
-        // Last resort: try by full name match
-        if (!roomId && roomNumber) {
-          roomId = roomByNameMap.get(`${reservationHotelId}_${String(roomNumber).toLowerCase()}`);
-        }
+        // Parse dates and amounts
+        const checkIn = cleanValue(reservation.check_in) || cleanValue(reservation.checkin_date) || cleanValue(reservation.checkin);
+        const checkOut = cleanValue(reservation.check_out) || cleanValue(reservation.checkout_date) || cleanValue(reservation.checkout);
+        const totalAmount = parseFloat(cleanValue(reservation.total_amount) || cleanValue(reservation.total) || cleanValue(reservation.amount) || '0');
+        const status = cleanValue(reservation.status) || 'confirmed';
+        const paymentStatus = cleanValue(reservation.payment_status) || 'pending';
+        const notes = cleanValue(reservation.notes) || null;
 
-        if (!roomId) {
-          errors.push(`Row ${rowNumber}: Room "${roomNumber}" not found for guest ${guestName}`);
+        if (!checkIn || !checkOut) {
+          errors.push(`Row ${rowNumber}: Missing check_in or check_out dates - guest: ${guestName}`);
           continue;
         }
 
@@ -412,18 +427,19 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           room_id: roomId,
           guest_id: guestId,
           guest_name: guestName,
-          guest_phone: guestPhone,
+          guest_phone: finalGuestPhone,
           guest_email: guestEmail,
-          check_in: reservation.check_in || reservation.checkin_date,
-          check_out: reservation.check_out || reservation.checkout_date,
-          total_amount: parseFloat(reservation.total_amount || reservation.total || '0'),
-          status: reservation.status || 'confirmed',
-          payment_status: reservation.payment_status || 'pending',
-          notes: reservation.notes || ''
+          guest_count: guestCount,
+          check_in: checkIn,
+          check_out: checkOut,
+          total_amount: totalAmount,
+          status: status,
+          payment_status: paymentStatus,
+          notes: notes
         });
 
         if (bookingError) {
-          errors.push(`Row ${rowNumber}: Failed to create booking for guest ${guestName}: ${bookingError.message}`);
+          errors.push(`Row ${rowNumber}: Failed to create booking for ${guestName}: ${bookingError.message}`);
         } else {
           imported++;
         }
@@ -438,12 +454,12 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   console.log(`Import complete. Total imported: ${imported} out of ${csvData.length}`);
   if (errors.length > 0) {
     console.log(`Total errors: ${errors.length}`);
-    errors.forEach(error => console.log(error));
+    errors.slice(0, 20).forEach(error => console.log(error));
   }
 
   return {
     success: errors.length === 0,
-    message: errors.length === 0 ? `Successfully imported ${imported} reservations` : `Import completed with errors. Imported ${imported} out of ${csvData.length}`,
+    message: errors.length === 0 ? `Successfully imported ${imported} reservations` : `Imported ${imported} out of ${csvData.length} rows`,
     imported,
     errors: errors.length > 0 ? errors : undefined
   };
