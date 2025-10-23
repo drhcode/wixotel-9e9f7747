@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
 import heroImage from "@/assets/hotel-hero.jpg";
+import wixotelLogo from "@/assets/wixotel-logo.png";
 
 const Landing = () => {
   const features = [
@@ -41,10 +42,10 @@ const Landing = () => {
   const plans = [
     {
       name: "Basic",
-      price: "$49",
+      price: "€9",
       period: "/month",
       features: [
-        "Up to 20 rooms",
+        "Up to 10 rooms",
         "Basic booking calendar",
         "Guest management",
         "Email support",
@@ -53,11 +54,11 @@ const Landing = () => {
     },
     {
       name: "Pro",
-      price: "$99",
+      price: "€12.99",
       period: "/month",
       popular: true,
       features: [
-        "Up to 100 rooms",
+        "Up to 25 rooms",
         "Advanced calendar",
         "AI assistant",
         "Priority support",
@@ -67,7 +68,7 @@ const Landing = () => {
     },
     {
       name: "Premium",
-      price: "$199",
+      price: "€19.99",
       period: "/month",
       features: [
         "Unlimited rooms",
@@ -87,10 +88,7 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Hotel className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                HotelManager
-              </span>
+              <img src={wixotelLogo} alt="WIXOTEL" className="h-10" />
             </div>
             <div className="flex items-center gap-4">
               <Link to="/auth">
@@ -122,7 +120,7 @@ const Landing = () => {
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground">
-                The complete SaaS platform for modern hotel management. 
+                WIXOTEL - The complete platform for modern hotel management. 
                 Manage rooms, bookings, guests, and revenue all in one beautiful dashboard.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -247,7 +245,7 @@ const Landing = () => {
             Ready to Transform Your Hotel Management?
           </h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join hundreds of hotels already using HotelManager to streamline operations and boost revenue
+            Join hundreds of hotels already using WIXOTEL to streamline operations and boost revenue
           </p>
           <Link to="/auth">
             <Button size="lg" variant="secondary" className="shadow-lg hover:scale-105 transition-transform">
@@ -262,11 +260,10 @@ const Landing = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <Hotel className="h-6 w-6 text-primary" />
-              <span className="font-semibold">HotelManager</span>
+              <img src={wixotelLogo} alt="WIXOTEL" className="h-8" />
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 HotelManager. All rights reserved.
+              © 2025 WIXOTEL. All rights reserved.
             </p>
           </div>
         </div>
