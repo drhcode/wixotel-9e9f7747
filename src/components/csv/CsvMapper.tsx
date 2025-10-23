@@ -118,24 +118,24 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
 
   return (
     <Dialog open={open} onOpenChange={onCancel}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Map CSV Columns</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Map CSV Columns</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {ALL_FIELDS.map((field) => (
             <div key={field} className="space-y-2">
-              <Label>
-                {field}
+              <Label className="text-xs sm:text-sm">
+                {field.replace(/_/g, " ")}
                 {REQUIRED_FIELDS.includes(field) && <span className="text-destructive ml-1">*</span>}
               </Label>
               <Select
                 value={mapping[field] || "__none__"}
                 onValueChange={(v) => handleChange(field, v === "__none__" ? null : v)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select CSV column" />
+                <SelectTrigger className="text-xs sm:text-sm">
+                  <SelectValue placeholder="Select column" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
                   <SelectItem value="__none__">-- None --</SelectItem>
@@ -149,20 +149,24 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
         </div>
 
         {duplicateSelections.length > 0 && (
-          <p className="text-sm text-destructive">Duplicate mappings selected for: {duplicateSelections.join(", ")}</p>
+          <p className="text-xs sm:text-sm text-destructive">
+            Duplicate mappings: {duplicateSelections.join(", ")}
+          </p>
         )}
         {missingRequired.length > 0 && (
-          <p className="text-sm text-destructive">Missing required fields: {missingRequired.join(", ")}</p>
+          <p className="text-xs sm:text-sm text-destructive">
+            Missing required: {missingRequired.join(", ")}
+          </p>
         )}
 
-        <div className="mt-6">
-          <Label className="mb-2 block">Preview</Label>
-          <div className="rounded-md border">
+        <div className="mt-4 sm:mt-6">
+          <Label className="mb-2 block text-sm">Preview (first 5 rows)</Label>
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   {headers.map((h) => (
-                    <TableHead key={`h-${h}`}>{h}</TableHead>
+                    <TableHead key={`h-${h}`} className="text-xs whitespace-nowrap">{h}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -170,7 +174,9 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
                 {previewRows.slice(0, 5).map((row, idx) => (
                   <TableRow key={`r-${idx}`}>
                     {headers.map((h) => (
-                      <TableCell key={`c-${idx}-${h}`}>{String(row[h] ?? "")}</TableCell>
+                      <TableCell key={`c-${idx}-${h}`} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                        {String(row[h] ?? "")}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -179,11 +185,14 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
           </div>
         </div>
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <DialogFooter className="mt-4 flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+            Cancel
+          </Button>
           <Button
             onClick={() => onConfirm(mapping)}
             disabled={missingRequired.length > 0 || duplicateSelections.length > 0}
+            className="w-full sm:w-auto"
           >
             Confirm Mapping
           </Button>
