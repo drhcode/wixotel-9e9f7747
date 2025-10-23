@@ -487,7 +487,7 @@ export type Database = {
       app_role: "super_admin" | "hotel_admin"
       booking_status:
         | "pending"
-        | "confirmed"
+        | "reserved"
         | "checked_in"
         | "checked_out"
         | "cancelled"
@@ -625,7 +625,7 @@ export const Constants = {
       app_role: ["super_admin", "hotel_admin"],
       booking_status: [
         "pending",
-        "confirmed",
+        "reserved",
         "checked_in",
         "checked_out",
         "cancelled",

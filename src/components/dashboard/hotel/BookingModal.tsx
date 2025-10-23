@@ -158,7 +158,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         total_amount: totalPrice,
         guest_count: guestCount,
         notes,
-        status: 'confirmed'
+        status: 'reserved'
       });
       if (error) throw error;
       toast.success("Reservation created");

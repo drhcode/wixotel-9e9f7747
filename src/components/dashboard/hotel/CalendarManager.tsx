@@ -95,7 +95,7 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
+      case "reserved":
         return "#7C3BED";
       case "pending":
         return "#7C3BED";
@@ -246,7 +246,7 @@ const CalendarManager = ({ hotelId }: Props) => {
         <div className="flex flex-wrap gap-6 items-center justify-center">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded" style={{ backgroundColor: "#7C3BED" }}></div>
-            <span className="text-sm font-medium">Confirmed/Pending</span>
+            <span className="text-sm font-medium">Reserved/Pending</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded" style={{ backgroundColor: "#16A249" }}></div>

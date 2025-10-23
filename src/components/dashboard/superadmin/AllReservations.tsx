@@ -54,7 +54,7 @@ const AllReservations = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return '#7C3BED';
+      case 'reserved': return '#7C3BED';
       case 'pending': return '#7C3BED';
       case 'checked_in': return '#16A249';
       case 'checked_out': return '#C06969';

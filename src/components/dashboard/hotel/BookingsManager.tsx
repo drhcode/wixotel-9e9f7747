@@ -93,7 +93,7 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'reserved':
         return 'default';
       case 'checked_in':
         return 'secondary';
@@ -158,7 +158,7 @@ const BookingsManager = ({ hotelId }: Props) => {
         '2024-01-15',
         '2024-01-20',
         '500.00',
-        'confirmed',
+        'reserved',
         'paid',
         'Early check-in requested'
       ],
@@ -331,7 +331,7 @@ const BookingsManager = ({ hotelId }: Props) => {
             <p><strong>Required columns:</strong> guest_name, guest_phone, room_number, check_in, check_out, total_amount</p>
             <p><strong>Optional columns:</strong> guest_email, guest_country, guest_city, guest_address, status, payment_status, notes</p>
             <p><strong>Date format:</strong> YYYY-MM-DD (e.g., 2024-01-15)</p>
-            <p><strong>Status values:</strong> pending, confirmed, checked_in, checked_out, cancelled</p>
+            <p><strong>Status values:</strong> pending, reserved, checked_in, checked_out, cancelled</p>
             <p className="text-primary">💡 Download the template above to see the correct format with examples</p>
           </CardDescription>
         </CardHeader>

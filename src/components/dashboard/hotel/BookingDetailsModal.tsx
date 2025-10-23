@@ -251,7 +251,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             </div>
           )}
 
-          {booking.status === 'confirmed' && !canCheckIn() && (
+          {booking.status === 'reserved' && !canCheckIn() && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
@@ -283,7 +283,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   <Edit2 className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-                {booking.status === 'confirmed' && (
+                {booking.status === 'reserved' && (
                   <Button size="sm" onClick={() => handleStatusUpdate('checked_in')} disabled={!canCheckIn()}>
                     Check In
                   </Button>

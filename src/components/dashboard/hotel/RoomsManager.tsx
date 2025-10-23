@@ -168,7 +168,7 @@ const RoomsManager = ({ hotelId }: Props) => {
         .from('bookings')
         .select('id, check_out, status')
         .eq('room_id', deletingRoom)
-        .in('status', ['pending', 'confirmed', 'checked_in']);
+        .in('status', ['pending', 'reserved', 'checked_in']);
 
       if (bookingsError) throw bookingsError;
 
