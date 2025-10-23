@@ -11,9 +11,13 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState<'super_admin' | 'hotel_admin' | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const { data: roleData } = await supabase
@@ -22,8 +26,9 @@ const Dashboard = () => {
               .eq('user_id', session.user.id)
               .single();
             
-            if (roleData) {
+            if (roleData && mounted) {
               setUserRole(roleData.role);
+              setLoading(false);
             }
           }
         } else if (event === 'SIGNED_OUT') {
@@ -35,13 +40,18 @@ const Dashboard = () => {
     // Then check for existing session
     checkUserAndRole();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const checkUserAndRole = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError) throw sessionError;
+
       if (!session) {
         navigate("/auth");
         return;

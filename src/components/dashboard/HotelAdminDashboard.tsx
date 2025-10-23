@@ -28,7 +28,7 @@ const HotelAdminDashboard = () => {
   const navigate = useNavigate();
   const [hotel, setHotel] = useState<HotelData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("calendar");
 
   useEffect(() => {
     fetchHotelData();
