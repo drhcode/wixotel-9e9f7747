@@ -12,6 +12,40 @@ interface ImportResult {
   errors?: string[];
 }
 
+// Validation helpers
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+const validatePhone = (phone: string): boolean => {
+  const phoneRegex = /^[+\d\s()-]{7,20}$/;
+  return phoneRegex.test(phone);
+};
+
+const validatePrice = (price: number): boolean => {
+  return price > 0 && price < 1000000;
+};
+
+const validateCapacity = (capacity: number): boolean => {
+  return capacity >= 1 && capacity <= 100;
+};
+
+const validateDate = (dateStr: string): boolean => {
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime()) && date.getFullYear() >= 2000 && date.getFullYear() <= 2100;
+};
+
+const sanitizeString = (str: string, maxLength: number = 500): string => {
+  return str.trim().substring(0, maxLength);
+};
+
+const validateDateRange = (checkIn: string, checkOut: string): boolean => {
+  const inDate = new Date(checkIn);
+  const outDate = new Date(checkOut);
+  return outDate > inDate;
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -120,37 +154,73 @@ Deno.serve(async (req) => {
 
 async function importHotels(supabase: any, csvData: any[]): Promise<ImportResult> {
   const errors: string[] = [];
-  let imported = 0;
+  const validatedHotels: any[] = [];
 
-  // Import hotels in batches of 20
-  for (let i = 0; i < csvData.length; i += 20) {
-    const batch = csvData.slice(i, i + 20);
+  // Validate each hotel
+  csvData.forEach((hotel: any, index: number) => {
+    const rowNum = index + 2;
     
-    for (const property of batch) {
-      try {
-        // Get or create owner user (you'll need to create auth users separately)
-        const ownerEmail = property.owner_email || property.email || `hotel_${Date.now()}_${Math.random()}@temp.com`;
-        
-        // For now, create hotel without linking to owner (super admin can assign later)
-        const { error } = await supabase.from('hotels').insert({
-          name: property.name || property.property_name || 'Unnamed Hotel',
-          address: property.address || property.location || '',
-          phone: property.phone || property.contact || '',
-          email: property.email || ownerEmail,
-          description: property.description || '',
-          status: 'active',
-          subscription_plan: property.subscription_plan || 'basic',
-          owner_id: '00000000-0000-0000-0000-000000000000' // Placeholder, update with actual user
-        });
+    if (!hotel.name || hotel.name.trim().length === 0) {
+      errors.push(`Row ${rowNum}: Hotel name is required`);
+      return;
+    }
+    if (hotel.name.length > 100) {
+      errors.push(`Row ${rowNum}: Hotel name too long (max 100 chars)`);
+      return;
+    }
+    if (!hotel.address || hotel.address.trim().length === 0) {
+      errors.push(`Row ${rowNum}: Hotel address is required`);
+      return;
+    }
+    if (hotel.address.length > 500) {
+      errors.push(`Row ${rowNum}: Address too long (max 500 chars)`);
+      return;
+    }
+    if (hotel.email && !validateEmail(hotel.email)) {
+      errors.push(`Row ${rowNum}: Invalid email format`);
+      return;
+    }
+    if (hotel.phone && !validatePhone(hotel.phone)) {
+      errors.push(`Row ${rowNum}: Invalid phone format`);
+      return;
+    }
+    if (hotel.description && hotel.description.length > 2000) {
+      errors.push(`Row ${rowNum}: Description too long (max 2000 chars)`);
+      return;
+    }
 
-        if (error) {
-          errors.push(`Failed to import hotel ${property.name}: ${error.message}`);
-        } else {
-          imported++;
-        }
-      } catch (err: any) {
-        errors.push(`Hotel import error: ${err.message}`);
-      }
+    const ownerEmail = hotel.owner_email || hotel.email || `hotel_${Date.now()}_${Math.random()}@temp.com`;
+
+    validatedHotels.push({
+      name: sanitizeString(hotel.name, 100),
+      address: sanitizeString(hotel.address, 500),
+      email: hotel.email ? sanitizeString(hotel.email, 255) : ownerEmail,
+      phone: hotel.phone ? sanitizeString(hotel.phone, 20) : null,
+      description: hotel.description ? sanitizeString(hotel.description, 2000) : null,
+      status: 'active',
+      subscription_plan: hotel.subscription_plan || 'basic',
+      owner_id: '00000000-0000-0000-0000-000000000000'
+    });
+  });
+
+  if (errors.length > 0) {
+    return {
+      success: false,
+      message: 'Validation errors found',
+      errors: errors.slice(0, 10)
+    };
+  }
+
+  let imported = 0;
+  // Import hotels in batches of 20
+  for (let i = 0; i < validatedHotels.length; i += 20) {
+    const batch = validatedHotels.slice(i, i + 20);
+    
+    const { error } = await supabase.from('hotels').insert(batch);
+    if (error) {
+      errors.push(`Batch ${Math.floor(i / 20) + 1} failed: ${error.message}`);
+    } else {
+      imported += batch.length;
     }
   }
 
@@ -186,45 +256,81 @@ async function importRooms(supabase: any, csvData: any[]): Promise<ImportResult>
   const defaultHotelId = hotels.length === 1 ? hotels[0].id : null;
 
   // Import rooms in batches of 50
-  for (let i = 0; i < csvData.length; i += 50) {
-    const batch = csvData.slice(i, i + 50);
-    const roomsToInsert = [];
-
-    for (const room of batch) {
-      let hotelId = defaultHotelId;
-      
-      // Try to match hotel by name if provided
-      if (room.hotel_name || room.property_name) {
-        const hotelName = (room.hotel_name || room.property_name).toLowerCase();
-        hotelId = hotelMap.get(hotelName) || defaultHotelId;
-      }
-
-      if (!hotelId) {
-        errors.push(`Room ${room.name} has no matching hotel`);
-        continue;
-      }
-
-      roomsToInsert.push({
-        hotel_id: hotelId,
-        name: room.name || room.room_name || `Room ${room.room_number || i + 1}`,
-        room_number: room.room_number || room.number || String(i + 1),
-        room_type: room.room_type || room.type || 'standard',
-        capacity: parseInt(room.capacity || room.max_guests || '2'),
-        price: parseFloat(room.price || room.rate || '0'),
-        description: room.description || '',
-        status: room.status || 'ready',
-        is_available: room.is_available !== 'false' && room.is_available !== '0'
-      });
+  const roomsToInsert = [];
+  
+  for (let i = 0; i < csvData.length; i++) {
+    const room = csvData[i];
+    const rowNum = i + 2;
+    let hotelId = defaultHotelId;
+    
+    // Try to match hotel by name if provided
+    if (room.hotel_name || room.property_name) {
+      const hotelName = (room.hotel_name || room.property_name).toLowerCase();
+      hotelId = hotelMap.get(hotelName) || defaultHotelId;
     }
 
-    if (roomsToInsert.length > 0) {
-      const { error } = await supabase.from('rooms').insert(roomsToInsert);
-      
-      if (error) {
-        errors.push(`Batch ${Math.floor(i / 50) + 1} failed: ${error.message}`);
-      } else {
-        imported += roomsToInsert.length;
-      }
+    if (!hotelId) {
+      errors.push(`Row ${rowNum}: No matching hotel found`);
+      continue;
+    }
+
+    // Validate room data
+    if (!room.name || room.name.trim().length === 0) {
+      errors.push(`Row ${rowNum}: Room name is required`);
+      continue;
+    }
+    if (room.name.length > 100) {
+      errors.push(`Row ${rowNum}: Room name too long (max 100 chars)`);
+      continue;
+    }
+    
+    const capacity = parseInt(room.capacity || room.max_guests || '2');
+    if (!validateCapacity(capacity)) {
+      errors.push(`Row ${rowNum}: Invalid capacity (must be 1-100)`);
+      continue;
+    }
+    
+    const price = parseFloat(room.price || room.rate || '0');
+    if (!validatePrice(price)) {
+      errors.push(`Row ${rowNum}: Invalid price (must be positive and < 1,000,000)`);
+      continue;
+    }
+
+    if (room.description && room.description.length > 1000) {
+      errors.push(`Row ${rowNum}: Description too long (max 1000 chars)`);
+      continue;
+    }
+
+    roomsToInsert.push({
+      hotel_id: hotelId,
+      name: sanitizeString(room.name, 100),
+      room_number: room.room_number || room.number ? sanitizeString(room.room_number || room.number, 20) : String(i + 1),
+      room_type: room.room_type || room.type || 'standard',
+      capacity: capacity,
+      price: price,
+      description: room.description ? sanitizeString(room.description, 1000) : null,
+      status: room.status || 'ready',
+      is_available: room.is_available !== 'false' && room.is_available !== '0'
+    });
+  }
+
+  if (errors.length > 0) {
+    return {
+      success: false,
+      message: 'Validation errors found',
+      errors: errors.slice(0, 10)
+    };
+  }
+
+  // Insert in batches
+  for (let i = 0; i < roomsToInsert.length; i += 50) {
+    const batch = roomsToInsert.slice(i, i + 50);
+    
+    const { error } = await supabase.from('rooms').insert(batch);
+    if (error) {
+      errors.push(`Batch ${Math.floor(i / 50) + 1} failed: ${error.message}`);
+    } else {
+      imported += batch.length;
     }
   }
 
@@ -446,10 +552,44 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || cleanValue(reservation.Address)
           || null;
         
+        // Validate guest name
+        if (!fullName || fullName.length === 0) {
+          errors.push(`Row ${rowNumber}: Guest name is required`);
+          continue;
+        }
+        if (fullName.length > 100) {
+          errors.push(`Row ${rowNumber}: Guest name too long (max 100 chars)`);
+          continue;
+        }
+        
+        // Validate email if provided
+        if (guestEmail && !validateEmail(guestEmail)) {
+          errors.push(`Row ${rowNumber}: Invalid email format`);
+          continue;
+        }
+        
+        // Validate phone if provided
+        if (guestPhone && !validatePhone(guestPhone)) {
+          errors.push(`Row ${rowNumber}: Invalid phone format`);
+          continue;
+        }
+
+        // Validate address length
+        if (guestAddress && guestAddress.length > 500) {
+          errors.push(`Row ${rowNumber}: Guest address too long (max 500 chars)`);
+          continue;
+        }
+
         const guestCount = parseInt(cleanValue(reservation.guest_count) 
           || cleanValue(reservation.guests) 
           || cleanValue(reservation['Guest Count'])
           || '1') || 1;
+
+        if (guestCount < 1 || guestCount > 100) {
+          errors.push(`Row ${rowNumber}: Invalid guest count (must be 1-100)`);
+          continue;
+        }
+
         // Extract room number - try multiple field names
         const roomNumber = cleanValue(reservation.room_number) 
           || cleanValue(reservation.room) 
@@ -467,7 +607,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         const roomLower = roomNumber.toLowerCase().trim();
         let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomLower}`);
         
-        // Try extracting just numbers (e.g., "102" from "Room 102" or "102 - Double Room")
+        // Try extracting just numbers
         if (!roomId) {
           const numberMatch = roomNumber.match(/\d+/);
           if (numberMatch) {
@@ -481,7 +621,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           roomId = roomByNameMap.get(`${reservationHotelId}_${roomLower}`);
         }
         
-        // Try partial name match (e.g., "Fshat Tili" or "Double Room")
+        // Try partial name match
         if (!roomId) {
           for (const [key, value] of roomByNameMap.entries()) {
             if (key.startsWith(`${reservationHotelId}_`)) {
@@ -499,7 +639,43 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           continue;
         }
 
-        // Find or create guest - phone is optional, use temp if not provided
+        // Parse and validate dates
+        const checkIn = cleanValue(reservation.check_in || reservation.checkin || reservation.arrival);
+        const checkOut = cleanValue(reservation.check_out || reservation.checkout || reservation.departure);
+        
+        if (!checkIn || !checkOut) {
+          errors.push(`Row ${rowNumber}: Check-in and check-out dates are required`);
+          continue;
+        }
+
+        if (!validateDate(checkIn)) {
+          errors.push(`Row ${rowNumber}: Invalid check-in date format`);
+          continue;
+        }
+        if (!validateDate(checkOut)) {
+          errors.push(`Row ${rowNumber}: Invalid check-out date format`);
+          continue;
+        }
+        if (!validateDateRange(checkIn, checkOut)) {
+          errors.push(`Row ${rowNumber}: Check-out must be after check-in`);
+          continue;
+        }
+
+        // Validate total amount
+        const totalAmount = parseFloat(cleanValue(reservation.total_amount || reservation.amount) || '0');
+        if (totalAmount < 0 || totalAmount > 1000000) {
+          errors.push(`Row ${rowNumber}: Invalid total amount (must be 0-1,000,000)`);
+          continue;
+        }
+
+        // Validate notes length
+        const notes = cleanValue(reservation.notes);
+        if (notes && notes.length > 1000) {
+          errors.push(`Row ${rowNumber}: Notes too long (max 1000 chars)`);
+          continue;
+        }
+
+        // Find or create guest
         const finalGuestPhone = guestPhone || `temp_${Date.now()}_${Math.random()}`;
         
         let guestId;
@@ -523,12 +699,12 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
             .from('guests')
             .insert({
               hotel_id: reservationHotelId,
-              name: fullName,
+              name: sanitizeString(fullName, 100),
               phone: finalGuestPhone,
               email: guestEmail,
-              country: guestCountry,
-              city: guestCity,
-              address: guestAddress
+              country: guestCountry ? sanitizeString(guestCountry, 100) : null,
+              city: guestCity ? sanitizeString(guestCity, 100) : null,
+              address: guestAddress ? sanitizeString(guestAddress, 500) : null
             })
             .select('id')
             .single();
@@ -540,49 +716,15 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           guestId = newGuest.id;
         }
 
-        // Parse dates and amounts
-        const checkIn = cleanValue(reservation.check_in) 
-          || cleanValue(reservation.checkin_date) 
-          || cleanValue(reservation.checkin)
-          || cleanValue(reservation['Check In'])
-          || cleanValue(reservation['Check-In']);
-        
-        const checkOut = cleanValue(reservation.check_out) 
-          || cleanValue(reservation.checkout_date) 
-          || cleanValue(reservation.checkout)
-          || cleanValue(reservation['Check Out'])
-          || cleanValue(reservation['Check-Out']);
-        
-        const totalAmount = parseFloat(cleanValue(reservation.total_amount) 
-          || cleanValue(reservation.total) 
-          || cleanValue(reservation.amount)
-          || cleanValue(reservation.Total)
-          || cleanValue(reservation['Total Amount']) 
-          || '0') || 0;
-        
-        const status = normalizeStatus(cleanValue(reservation.status) 
-          || cleanValue(reservation.Status)
-          || cleanValue(reservation['Booking Status']));
-        
-        const paymentStatus = normalizePaymentStatus(cleanValue(reservation.payment_status) 
-          || cleanValue(reservation['Payment Status'])
-          || cleanValue(reservation.Payment));
-        
-        const notes = cleanValue(reservation.notes) 
-          || cleanValue(reservation.Notes)
-          || null;
-
-        if (!checkIn || !checkOut) {
-          errors.push(`Row ${rowNumber}: Missing check_in or check_out dates - guest: ${fullName}`);
-          continue;
-        }
+        const status = normalizeStatus(cleanValue(reservation.status) || cleanValue(reservation.Status) || '');
+        const paymentStatus = normalizePaymentStatus(cleanValue(reservation.payment_status) || cleanValue(reservation.Payment) || '');
 
         // Create booking
         const { error: bookingError } = await supabase.from('bookings').insert({
           hotel_id: reservationHotelId,
           room_id: roomId,
           guest_id: guestId,
-          full_name: fullName,
+          full_name: sanitizeString(fullName, 100),
           guest_phone: finalGuestPhone,
           guest_email: guestEmail,
           guest_count: guestCount,
@@ -591,7 +733,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           total_amount: totalAmount,
           status: status,
           payment_status: paymentStatus,
-          notes: notes
+          notes: notes ? sanitizeString(notes, 1000) : null
         });
 
         if (bookingError) {

@@ -189,7 +189,34 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the request
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
+    
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${authHeader}`,
+        'apikey': supabaseKey,
+      },
+    });
+
+    if (!authResponse.ok) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { csvText } = await req.json();
+
+    if (csvText && csvText.length > 10 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: 'CSV too large (max 10MB)' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!csvText) {
       return new Response(

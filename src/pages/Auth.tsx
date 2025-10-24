@@ -9,6 +9,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().trim().email("Invalid email").max(255),
+  password: z.string().min(6, "Min 6 characters"),
+});
+
+const signupSchema = z.object({
+  email: z.string().trim().email("Invalid email").max(255),
+  password: z.string().min(8, "Min 8 characters").max(100).regex(/[A-Z]/, "Need uppercase").regex(/[0-9]/, "Need number"),
+  fullName: z.string().trim().min(2).max(100),
+  hotelName: z.string().trim().min(2).max(100),
+  hotelAddress: z.string().trim().min(5).max(500),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/, "Invalid phone"),
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -43,7 +58,13 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Execute reCAPTCHA
+      const validation = signupSchema.safeParse(signupData);
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
       const recaptchaToken = await executeRecaptcha('signup');
       if (recaptchaToken) {
         const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
@@ -51,16 +72,15 @@ const Auth = () => {
         });
 
         if (!verifyData?.success) {
-          toast.error("reCAPTCHA verification failed. Please try again.");
+          toast.error("reCAPTCHA failed");
           setLoading(false);
           return;
         }
       }
 
-      // Sign up the user
       const { data: authData, error: signupError } = await supabase.auth.signUp({
-        email: signupData.email,
-        password: signupData.password,
+        email: validation.data.email,
+        password: validation.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
@@ -100,7 +120,13 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Execute reCAPTCHA
+      const validation = loginSchema.safeParse(loginData);
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
       const recaptchaToken = await executeRecaptcha('login');
       if (recaptchaToken) {
         const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
@@ -108,15 +134,15 @@ const Auth = () => {
         });
 
         if (!verifyData?.success) {
-          toast.error("reCAPTCHA verification failed. Please try again.");
+          toast.error("reCAPTCHA failed");
           setLoading(false);
           return;
         }
       }
 
       const { error } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password
+        email: validation.data.email,
+        password: validation.data.password
       });
 
       if (error) throw error;

@@ -11,6 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const hotelSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  email: z.string().trim().email().max(255),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/),
+  address: z.string().trim().min(5).max(500),
+  description: z.string().max(2000).optional(),
+  password: z.string().min(8).max(100).regex(/[A-Z]/).regex(/[0-9]/).optional(),
+});
 
 interface Hotel {
   id: string;
@@ -67,34 +77,31 @@ const HotelManagement = () => {
     e.preventDefault();
 
     try {
+      const validationData: any = { ...formData, description: formData.description || undefined };
+      if (!editingHotel) validationData.password = formData.password;
+      
+      const validation = hotelSchema.safeParse(validationData);
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
       if (editingHotel) {
-        // Update existing hotel (no password change)
-        const { error } = await supabase
-          .from('hotels')
-          .update({
-            name: formData.name,
-            address: formData.address,
-            email: formData.email,
-            phone: formData.phone,
-            description: formData.description,
+        const { error } = await supabase.from('hotels').update({
+            name: validation.data.name,
+            address: validation.data.address,
+            email: validation.data.email,
+            phone: validation.data.phone,
+            description: validation.data.description || null,
             status: formData.status,
             subscription_plan: formData.subscription_plan
-          })
-          .eq('id', editingHotel.id);
-
+          }).eq('id', editingHotel.id);
         if (error) throw error;
-        toast.success("Hotel updated successfully");
+        toast.success("Hotel updated");
       } else {
-        // Create new hotel with user account
-        if (!formData.password) {
-          toast.error("Password is required");
-          return;
-        }
-
-        // Create user account
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
+          email: validation.data.email,
+          password: validation.data.password!,
           options: {
             data: {
               full_name: formData.name
