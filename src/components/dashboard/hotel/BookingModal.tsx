@@ -394,7 +394,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
-                      {Country.getAllCountries().map((country) => (
+                      {Country.getAllCountries()
+                        .filter((country) => country?.isoCode && country.isoCode.trim() !== "" && country?.name && country.name.trim() !== "")
+                        .map((country) => (
                         <SelectItem key={country.isoCode} value={country.isoCode}>
                           {country.flag} {country.name}
                         </SelectItem>

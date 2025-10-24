@@ -88,13 +88,16 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
     notes: null,
   });
 
+  // Sanitize headers (Radix Select cannot handle empty-string values)
+  const safeHeaders = useMemo(() => (headers || []).filter((h) => typeof h === "string" && h.trim() !== ""), [headers.join(",")]);
+
   // Auto-suggest based on aliases and available headers
   React.useEffect(() => {
     const initial: Record<CanonicalField, string | null> = { ...mapping };
     ALL_FIELDS.forEach((field) => {
       if (initial[field]) return;
       const aliases = ALIAS_SUGGESTIONS[field] || [];
-      const found = headers.find((h) => aliases.map(a => a.toLowerCase()).includes(h.toLowerCase()));
+      const found = safeHeaders.find((h) => aliases.map(a => a.toLowerCase()).includes(h.toLowerCase()));
       initial[field] = found || null;
     });
     setMapping(initial);
@@ -138,7 +141,7 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
                   <SelectItem value="__none__">-- None --</SelectItem>
-                  {headers.map((h) => (
+                  {safeHeaders.map((h) => (
                     <SelectItem key={`${field}-${h}`} value={h}>{h}</SelectItem>
                   ))}
                 </SelectContent>
@@ -164,7 +167,7 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
             <Table>
               <TableHeader>
                 <TableRow>
-                  {headers.map((h) => (
+                  {safeHeaders.map((h) => (
                     <TableHead key={`h-${h}`} className="text-xs whitespace-nowrap">{h}</TableHead>
                   ))}
                 </TableRow>
@@ -172,7 +175,7 @@ const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCan
               <TableBody>
                 {previewRows.slice(0, 5).map((row, idx) => (
                   <TableRow key={`r-${idx}`}>
-                    {headers.map((h) => (
+                    {safeHeaders.map((h) => (
                       <TableCell key={`c-${idx}-${h}`} className="text-xs whitespace-nowrap max-w-[200px] truncate">
                         {String(row[h] ?? "")}
                       </TableCell>
