@@ -17,8 +17,8 @@ import { z } from "zod";
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
   phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
-  email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
   country: z.string().min(1, "Country is required"),
+  city: z.string().min(1, "City is required"),
   guestCount: z.number().min(1, "At least 1 guest required"),
 });
 
@@ -149,8 +149,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         const validation = guestSchema.safeParse({
           fullName: guestName,
           phone: guestPhone,
-          email: guestEmail,
           country: guestCountry,
+          city: guestCity,
           guestCount: guestCount,
         });
 
@@ -365,19 +365,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   )}
                 </div>
                 <div>
-                  <Label>Email *</Label>
+                  <Label>Email</Label>
                   <Input 
                     type="email" 
                     value={guestEmail} 
-                    onChange={(e) => {
-                      setGuestEmail(e.target.value);
-                      setValidationErrors(prev => ({ ...prev, email: "" }));
-                    }}
-                    className={validationErrors.email ? "border-destructive" : ""}
+                    onChange={(e) => setGuestEmail(e.target.value)}
                   />
-                  {validationErrors.email && (
-                    <p className="text-xs text-destructive mt-1">{validationErrors.email}</p>
-                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -408,13 +401,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   )}
                 </div>
                 <div>
-                  <Label>City</Label>
+                  <Label>City *</Label>
                   <Select 
                     value={guestCity} 
-                    onValueChange={setGuestCity}
+                    onValueChange={(value) => {
+                      setGuestCity(value);
+                      setValidationErrors(prev => ({ ...prev, city: "" }));
+                    }}
                     disabled={!guestCountry || availableCities.length === 0}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={validationErrors.city ? "border-destructive" : ""}>
                       <SelectValue placeholder={!guestCountry ? "Select country first" : "Select city"} />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
@@ -425,6 +421,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.city && (
+                    <p className="text-xs text-destructive mt-1">{validationErrors.city}</p>
+                  )}
                 </div>
               </div>
               <div>
