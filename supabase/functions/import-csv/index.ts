@@ -312,7 +312,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
     const allowed = new Set([
       'guest_name','guest_phone','guest_email','guest_country','guest_city','guest_address','guest_count','room_number','check_in','check_out','total_amount','status','payment_status','notes'
     ]);
-    const required = ['guest_name','room_number','check_in','check_out','total_amount'];
+    const required = ['guest_name','room_number','check_in','check_out'];
     const headers = Object.keys(csvData[0] || {});
     const unknown = headers.filter((h) => !allowed.has(h));
     const missing = required.filter((r) => !headers.includes(r));
@@ -461,9 +461,10 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
 
         // Find room using flexible matching
-        let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+        const roomLower = roomNumber.toLowerCase().trim();
+        let roomId = roomByNumberMap.get(`${reservationHotelId}_${roomLower}`);
         
-        // Try extracting just numbers (e.g., "102" from "Room 102" or "102 - Double")
+        // Try extracting just numbers (e.g., "102" from "Room 102" or "102 - Double Room")
         if (!roomId) {
           const numberMatch = roomNumber.match(/\d+/);
           if (numberMatch) {
@@ -474,7 +475,20 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         
         // Try by full name match
         if (!roomId) {
-          roomId = roomByNameMap.get(`${reservationHotelId}_${roomNumber.toLowerCase()}`);
+          roomId = roomByNameMap.get(`${reservationHotelId}_${roomLower}`);
+        }
+        
+        // Try partial name match (e.g., "Fshat Tili" or "Double Room")
+        if (!roomId) {
+          for (const [key, value] of roomByNameMap.entries()) {
+            if (key.startsWith(`${reservationHotelId}_`)) {
+              const roomName = key.substring(`${reservationHotelId}_`.length);
+              if (roomName.includes(roomLower) || roomLower.includes(roomName)) {
+                roomId = value;
+                break;
+              }
+            }
+          }
         }
 
         if (!roomId) {
@@ -482,7 +496,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           continue;
         }
 
-        // Find or create guest - use temporary phone if none provided
+        // Find or create guest - phone is optional, use temp if not provided
         const finalGuestPhone = guestPhone || `temp_${Date.now()}_${Math.random()}`;
         
         let guestId;
@@ -541,7 +555,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || cleanValue(reservation.amount)
           || cleanValue(reservation.Total)
           || cleanValue(reservation['Total Amount']) 
-          || '0');
+          || '0') || 0;
         
         const status = normalizeStatus(cleanValue(reservation.status) 
           || cleanValue(reservation.Status)

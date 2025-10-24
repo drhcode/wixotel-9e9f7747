@@ -40,11 +40,9 @@ const ALL_FIELDS: CanonicalField[] = [
 
 const REQUIRED_FIELDS: CanonicalField[] = [
   "guest_name",
-  "guest_phone",
   "room_number",
   "check_in",
   "check_out",
-  "total_amount",
 ];
 
 const ALIAS_SUGGESTIONS: Record<CanonicalField, string[]> = {
