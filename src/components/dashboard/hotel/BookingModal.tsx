@@ -11,6 +11,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Country, City } from "country-state-city";
+import { z } from "zod";
+
+const guestSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
+  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
+  country: z.string().min(1, "Country is required"),
+  guestCount: z.number().min(1, "At least 1 guest required"),
+});
 
 interface Props {
   isOpen: boolean;
@@ -36,6 +46,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestCity, setGuestCity] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
   const [guestCount, setGuestCount] = useState(1);
+  const [availableCities, setAvailableCities] = useState<any[]>([]);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
@@ -50,6 +62,21 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       }
     }
   }, [isOpen, checkIn, checkOut]);
+
+  // Update cities when country changes
+  useEffect(() => {
+    if (guestCountry) {
+      const cities = City.getCitiesOfCountry(guestCountry);
+      setAvailableCities(cities || []);
+      // Reset city if current selection is not in new country
+      if (guestCity && !cities?.some(c => c.name === guestCity)) {
+        setGuestCity("");
+      }
+    } else {
+      setAvailableCities([]);
+      setGuestCity("");
+    }
+  }, [guestCountry]);
 
   const fetchGuests = async () => {
     const { data } = await supabase
@@ -109,13 +136,31 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   }, [selectedRoom, checkIn, checkOut, availableRooms]);
   const handleSubmit = async () => {
     setLoading(true);
+    setValidationErrors({});
+    
     try {
       let guestId = selectedGuest;
 
       // If "new" is selected or no guest selected, create a new guest
       if (selectedGuest === 'new' || !selectedGuest) {
-        if (!guestName || !guestPhone) {
-          toast.error("Guest name and phone are required");
+        // Validate required fields
+        const validation = guestSchema.safeParse({
+          fullName: guestName,
+          phone: guestPhone,
+          email: guestEmail,
+          country: guestCountry,
+          guestCount: guestCount,
+        });
+
+        if (!validation.success) {
+          const errors: Record<string, string> = {};
+          validation.error.errors.forEach((err) => {
+            if (err.path[0]) {
+              errors[err.path[0] as string] = err.message;
+            }
+          });
+          setValidationErrors(errors);
+          toast.error("Please fill all required fields correctly");
           setLoading(false);
           return;
         }
@@ -289,27 +334,93 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           {(!selectedGuest || selectedGuest === 'new') && (
             <>
               <div>
-                <Label>Guest Name *</Label>
-                <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} />
+                <Label>Full Name *</Label>
+                <Input 
+                  value={guestName} 
+                  onChange={(e) => {
+                    setGuestName(e.target.value);
+                    setValidationErrors(prev => ({ ...prev, fullName: "" }));
+                  }}
+                  className={validationErrors.fullName ? "border-destructive" : ""}
+                />
+                {validationErrors.fullName && (
+                  <p className="text-xs text-destructive mt-1">{validationErrors.fullName}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Phone *</Label>
-                  <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+                  <Input 
+                    value={guestPhone} 
+                    onChange={(e) => {
+                      setGuestPhone(e.target.value);
+                      setValidationErrors(prev => ({ ...prev, phone: "" }));
+                    }}
+                    className={validationErrors.phone ? "border-destructive" : ""}
+                  />
+                  {validationErrors.phone && (
+                    <p className="text-xs text-destructive mt-1">{validationErrors.phone}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Email</Label>
-                  <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
+                  <Label>Email *</Label>
+                  <Input 
+                    type="email" 
+                    value={guestEmail} 
+                    onChange={(e) => {
+                      setGuestEmail(e.target.value);
+                      setValidationErrors(prev => ({ ...prev, email: "" }));
+                    }}
+                    className={validationErrors.email ? "border-destructive" : ""}
+                  />
+                  {validationErrors.email && (
+                    <p className="text-xs text-destructive mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Country</Label>
-                  <Input value={guestCountry} onChange={(e) => setGuestCountry(e.target.value)} />
+                  <Label>Country *</Label>
+                  <Select 
+                    value={guestCountry} 
+                    onValueChange={(value) => {
+                      setGuestCountry(value);
+                      setValidationErrors(prev => ({ ...prev, country: "" }));
+                    }}
+                  >
+                    <SelectTrigger className={validationErrors.country ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-[100] max-h-[300px]">
+                      {Country.getAllCountries().map((country) => (
+                        <SelectItem key={country.isoCode} value={country.isoCode}>
+                          {country.flag} {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {validationErrors.country && (
+                    <p className="text-xs text-destructive mt-1">{validationErrors.country}</p>
+                  )}
                 </div>
                 <div>
                   <Label>City</Label>
-                  <Input value={guestCity} onChange={(e) => setGuestCity(e.target.value)} />
+                  <Select 
+                    value={guestCity} 
+                    onValueChange={setGuestCity}
+                    disabled={!guestCountry || availableCities.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!guestCountry ? "Select country first" : "Select city"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-[100] max-h-[300px]">
+                      {availableCities.map((city) => (
+                        <SelectItem key={city.name} value={city.name}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div>
@@ -320,13 +431,20 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           )}
 
           <div>
-            <Label>Number of Guests</Label>
+            <Label>Number of Guests *</Label>
             <Input 
               type="number" 
               min="1" 
               value={guestCount} 
-              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)} 
+              onChange={(e) => {
+                setGuestCount(parseInt(e.target.value) || 1);
+                setValidationErrors(prev => ({ ...prev, guestCount: "" }));
+              }}
+              className={validationErrors.guestCount ? "border-destructive" : ""}
             />
+            {validationErrors.guestCount && (
+              <p className="text-xs text-destructive mt-1">{validationErrors.guestCount}</p>
+            )}
           </div>
 
           <div>
