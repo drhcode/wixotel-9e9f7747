@@ -31,7 +31,7 @@ const AllReservations = () => {
 
   useEffect(() => {
     const filtered = bookings.filter(booking =>
-      booking.guest_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.guest_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.guest_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.hotels?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +57,7 @@ const AllReservations = () => {
     const headers = ['Hotel', 'Guest Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
     const csvData = filteredBookings.map(booking => [
       booking.hotels?.name || '',
-      booking.guests?.name || booking.guest_name || '',
+      booking.guests?.name || booking.full_name || '',
       booking.guest_email || booking.guests?.email || '',
       booking.guest_phone || booking.guests?.phone || '',
       `Room ${booking.rooms?.room_number || booking.rooms?.name || ''}`,
@@ -150,7 +150,7 @@ const AllReservations = () => {
                   <TableCell className="font-medium">{booking.hotels?.name}</TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div>{booking.guests?.name || booking.guest_name}</div>
+                      <div>{booking.guests?.name || booking.full_name}</div>
                       <div className="text-muted-foreground text-xs">
                         {booking.guest_email || booking.guests?.email}
                       </div>

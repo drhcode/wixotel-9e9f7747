@@ -162,7 +162,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
         <div className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground">Guest</p>
-            <p className="font-medium">{booking.guests?.name || booking.guest_name}</p>
+            <p className="font-medium">{booking.guests?.name || booking.full_name}</p>
           </div>
           
           {!isEditing ? (

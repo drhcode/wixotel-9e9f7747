@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export type CanonicalField =
-  | "guest_name"
+  | "full_name"
   | "guest_phone"
   | "guest_email"
   | "guest_country"
@@ -22,7 +22,7 @@ export type CanonicalField =
   | "notes";
 
 const ALL_FIELDS: CanonicalField[] = [
-  "guest_name",
+  "full_name",
   "guest_phone",
   "guest_email",
   "guest_country",
@@ -39,14 +39,14 @@ const ALL_FIELDS: CanonicalField[] = [
 ];
 
 const REQUIRED_FIELDS: CanonicalField[] = [
-  "guest_name",
+  "full_name",
   "room_number",
   "check_in",
   "check_out",
 ];
 
 const ALIAS_SUGGESTIONS: Record<CanonicalField, string[]> = {
-  guest_name: ["guest_name", "name", "Guest", "Guest Name", "full_name", "Full Name", "customer_name", "Customer Name", "client_name", "Client Name", "first_name", "First Name", "last_name", "Last Name"],
+  full_name: ["full_name", "Full Name", "fullname", "FullName"],
   guest_phone: ["guest_phone", "phone", "Guest Phone"],
   guest_email: ["guest_email", "email", "Guest Email"],
   guest_country: ["guest_country", "country", "Country"],
@@ -72,7 +72,7 @@ interface CsvMapperProps {
 
 const CsvMapper: React.FC<CsvMapperProps> = ({ open, headers, previewRows, onCancel, onConfirm }) => {
   const [mapping, setMapping] = useState<Record<CanonicalField, string | null>>({
-    guest_name: null,
+    full_name: null,
     guest_phone: null,
     guest_email: null,
     guest_country: null,

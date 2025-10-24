@@ -360,7 +360,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                               onClick={() => setSelectedBooking(startBooking)}
                             >
                               <div className="font-semibold truncate">
-                                {startBooking.guests?.name || startBooking.guest_name}
+                                {startBooking.guests?.name || startBooking.full_name}
                               </div>
                               <div className="text-[10px] opacity-90 truncate">
                                 {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
@@ -450,7 +450,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="font-medium">{booking.guests?.name || booking.guest_name}</p>
+                      <p className="font-medium">{booking.guests?.name || booking.full_name}</p>
                       <p className="text-sm text-muted-foreground">
                         Room {booking.rooms?.room_number || booking.rooms?.name}
                       </p>

@@ -150,7 +150,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         hotel_id: hotelId,
         room_id: selectedRoom,
         guest_id: guestId,
-        guest_name: guestName || existingGuest?.name,
+        full_name: guestName || existingGuest?.name,
         guest_phone: guestPhone || existingGuest?.phone,
         guest_email: guestEmail || existingGuest?.email,
         check_in: format(ci, 'yyyy-MM-dd'),

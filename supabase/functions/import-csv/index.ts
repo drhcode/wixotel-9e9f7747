@@ -310,9 +310,9 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
   // Strict header validation
   if (strict && csvData.length > 0) {
     const allowed = new Set([
-      'guest_name','guest_phone','guest_email','guest_country','guest_city','guest_address','guest_count','room_number','check_in','check_out','total_amount','status','payment_status','notes'
+      'full_name','guest_phone','guest_email','guest_country','guest_city','guest_address','guest_count','room_number','check_in','check_out','total_amount','status','payment_status','notes'
     ]);
-    const required = ['guest_name','room_number','check_in','check_out'];
+    const required = ['full_name','room_number','check_in','check_out'];
     const headers = Object.keys(csvData[0] || {});
     const unknown = headers.filter((h) => !allowed.has(h));
     const missing = required.filter((r) => !headers.includes(r));
@@ -403,33 +403,20 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         let reservationHotelId = hotelId;
         
         // Clean and normalize all fields - try multiple possible field names
-        let guestName = cleanValue(reservation.guest_name)
-          || cleanValue(reservation.name)
-          || cleanValue(reservation.Name)
-          || cleanValue(reservation.Guest)
-          || cleanValue(reservation['Guest Name'])
-          || cleanValue(reservation.full_name)
+        const fullName = cleanValue(reservation.full_name) 
           || cleanValue(reservation['Full Name'])
-          || cleanValue(reservation.customer_name)
-          || cleanValue(reservation['Customer Name'])
-          || cleanValue(reservation.client_name)
-          || cleanValue(reservation['Client Name'])
-          || (() => {
-            const fn = cleanValue(reservation.first_name) 
-              || cleanValue(reservation['First Name']) 
-              || cleanValue(reservation.firstname) 
-              || cleanValue(reservation['FirstName']);
-            const ln = cleanValue(reservation.last_name) 
-              || cleanValue(reservation['Last Name']) 
-              || cleanValue(reservation.lastname) 
-              || cleanValue(reservation['LastName']);
-            const combined = [fn, ln].filter(Boolean).join(' ').trim();
-            return combined || '';
-          })();
+          || cleanValue(reservation.fullname)
+          || cleanValue(reservation['FullName']);
         
-        if (!guestName) {
-          errors.push(`Row ${rowNumber}: Missing guest_name - unable to derive name`);
+        if (!fullName) {
+          errors.push(`Row ${rowNumber}: Missing full_name`);
+          console.log(`Row ${rowNumber} full data:`, reservation);
           continue;
+        }
+        
+        // Log every 10th row to help debug
+        if (rowNumber % 10 === 0) {
+          console.log(`Row ${rowNumber} - Guest: ${fullName}, Room: ${cleanValue(reservation.room_number)}`);
         }
         
         const guestPhone = cleanValue(reservation.guest_phone) 
@@ -463,12 +450,6 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || cleanValue(reservation.guests) 
           || cleanValue(reservation['Guest Count'])
           || '1') || 1;
-        
-        // Log every 10th row to help debug
-        if (rowNumber % 10 === 0) {
-          console.log(`Row ${rowNumber} - Guest: ${guestName}, Room: ${cleanValue(reservation.room_number)}`);
-        }
-        
         // Extract room number - try multiple field names
         const roomNumber = cleanValue(reservation.room_number) 
           || cleanValue(reservation.room) 
@@ -477,7 +458,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || cleanValue(reservation['Room Number']);
         
         if (!roomNumber) {
-          errors.push(`Row ${rowNumber}: Missing room_number - guest: ${guestName}`);
+          errors.push(`Row ${rowNumber}: Missing room_number - guest: ${fullName}`);
           console.log(`Row ${rowNumber} full data:`, reservation);
           continue;
         }
@@ -514,7 +495,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
 
         if (!roomId) {
-          errors.push(`Row ${rowNumber}: Room "${roomNumber}" not found - guest: ${guestName}`);
+          errors.push(`Row ${rowNumber}: Room "${roomNumber}" not found - guest: ${fullName}`);
           continue;
         }
 
@@ -542,7 +523,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
             .from('guests')
             .insert({
               hotel_id: reservationHotelId,
-              name: guestName,
+              name: fullName,
               phone: finalGuestPhone,
               email: guestEmail,
               country: guestCountry,
@@ -553,7 +534,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
             .single();
 
           if (guestError) {
-            errors.push(`Row ${rowNumber}: Failed to create guest ${guestName}: ${guestError.message}`);
+            errors.push(`Row ${rowNumber}: Failed to create guest ${fullName}: ${guestError.message}`);
             continue;
           }
           guestId = newGuest.id;
@@ -592,7 +573,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || null;
 
         if (!checkIn || !checkOut) {
-          errors.push(`Row ${rowNumber}: Missing check_in or check_out dates - guest: ${guestName}`);
+          errors.push(`Row ${rowNumber}: Missing check_in or check_out dates - guest: ${fullName}`);
           continue;
         }
 
@@ -601,7 +582,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           hotel_id: reservationHotelId,
           room_id: roomId,
           guest_id: guestId,
-          guest_name: guestName,
+          full_name: fullName,
           guest_phone: finalGuestPhone,
           guest_email: guestEmail,
           guest_count: guestCount,
@@ -614,7 +595,7 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         });
 
         if (bookingError) {
-          errors.push(`Row ${rowNumber}: Failed to create booking for ${guestName}: ${bookingError.message}`);
+          errors.push(`Row ${rowNumber}: Failed to create booking for ${fullName}: ${bookingError.message}`);
         } else {
           imported++;
         }

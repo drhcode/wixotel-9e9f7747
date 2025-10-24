@@ -83,9 +83,9 @@ const BookingsManager = ({ hotelId }: Props) => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Guest Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
+    const headers = ['Full Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
     const csvData = filteredBookings.map(booking => [
-      booking.guest_name || '',
+      booking.full_name || '',
       booking.guest_email || '',
       booking.guest_phone || '',
       booking.rooms?.name || '',
@@ -115,7 +115,7 @@ const BookingsManager = ({ hotelId }: Props) => {
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      booking.guest_name?.toLowerCase().includes(searchLower) ||
+      booking.full_name?.toLowerCase().includes(searchLower) ||
       booking.guest_email?.toLowerCase().includes(searchLower) ||
       booking.rooms?.name?.toLowerCase().includes(searchLower) ||
       booking.status?.toLowerCase().includes(searchLower)
@@ -163,7 +163,7 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   const downloadTemplate = () => {
     const headers = [
-      'guest_name',
+      'full_name',
       'guest_phone',
       'guest_email',
       'guest_country',
@@ -402,7 +402,7 @@ const BookingsManager = ({ hotelId }: Props) => {
               <div>
                 <p className="font-semibold text-foreground mb-1">Required Fields (must be present):</p>
                 <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                  <li><code className="bg-muted px-1 rounded">guest_name</code> - Full name of the guest</li>
+                  <li><code className="bg-muted px-1 rounded">full_name</code> - Full name of the guest</li>
                   <li><code className="bg-muted px-1 rounded">room_number</code> - Room identifier (e.g., "101", "102 - Double Room", "Fshat Tili")</li>
                   <li><code className="bg-muted px-1 rounded">check_in</code> - Check-in date in YYYY-MM-DD format</li>
                   <li><code className="bg-muted px-1 rounded">check_out</code> - Check-out date in YYYY-MM-DD format</li>
@@ -466,7 +466,7 @@ const BookingsManager = ({ hotelId }: Props) => {
               <TableBody>
                 {paginatedBookings.map((booking) => (
                   <TableRow key={booking.id}>
-                    <TableCell>{booking.guest_name}</TableCell>
+                    <TableCell>{booking.full_name}</TableCell>
                     <TableCell>{booking.rooms?.name}</TableCell>
                     <TableCell>{new Date(booking.check_in).toLocaleDateString()}</TableCell>
                     <TableCell>{new Date(booking.check_out).toLocaleDateString()}</TableCell>
