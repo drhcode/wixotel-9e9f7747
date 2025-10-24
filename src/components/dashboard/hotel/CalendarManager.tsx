@@ -33,6 +33,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const TIMELINE_DAYS = 12;
 
   useEffect(() => {
     fetchRooms();
@@ -56,7 +57,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     setIsLoading(true);
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
-    const timelineEnd = addDays(timelineStartDate, 13); // 14 days total (0..13)
+    const timelineEnd = addDays(timelineStartDate, TIMELINE_DAYS - 1);
 
     // Fetch bookings that intersect the current month OR the timeline window
     // The last OR cond checks intersection with the timeline window inclusive
@@ -121,7 +122,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   };
 
   const getStartCellBookingForRoom = (roomId: string, date: Date) => {
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
+    const lastVisibleDate = startOfDay(addDays(timelineStartDate, TIMELINE_DAYS - 1));
     const windowStart = startOfDay(timelineStartDate);
     const dateStr = format(startOfDay(date), "yyyy-MM-dd");
 
@@ -149,7 +150,7 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const generateTimelineDates = () => {
     const dates: Date[] = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < TIMELINE_DAYS; i++) {
       dates.push(addDays(timelineStartDate, i));
     }
     return dates;
@@ -162,7 +163,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     const checkOut = startOfDay(new Date(booking.check_out));
     const currentDate = startOfDay(date);
     const windowStart = startOfDay(timelineStartDate);
-    const lastVisibleDate = startOfDay(addDays(timelineStartDate, 13));
+    const lastVisibleDate = startOfDay(addDays(timelineStartDate, TIMELINE_DAYS - 1));
 
     // Start cell for this booking within current window
     const startCell = new Date(Math.max(checkIn.getTime(), windowStart.getTime()));
@@ -268,23 +269,23 @@ const CalendarManager = ({ hotelId }: Props) => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -14))}
+                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -TIMELINE_DAYS))}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(new Date())}>
                 Today
               </Button>
-              <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, 14))}>
+              <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, TIMELINE_DAYS))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
           <div className="overflow-x-auto relative rounded-lg border">
-            <div className="min-w-[1200px] bg-background">
+            <div className="min-w-[1400px] bg-background">
               {/* Header */}
-              <div className="grid relative" style={{ gridTemplateColumns: "300px repeat(14, 1fr)" }}>
+              <div className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
                 <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                   Room
                 </div>
@@ -312,7 +313,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 const renderedDateIndices = new Set<number>();
 
                 return (
-                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "300px repeat(14, 1fr)" }}>
+                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                       <div className="text-sm font-bold">
                         {room.room_number} {room.name}
@@ -347,7 +348,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                             style={{ gridColumnStart: gridStart, gridColumnEnd: gridEnd }}
                           >
                             <div
-                              className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg"
+                              className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg group"
                               style={{
                                 backgroundColor: `${getStatusColor(startBooking.status)}20`,
                                 border: `2px solid ${getStatusColor(startBooking.status)}`,
@@ -358,6 +359,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                                 bottom: "8px",
                               }}
                               onClick={() => setSelectedBooking(startBooking)}
+                              title={startBooking.full_name || startBooking.guests?.name}
                             >
                               <div className="font-semibold truncate">
                                 {startBooking.full_name || startBooking.guests?.name}
