@@ -32,7 +32,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [timelineStartDate, setTimelineStartDate] = useState<Date>(new Date());
+  const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
   const TIMELINE_DAYS = 12;
 
@@ -151,8 +151,9 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const generateTimelineDates = () => {
     const dates: Date[] = [];
+    const normalizedStart = startOfDay(timelineStartDate);
     for (let i = 0; i < TIMELINE_DAYS; i++) {
-      dates.push(addDays(timelineStartDate, i));
+      dates.push(startOfDay(addDays(normalizedStart, i)));
     }
     return dates;
   };
@@ -271,7 +272,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <Select
                   value={format(timelineStartDate, "M")}
                   onValueChange={(value) => {
-                    const newDate = new Date(timelineStartDate);
+                    const newDate = startOfDay(new Date(timelineStartDate));
                     newDate.setMonth(parseInt(value) - 1);
                     setTimelineStartDate(newDate);
                   }}
@@ -290,7 +291,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <Select
                   value={format(timelineStartDate, "yyyy")}
                   onValueChange={(value) => {
-                    const newDate = new Date(timelineStartDate);
+                    const newDate = startOfDay(new Date(timelineStartDate));
                     newDate.setFullYear(parseInt(value));
                     setTimelineStartDate(newDate);
                   }}
@@ -314,14 +315,14 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setTimelineStartDate(addDays(timelineStartDate, -TIMELINE_DAYS))}
+                  onClick={() => setTimelineStartDate(startOfDay(addDays(timelineStartDate, -TIMELINE_DAYS)))}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(new Date())}>
+                <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(startOfDay(new Date()))}>
                   Today
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, TIMELINE_DAYS))}>
+                <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(startOfDay(addDays(timelineStartDate, TIMELINE_DAYS)))}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
