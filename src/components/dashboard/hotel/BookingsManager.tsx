@@ -39,7 +39,6 @@ const BookingsManager = ({ hotelId }: Props) => {
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [allowDataClear, setAllowDataClear] = useState(false);
   // CSV mapping state
   const [mapperOpen, setMapperOpen] = useState(false);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
@@ -49,23 +48,7 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   useEffect(() => {
     fetchBookings();
-    fetchHotelSettings();
   }, [hotelId]);
-
-  const fetchHotelSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('hotels')
-        .select('allow_data_clear')
-        .eq('id', hotelId)
-        .single();
-      
-      if (error) throw error;
-      setAllowDataClear(data?.allow_data_clear || false);
-    } catch (error) {
-      console.error("Error fetching hotel settings:", error);
-    }
-  };
 
   const fetchBookings = async () => {
     try {
@@ -249,24 +232,6 @@ const BookingsManager = ({ hotelId }: Props) => {
     }
   };
 
-  const handleClearAll = async () => {
-    if (!confirm('⚠️ Are you sure you want to delete ALL bookings and guests? This cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('clear-hotel-data');
-      
-      if (error) throw error;
-      
-      toast.success(`Cleared ${data.bookingsDeleted} bookings and ${data.guestsDeleted} guests`);
-      fetchBookings();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to clear data');
-      console.error(error);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -275,16 +240,6 @@ const BookingsManager = ({ hotelId }: Props) => {
           <p className="text-muted-foreground">View and manage all bookings · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {allowDataClear && (
-            <Button
-              variant="destructive"
-              onClick={handleClearAll}
-              size="sm"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear All Data
-            </Button>
-          )}
           <Button
             variant="outline"
             onClick={exportToCSV}
