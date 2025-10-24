@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import legacy from "@vitejs/plugin-legacy";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -9,13 +10,19 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    legacy({
+      targets: ["defaults", "safari >= 10.1", "ios_saf >= 10.3"],
+      renderLegacyChunks: true,
+      additionalLegacyPolyfills: ["whatwg-fetch"],
+      modernPolyfills: true,
+    }),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  build: {
-    target: ["es2020", "safari13"],
   },
 }));
