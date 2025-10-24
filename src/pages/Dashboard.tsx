@@ -34,17 +34,52 @@ const Dashboard = () => {
       }
     };
 
+    const checkUserAndRole = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+          if (mounted) {
+            setLoading(false);
+            navigate("/auth");
+          }
+          return;
+        }
+
+        // Get user role
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (roleError) throw roleError;
+
+        if (mounted) {
+          setUserRole(roleData.role);
+          sessionStorage.setItem('user_role', roleData.role);
+        }
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        if (mounted) {
+          setLoading(false);
+          navigate("/auth");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           // Defer heavy work outside the callback
           setTimeout(() => fetchRole(session.user!.id), 0);
-        } else {
-          setLoading(false);
-          navigate("/auth");
         }
       } else if (event === 'SIGNED_OUT') {
         sessionStorage.removeItem('user_role');
@@ -61,34 +96,6 @@ const Dashboard = () => {
     };
   }, [navigate]);
 
-  const checkUserAndRole = async () => {
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) throw sessionError;
-
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-
-      // Get user role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (roleError) throw roleError;
-
-      setUserRole(roleData.role);
-    } catch (error) {
-      console.error("Error checking user role:", error);
-      navigate("/auth");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (

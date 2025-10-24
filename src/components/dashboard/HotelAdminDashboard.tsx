@@ -37,13 +37,16 @@ const HotelAdminDashboard = () => {
   const fetchHotelData = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setLoading(false);
+        return;
+      }
 
       const { data: hotelData, error } = await supabase
         .from('hotels')
         .select('*')
         .eq('owner_id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setHotel(hotelData);

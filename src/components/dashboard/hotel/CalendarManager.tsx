@@ -38,8 +38,10 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   useEffect(() => {
     fetchRooms();
+  }, [hotelId]);
+
+  useEffect(() => {
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotelId, currentMonth, timelineStartDate]);
 
   const fetchRooms = async () => {
