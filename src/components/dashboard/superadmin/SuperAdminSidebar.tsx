@@ -1,13 +1,16 @@
-import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 interface SuperAdminSidebarProps {
   activeTab: string;
@@ -24,8 +27,30 @@ const menuItems = [
 ];
 
 export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarProps) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleMenuClick = (tabId: string) => {
+    onTabChange(tabId);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar className="border-r">
+      {isMobile && (
+        <SidebarHeader className="flex flex-row items-center justify-between border-b pb-2">
+          <h2 className="text-lg font-semibold">Menu</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setOpenMobile(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </SidebarHeader>
+      )}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -33,7 +58,7 @@ export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarP
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                     isActive={activeTab === item.id}
                     tooltip={item.label}
                   >
