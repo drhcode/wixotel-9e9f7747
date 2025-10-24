@@ -161,74 +161,6 @@ const BookingsManager = ({ hotelId }: Props) => {
     });
   };
 
-  const downloadTemplate = () => {
-    const headers = [
-      'full_name',
-      'guest_phone',
-      'guest_email',
-      'guest_country',
-      'guest_city',
-      'guest_address',
-      'room_number',
-      'check_in',
-      'check_out',
-      'total_amount',
-      'status',
-      'payment_status',
-      'notes'
-    ];
-    
-    const exampleRows = [
-      [
-        'John Doe',
-        '+1234567890',
-        'john@example.com',
-        'USA',
-        'New York',
-        '123 Main St',
-        '101',
-        '2024-01-15',
-        '2024-01-20',
-        '500.00',
-        'reserved',
-        'paid',
-        'Early check-in requested'
-      ],
-      [
-        'Jane Smith',
-        '+9876543210',
-        'jane@example.com',
-        'UK',
-        'London',
-        '456 Park Ave',
-        '102',
-        '2024-01-18',
-        '2024-01-22',
-        '750.00',
-        'pending',
-        'pending',
-        ''
-      ]
-    ];
-
-    const csvContent = [
-      headers.join(','),
-      ...exampleRows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'reservations_import_template.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Template downloaded successfully');
-  };
 
   const handleCSVImport = async (normalizedRows: any[]) => {
     setImporting(true);
@@ -337,12 +269,12 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>
           <p className="text-muted-foreground">View and manage all bookings · Total: {bookings.length} booking{bookings.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {allowDataClear && (
             <Button
               variant="destructive"
@@ -360,13 +292,6 @@ const BookingsManager = ({ hotelId }: Props) => {
           >
             <Download className="h-4 w-4 mr-2" />
             Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            onClick={downloadTemplate}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download Template
           </Button>
           <label htmlFor="csv-upload">
             <input
