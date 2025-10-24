@@ -132,9 +132,11 @@ const CalendarManager = ({ hotelId }: Props) => {
 
       const bStart = startOfDay(new Date(booking.check_in));
       const bEnd = startOfDay(new Date(booking.check_out));
+      // Last occupied day is one day before checkout (checkout day is free)
+      const lastOccupiedDay = addDays(bEnd, -1);
 
-      // Overlaps the window (inclusive) — we want to show bookings that touch the window edges
-      const overlaps = bStart.getTime() <= lastVisibleDate.getTime() && bEnd.getTime() >= windowStart.getTime();
+      // Check if booking overlaps with window (checkout day not occupied)
+      const overlaps = bStart.getTime() <= lastVisibleDate.getTime() && lastOccupiedDay.getTime() >= windowStart.getTime();
       if (!overlaps) continue;
 
       // Start cell is the later of booking start and window start
