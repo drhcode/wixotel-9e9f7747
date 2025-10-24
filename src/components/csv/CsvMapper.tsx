@@ -46,7 +46,7 @@ const REQUIRED_FIELDS: CanonicalField[] = [
 ];
 
 const ALIAS_SUGGESTIONS: Record<CanonicalField, string[]> = {
-  guest_name: ["guest_name", "name", "Guest", "Guest Name"],
+  guest_name: ["guest_name", "name", "Guest", "Guest Name", "full_name", "Full Name", "customer_name", "Customer Name", "client_name", "Client Name", "first_name", "First Name", "last_name", "Last Name"],
   guest_phone: ["guest_phone", "phone", "Guest Phone"],
   guest_email: ["guest_email", "email", "Guest Email"],
   guest_country: ["guest_country", "country", "Country"],

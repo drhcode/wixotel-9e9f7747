@@ -403,12 +403,34 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         let reservationHotelId = hotelId;
         
         // Clean and normalize all fields - try multiple possible field names
-        const guestName = cleanValue(reservation.guest_name) 
-          || cleanValue(reservation.name) 
+        let guestName = cleanValue(reservation.guest_name)
+          || cleanValue(reservation.name)
           || cleanValue(reservation.Name)
           || cleanValue(reservation.Guest)
           || cleanValue(reservation['Guest Name'])
-          || 'Guest';
+          || cleanValue(reservation.full_name)
+          || cleanValue(reservation['Full Name'])
+          || cleanValue(reservation.customer_name)
+          || cleanValue(reservation['Customer Name'])
+          || cleanValue(reservation.client_name)
+          || cleanValue(reservation['Client Name'])
+          || (() => {
+            const fn = cleanValue(reservation.first_name) 
+              || cleanValue(reservation['First Name']) 
+              || cleanValue(reservation.firstname) 
+              || cleanValue(reservation['FirstName']);
+            const ln = cleanValue(reservation.last_name) 
+              || cleanValue(reservation['Last Name']) 
+              || cleanValue(reservation.lastname) 
+              || cleanValue(reservation['LastName']);
+            const combined = [fn, ln].filter(Boolean).join(' ').trim();
+            return combined || '';
+          })();
+        
+        if (!guestName) {
+          errors.push(`Row ${rowNumber}: Missing guest_name - unable to derive name`);
+          continue;
+        }
         
         const guestPhone = cleanValue(reservation.guest_phone) 
           || cleanValue(reservation.phone) 
