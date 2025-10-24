@@ -139,7 +139,7 @@ const SuperAdminDashboard = () => {
         return (
           <>
             {/* Stats Grid */}
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Total Hotels</CardTitle>
@@ -188,54 +188,55 @@ const SuperAdminDashboard = () => {
             {/* Hotels Table */}
             <Card>
               <CardHeader>
-                <CardTitle>All Hotels</CardTitle>
-                <CardDescription>Manage hotel registrations and subscriptions</CardDescription>
+                <CardTitle className="text-lg lg:text-xl">All Hotels</CardTitle>
+                <CardDescription className="text-sm">Manage hotel registrations and subscriptions</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Hotel Name</TableHead>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Clear Data</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">Hotel Name</TableHead>
+                        <TableHead className="whitespace-nowrap hidden md:table-cell">Address</TableHead>
+                        <TableHead className="whitespace-nowrap hidden lg:table-cell">Contact</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="whitespace-nowrap hidden sm:table-cell">Plan</TableHead>
+                        <TableHead className="whitespace-nowrap hidden xl:table-cell">Clear Data</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {hotels.map((hotel) => (
                       <TableRow key={hotel.id}>
-                        <TableCell className="font-medium">{hotel.name}</TableCell>
-                        <TableCell>{hotel.address}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">{hotel.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{hotel.address}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="text-sm">
                             <div>{hotel.email}</div>
                             <div className="text-muted-foreground">{hotel.phone}</div>
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(hotel.status)}</TableCell>
-                        <TableCell>{getPlanBadge(hotel.subscription_plan)}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">{getPlanBadge(hotel.subscription_plan)}</TableCell>
+                        <TableCell className="hidden xl:table-cell">
                           <div className="flex items-center gap-2">
                             <Switch
                               checked={hotel.allow_data_clear}
                               onCheckedChange={() => toggleDataClearPermission(hotel.id, hotel.allow_data_clear)}
                             />
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
                               {hotel.allow_data_clear ? 'Enabled' : 'Disabled'}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-1 lg:gap-2">
                             {hotel.status === 'pending' && (
                               <>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="text-success hover:text-success"
+                                  className="text-success hover:text-success h-8 w-8 p-0"
                                   onClick={() => updateHotelStatus(hotel.id, 'active')}
                                 >
                                   <Check className="h-4 w-4" />
@@ -243,7 +244,7 @@ const SuperAdminDashboard = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="text-destructive hover:text-destructive"
+                                  className="text-destructive hover:text-destructive h-8 w-8 p-0"
                                   onClick={() => updateHotelStatus(hotel.id, 'suspended')}
                                 >
                                   <X className="h-4 w-4" />
@@ -254,7 +255,7 @@ const SuperAdminDashboard = () => {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="text-destructive hover:text-destructive"
+                                className="text-destructive hover:text-destructive text-xs whitespace-nowrap"
                                 onClick={() => updateHotelStatus(hotel.id, 'suspended')}
                               >
                                 Suspend
@@ -264,7 +265,7 @@ const SuperAdminDashboard = () => {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="text-success hover:text-success"
+                                className="text-success hover:text-success text-xs whitespace-nowrap"
                                 onClick={() => updateHotelStatus(hotel.id, 'active')}
                               >
                                 Activate
@@ -275,7 +276,8 @@ const SuperAdminDashboard = () => {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </>
@@ -300,37 +302,54 @@ const SuperAdminDashboard = () => {
       <div className="min-h-screen flex w-full bg-background">
         <SuperAdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col w-full">
           {/* Header */}
-          <header className="border-b bg-card sticky top-0 z-10">
-            <div className="px-6 py-4">
+          <header className="border-b bg-card sticky top-0 z-40">
+            <div className="px-4 lg:px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 lg:gap-4">
                   <SidebarTrigger />
                   <div className="flex items-center gap-2">
-                    <Hotel className="h-8 w-8 text-primary" />
-                    <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <Hotel className="h-6 w-6 lg:h-8 lg:w-8 text-primary" />
+                    <span className="text-lg lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                       HotelManager
                     </span>
-                    <Badge variant="secondary" className="ml-2">Super Admin</Badge>
+                    <Badge variant="secondary" className="ml-1 lg:ml-2 text-xs">Super Admin</Badge>
                   </div>
                 </div>
-                <Button variant="ghost" onClick={handleLogout}>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
+              </div>
+            </div>
+
+            {/* Mobile Tabs */}
+            <div className="lg:hidden border-t overflow-x-auto">
+              <div className="flex px-2 py-2 gap-1 min-w-max">
+                {["overview", "hotels", "plans", "subscriptions", "reservations", "guests"].map((tab) => (
+                  <Button
+                    key={tab}
+                    variant={activeTab === tab ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab(tab)}
+                    className="capitalize whitespace-nowrap text-xs"
+                  >
+                    {tab}
+                  </Button>
+                ))}
               </div>
             </div>
           </header>
 
           <div className="flex-1 overflow-auto">
-            <div className="container mx-auto px-6 py-8">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Platform Overview</h1>
-                <p className="text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
+            <div className="container mx-auto px-4 lg:px-6 py-6 lg:py-8">
+              <div className="mb-6 lg:mb-8">
+                <h1 className="text-2xl lg:text-3xl font-bold mb-2">Platform Overview</h1>
+                <p className="text-sm lg:text-base text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 lg:space-y-6">
                 {renderContent()}
               </div>
             </div>

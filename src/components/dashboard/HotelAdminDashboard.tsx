@@ -187,10 +187,7 @@ const HotelAdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex bg-background">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+        <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col w-full">
@@ -199,7 +196,7 @@ const HotelAdminDashboard = () => {
             <div className="px-4 lg:px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <SidebarTrigger className="lg:hidden">
+                  <SidebarTrigger>
                     <Menu className="h-5 w-5" />
                   </SidebarTrigger>
                   {hotel.logo_url ? (
