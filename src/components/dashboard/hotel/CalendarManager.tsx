@@ -19,6 +19,7 @@ import {
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Props {
   hotelId: string;
@@ -263,22 +264,67 @@ const CalendarManager = ({ hotelId }: Props) => {
       {/* Desktop Timeline View */}
       <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-4">
             <h3 className="font-semibold text-lg">Timeline View</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setTimelineStartDate(addDays(timelineStartDate, -TIMELINE_DAYS))}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(new Date())}>
-                Today
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, TIMELINE_DAYS))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <div className="flex gap-2 flex-wrap items-center">
+              <div className="flex gap-2">
+                <Select
+                  value={format(timelineStartDate, "M")}
+                  onValueChange={(value) => {
+                    const newDate = new Date(timelineStartDate);
+                    newDate.setMonth(parseInt(value) - 1);
+                    setTimelineStartDate(newDate);
+                  }}
+                >
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-[100]">
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i} value={String(i + 1)}>
+                        {format(new Date(2024, i, 1), "MMMM")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={format(timelineStartDate, "yyyy")}
+                  onValueChange={(value) => {
+                    const newDate = new Date(timelineStartDate);
+                    newDate.setFullYear(parseInt(value));
+                    setTimelineStartDate(newDate);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-[100]">
+                    {Array.from({ length: 11 }, (_, i) => {
+                      const year = new Date().getFullYear() - 5 + i;
+                      return (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setTimelineStartDate(addDays(timelineStartDate, -TIMELINE_DAYS))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(new Date())}>
+                  Today
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setTimelineStartDate(addDays(timelineStartDate, TIMELINE_DAYS))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
