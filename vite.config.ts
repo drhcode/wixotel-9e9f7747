@@ -14,9 +14,6 @@ export default defineConfig(({ mode }) => ({
     react(),
     legacy({
       targets: ["defaults", "safari >= 10.1", "ios_saf >= 10.3"],
-      renderLegacyChunks: true,
-      additionalLegacyPolyfills: ["whatwg-fetch"],
-      modernPolyfills: true,
     }),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
