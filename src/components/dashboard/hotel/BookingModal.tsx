@@ -67,9 +67,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   useEffect(() => {
     if (guestCountry) {
       const cities = City.getCitiesOfCountry(guestCountry);
-      setAvailableCities(cities || []);
+      // Filter out cities with empty names to avoid Select errors
+      const validCities = (cities || []).filter(c => c.name && c.name.trim() !== "");
+      setAvailableCities(validCities);
       // Reset city if current selection is not in new country
-      if (guestCity && !cities?.some(c => c.name === guestCity)) {
+      if (guestCity && !validCities?.some(c => c.name === guestCity)) {
         setGuestCity("");
       }
     } else {
