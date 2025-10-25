@@ -31,12 +31,27 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestCount, setGuestCount] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [totalAmount, setTotalAmount] = useState("");
+  const [status, setStatus] = useState<BookingStatus>("pending");
 
   useEffect(() => {
     if (booking) {
       setCheckIn(new Date(booking.check_in));
       setCheckOut(new Date(booking.check_out));
       setSelectedRoom(booking.room_id);
+      setGuestName(booking.full_name || booking.guests?.name || "");
+      setGuestEmail(booking.guest_email || "");
+      setGuestPhone(booking.guest_phone || "");
+      setGuestCount(booking.guest_count || 1);
+      setNotes(booking.notes || "");
+      setTotalAmount(booking.total_amount?.toString() || "");
+      setStatus(booking.status);
     }
   }, [booking]);
 
@@ -104,8 +119,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const handleSaveChanges = async () => {
-    if (!checkIn || !checkOut || !selectedRoom) {
-      toast.error("Please fill all fields");
+    if (!checkIn || !checkOut || !selectedRoom || !guestName || !guestPhone) {
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -120,7 +135,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       .update({
         check_in: format(ci, 'yyyy-MM-dd'),
         check_out: format(co, 'yyyy-MM-dd'),
-        room_id: selectedRoom
+        room_id: selectedRoom,
+        full_name: guestName.trim(),
+        guest_email: guestEmail.trim() || null,
+        guest_phone: guestPhone.trim(),
+        guest_count: guestCount,
+        notes: notes.trim() || null,
+        total_amount: parseFloat(totalAmount) || 0,
+        status: status
       })
       .eq('id', booking.id);
     setLoading(false);
@@ -160,13 +182,13 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
         </DialogHeader>
         
         <div className="space-y-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Guest</p>
-            <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
-          </div>
-          
           {!isEditing ? (
             <>
+              <div>
+                <p className="text-sm text-muted-foreground">Guest</p>
+                <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
+              </div>
+              
               <div>
                 <p className="text-sm text-muted-foreground">Room</p>
                 <p className="font-medium">{booking.rooms?.room_number || booking.rooms?.name}</p>
@@ -182,9 +204,63 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   <p className="font-medium">{new Date(booking.check_out).toLocaleDateString()}</p>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Guest Email</p>
+                  <p className="font-medium">{booking.guest_email || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Guest Phone</p>
+                  <p className="font-medium">{booking.guest_phone}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">Guest Count</p>
+                <p className="font-medium">{booking.guest_count}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge>{booking.status}</Badge>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">Total Price</p>
+                <p className="font-medium">€{booking.total_amount}</p>
+              </div>
+
+              {booking.notes && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Notes</p>
+                  <p className="text-sm">{booking.notes}</p>
+                </div>
+              )}
             </>
           ) : (
             <>
+              <div className="space-y-2">
+                <Label>Guest Name *</Label>
+                <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Guest name" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Guest Email</Label>
+                  <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="email@example.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Guest Phone *</Label>
+                  <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+1234567890" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Guest Count *</Label>
+                <Input type="number" min="1" value={guestCount} onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)} />
+              </div>
+
               <div className="space-y-2">
                 <Label>Room</Label>
                 <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -212,7 +288,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus />
+                      <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus className="pointer-events-auto" />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -226,29 +302,38 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus />
+                      <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus className="pointer-events-auto" />
                     </PopoverContent>
                   </Popover>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={(val) => setStatus(val as BookingStatus)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="reserved">Reserved</SelectItem>
+                    <SelectItem value="checked_in">Checked In</SelectItem>
+                    <SelectItem value="checked_out">Checked Out</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Total Amount *</Label>
+                <Input type="number" min="0" step="0.01" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} placeholder="0.00" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes" />
+              </div>
             </>
-          )}
-          
-          <div>
-            <p className="text-sm text-muted-foreground">Status</p>
-            <Badge>{booking.status}</Badge>
-          </div>
-
-          <div>
-            <p className="text-sm text-muted-foreground">Total Price</p>
-            <p className="font-medium">€{booking.total_amount}</p>
-          </div>
-
-          {booking.notes && (
-            <div>
-              <p className="text-sm text-muted-foreground">Notes</p>
-              <p className="text-sm">{booking.notes}</p>
-            </div>
           )}
 
           {booking.status === 'reserved' && !canCheckIn() && (
