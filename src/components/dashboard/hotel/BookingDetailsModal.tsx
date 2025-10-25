@@ -327,7 +327,11 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                       <Calendar 
                         mode="single" 
                         selected={checkOut} 
-                        onSelect={setCheckOut}
+                        onSelect={(date) => {
+                          if (date) {
+                            setCheckOut(date);
+                          }
+                        }}
                         disabled={(date) => checkIn ? date <= checkIn : false}
                         initialFocus 
                         className="pointer-events-auto" 
