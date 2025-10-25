@@ -123,6 +123,12 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       toast.error("Please fill all required fields");
       return;
     }
+    
+    // Validate minimum 1 night stay
+    if (checkOut <= checkIn) {
+      toast.error("Check-out must be at least 1 day after check-in");
+      return;
+    }
 
     setLoading(true);
     // Normalize dates before updating
@@ -288,7 +294,23 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus className="pointer-events-auto" />
+                      <Calendar 
+                        mode="single" 
+                        selected={checkIn} 
+                        onSelect={(date) => {
+                          if (date) {
+                            setCheckIn(date);
+                            // Auto-adjust checkout to be at least 1 day after check-in
+                            const minCheckout = new Date(date);
+                            minCheckout.setDate(minCheckout.getDate() + 1);
+                            if (checkOut && checkOut <= date) {
+                              setCheckOut(minCheckout);
+                            }
+                          }
+                        }}
+                        initialFocus 
+                        className="pointer-events-auto" 
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -302,7 +324,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus className="pointer-events-auto" />
+                      <Calendar 
+                        mode="single" 
+                        selected={checkOut} 
+                        onSelect={setCheckOut}
+                        disabled={(date) => checkIn ? date <= checkIn : false}
+                        initialFocus 
+                        className="pointer-events-auto" 
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>

@@ -137,6 +137,22 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     }
   }, [selectedRoom, checkIn, checkOut, availableRooms]);
   const handleSubmit = async () => {
+    // Validate minimum 1 night stay
+    if (!checkIn || !checkOut) {
+      toast.error("Please select check-in and check-out dates");
+      return;
+    }
+    
+    if (checkOut <= checkIn) {
+      toast.error("Check-out must be at least 1 day after check-in");
+      return;
+    }
+    
+    if (!selectedRoom) {
+      toast.error("Please select a room");
+      return;
+    }
+    
     setLoading(true);
     setValidationErrors({});
     
@@ -261,19 +277,19 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <Calendar 
                     mode="single" 
                     selected={checkIn} 
-                    onSelect={(date) => {
-                      if (date) {
-                        setCheckIn(date);
-                        // Auto-adjust checkout if it's not after the new check-in
-                        if (checkOut <= date) {
-                          const nextDay = new Date(date);
-                          nextDay.setDate(nextDay.getDate() + 1);
-                          setCheckOut(nextDay);
-                        }
-                        setCheckInOpen(false);
-                        setCheckOutOpen(true);
-                      }
-                    }} 
+                     onSelect={(date) => {
+                       if (date) {
+                         setCheckIn(date);
+                         // Auto-adjust checkout to be at least 1 day after check-in
+                         const minCheckout = new Date(date);
+                         minCheckout.setDate(minCheckout.getDate() + 1);
+                         if (checkOut <= date) {
+                           setCheckOut(minCheckout);
+                         }
+                         setCheckInOpen(false);
+                         setCheckOutOpen(true);
+                       }
+                     }}
                   />
                 </PopoverContent>
               </Popover>
