@@ -31,6 +31,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -286,7 +288,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Check-in</Label>
-                  <Popover>
+                  <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkIn && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -306,6 +308,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                             if (checkOut && checkOut <= date) {
                               setCheckOut(minCheckout);
                             }
+                            setCheckInOpen(false);
                           }
                         }}
                         initialFocus 
@@ -316,7 +319,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 </div>
                 <div className="space-y-2">
                   <Label>Check-out</Label>
-                  <Popover>
+                  <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkOut && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -330,6 +333,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                         onSelect={(date) => {
                           if (date) {
                             setCheckOut(date);
+                            setCheckOutOpen(false);
                           }
                         }}
                         disabled={(date) => checkIn ? date <= checkIn : false}
