@@ -209,6 +209,27 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       });
       if (error) throw error;
       toast.success("Reservation created");
+      
+      // Reset form
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfter = new Date();
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      
+      setCheckIn(tomorrow);
+      setCheckOut(dayAfter);
+      setSelectedRoom("");
+      setSelectedGuest("");
+      setGuestName("");
+      setGuestEmail("");
+      setGuestPhone("");
+      setGuestCountry("");
+      setGuestCity("");
+      setGuestAddress("");
+      setGuestCount(1);
+      setNotes("");
+      setTotalPrice(0);
+      
       onSuccess();
       onClose();
     } catch (error: any) {

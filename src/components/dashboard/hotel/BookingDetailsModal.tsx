@@ -176,7 +176,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
 
   return (
     <Dialog open={!!booking} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-full sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Booking Details</DialogTitle>
         </DialogHeader>
@@ -194,7 +194,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 <p className="font-medium">{booking.rooms?.room_number || booking.rooms?.name}</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Check-in</p>
                   <p className="font-medium">{new Date(booking.check_in).toLocaleDateString()}</p>
@@ -205,7 +205,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Guest Email</p>
                   <p className="font-medium">{booking.guest_email || "N/A"}</p>
@@ -245,7 +245,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Guest name" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Guest Email</Label>
                   <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="email@example.com" />
@@ -277,7 +277,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Check-in</Label>
                   <Popover>
@@ -361,7 +361,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             </div>
           )}
           
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap justify-start sm:justify-start">
             {!isEditing && !showDeleteConfirm ? (
               <>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
