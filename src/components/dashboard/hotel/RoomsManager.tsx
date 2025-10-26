@@ -31,6 +31,9 @@ interface Room {
   price: number;
   capacity: number;
   is_available: boolean;
+  square_meters: number | null;
+  main_photo_url: string | null;
+  images: string[] | null;
 }
 
 const RoomsManager = ({ hotelId }: Props) => {
@@ -43,8 +46,11 @@ const RoomsManager = ({ hotelId }: Props) => {
     name: "",
     description: "",
     price: "",
-    capacity: "2"
+    capacity: "2",
+    square_meters: ""
   });
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchRooms();
@@ -95,10 +101,51 @@ const RoomsManager = ({ hotelId }: Props) => {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const urls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${hotelId}/${Math.random()}.${fileExt}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('hotel-assets')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('hotel-assets')
+          .getPublicUrl(fileName);
+
+        urls.push(publicUrl);
+      }
+
+      setUploadedPhotos([...uploadedPhotos, ...urls]);
+      toast.success(`${urls.length} photo(s) uploaded successfully`);
+    } catch (error: any) {
+      toast.error("Failed to upload photos");
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setUploadedPhotos(uploadedPhotos.filter(p => p !== url));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      const mainPhoto = uploadedPhotos.length > 0 ? uploadedPhotos[0] : null;
+      
       if (editingRoom) {
         const { error } = await supabase
           .from('rooms')
@@ -106,7 +153,10 @@ const RoomsManager = ({ hotelId }: Props) => {
             name: formData.name,
             description: formData.description,
             price: parseFloat(formData.price),
-            capacity: parseInt(formData.capacity)
+            capacity: parseInt(formData.capacity),
+            square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
+            images: uploadedPhotos.length > 0 ? uploadedPhotos : editingRoom.images,
+            main_photo_url: mainPhoto || editingRoom.main_photo_url
           })
           .eq('id', editingRoom.id);
 
@@ -127,7 +177,10 @@ const RoomsManager = ({ hotelId }: Props) => {
             name: formData.name,
             description: formData.description,
             price: parseFloat(formData.price),
-            capacity: parseInt(formData.capacity)
+            capacity: parseInt(formData.capacity),
+            square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
+            images: uploadedPhotos,
+            main_photo_url: mainPhoto
           });
 
         if (error) throw error;
@@ -136,7 +189,8 @@ const RoomsManager = ({ hotelId }: Props) => {
 
       setIsDialogOpen(false);
       setEditingRoom(null);
-      setFormData({ name: "", description: "", price: "", capacity: "2" });
+      setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+      setUploadedPhotos([]);
       fetchRooms();
     } catch (error: any) {
       toast.error("Failed to save room");
@@ -150,8 +204,10 @@ const RoomsManager = ({ hotelId }: Props) => {
       name: room.name,
       description: room.description || "",
       price: room.price.toString(),
-      capacity: room.capacity.toString()
+      capacity: room.capacity.toString(),
+      square_meters: room.square_meters?.toString() || ""
     });
+    setUploadedPhotos(room.images || []);
     setIsDialogOpen(true);
   };
 
@@ -212,7 +268,8 @@ const RoomsManager = ({ hotelId }: Props) => {
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary" onClick={() => {
               setEditingRoom(null);
-              setFormData({ name: "", description: "", price: "", capacity: "2" });
+              setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+              setUploadedPhotos([]);
             }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Room
@@ -271,6 +328,53 @@ const RoomsManager = ({ hotelId }: Props) => {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="square_meters">Room Size (m²)</Label>
+                <Input
+                  id="square_meters"
+                  type="number"
+                  step="0.01"
+                  value={formData.square_meters}
+                  onChange={(e) => setFormData({ ...formData, square_meters: e.target.value })}
+                  placeholder="25.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="photos">Room Photos</Label>
+                <Input
+                  id="photos"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  disabled={uploading}
+                />
+                {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                {uploadedPhotos.length > 0 && (
+                  <div className="space-y-2 mt-3">
+                    <p className="text-sm font-medium">Uploaded Photos (first photo is main):</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {uploadedPhotos.map((url, index) => (
+                        <div key={url} className="relative group">
+                          <img src={url} alt={`Room ${index + 1}`} className="w-full h-20 object-cover rounded border" />
+                          {index === 0 && (
+                            <Badge className="absolute top-1 left-1 text-xs">Main</Badge>
+                          )}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removePhoto(url)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <Button type="submit" className="w-full">
                 {editingRoom ? "Update Room" : "Add Room"}
               </Button>
@@ -295,6 +399,9 @@ const RoomsManager = ({ hotelId }: Props) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
+                {room.main_photo_url && (
+                  <img src={room.main_photo_url} alt={room.name} className="w-full h-32 object-cover rounded" />
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Price per night:</span>
                   <span className="font-semibold text-primary">€{room.price}</span>
@@ -303,6 +410,12 @@ const RoomsManager = ({ hotelId }: Props) => {
                   <span className="text-muted-foreground">Capacity:</span>
                   <span className="font-medium">{room.capacity} guests</span>
                 </div>
+                {room.square_meters && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Size:</span>
+                    <span className="font-medium">{room.square_meters} m²</span>
+                  </div>
+                )}
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(room)}>
                     <Edit className="h-4 w-4 mr-1" />

@@ -297,10 +297,12 @@ export type Database = {
           id: string
           images: string[] | null
           is_available: boolean
+          main_photo_url: string | null
           name: string
           price: number
           room_number: string | null
           room_type: string | null
+          square_meters: number | null
           status: string | null
           updated_at: string
         }
@@ -313,10 +315,12 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_available?: boolean
+          main_photo_url?: string | null
           name: string
           price: number
           room_number?: string | null
           room_type?: string | null
+          square_meters?: number | null
           status?: string | null
           updated_at?: string
         }
@@ -329,10 +333,12 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_available?: boolean
+          main_photo_url?: string | null
           name?: string
           price?: number
           room_number?: string | null
           room_type?: string | null
+          square_meters?: number | null
           status?: string | null
           updated_at?: string
         }

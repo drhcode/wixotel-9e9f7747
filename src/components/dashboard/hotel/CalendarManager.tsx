@@ -366,8 +366,15 @@ const CalendarManager = ({ hotelId }: Props) => {
                 return (
                   <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                      <div className="text-sm font-bold">
-                        {room.room_number} {room.name}
+                      <div className="text-sm font-bold flex items-center gap-2">
+                        {room.main_photo_url && (
+                          <img 
+                            src={room.main_photo_url} 
+                            alt={room.name} 
+                            className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
+                          />
+                        )}
+                        <span>{room.room_number} {room.name}</span>
                       </div>
                       <div className="text-xs text-muted-foreground font-medium mt-1">Room</div>
                     </div>
@@ -495,30 +502,42 @@ const CalendarManager = ({ hotelId }: Props) => {
             {selectedDateBookings.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">No bookings for this date</p>
             ) : (
-              selectedDateBookings.map((booking) => (
-                <Card
-                  key={booking.id}
-                  className="p-4 cursor-pointer hover:bg-accent transition-colors"
-                  onClick={() => setSelectedBooking(booking)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Room {booking.rooms?.room_number || booking.rooms?.name}
-                      </p>
+              selectedDateBookings.map((booking) => {
+                const room = rooms.find(r => r.id === booking.room_id);
+                return (
+                  <Card
+                    key={booking.id}
+                    className="p-4 cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => setSelectedBooking(booking)}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        {room?.main_photo_url && (
+                          <img 
+                            src={room.main_photo_url} 
+                            alt={room.name} 
+                            className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Room {booking.rooms?.room_number || booking.rooms?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge style={{ backgroundColor: getStatusColor(booking.status) }} className="text-white">
+                        {booking.status}
+                      </Badge>
                     </div>
-                    <Badge style={{ backgroundColor: getStatusColor(booking.status) }} className="text-white">
-                      {booking.status}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {format(new Date(booking.check_in), "MMM dd")} -{" "}
-                    {format(new Date(booking.check_out), "MMM dd, yyyy")}
-                  </div>
-                  <div className="text-sm font-medium mt-2">€{booking.total_amount}</div>
-                </Card>
-              ))
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(booking.check_in), "MMM dd")} -{" "}
+                      {format(new Date(booking.check_out), "MMM dd, yyyy")}
+                    </div>
+                    <div className="text-sm font-medium mt-2">€{booking.total_amount}</div>
+                  </Card>
+                );
+              })
             )}
           </div>
         </Card>
