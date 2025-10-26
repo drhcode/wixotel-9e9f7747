@@ -160,6 +160,7 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          slug: string | null
           status: Database["public"]["Enums"]["hotel_status"]
           subscription_plan:
             | Database["public"]["Enums"]["subscription_plan"]
@@ -179,6 +180,7 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]
@@ -198,6 +200,7 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]

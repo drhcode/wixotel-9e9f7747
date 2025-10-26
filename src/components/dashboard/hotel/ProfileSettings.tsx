@@ -12,6 +12,7 @@ import { Shield, Hotel, Lock, Upload } from "lucide-react";
 interface Hotel {
   id: string;
   name: string;
+  slug: string | null;
   address: string;
   phone: string | null;
   email: string | null;
@@ -22,6 +23,7 @@ interface Hotel {
 const ProfileSettings = () => {
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [hotelName, setHotelName] = useState("");
+  const [hotelSlug, setHotelSlug] = useState("");
   const [hotelAddress, setHotelAddress] = useState("");
   const [hotelPhone, setHotelPhone] = useState("");
   const [hotelEmail, setHotelEmail] = useState("");
@@ -52,6 +54,7 @@ const ProfileSettings = () => {
     if (!error && hotelData) {
       setHotel(hotelData);
       setHotelName(hotelData.name || "");
+      setHotelSlug(hotelData.slug || "");
       setHotelAddress(hotelData.address || "");
       setHotelPhone(hotelData.phone || "");
       setHotelEmail(hotelData.email || "");
@@ -111,11 +114,17 @@ const ProfileSettings = () => {
       return;
     }
 
+    if (hotelSlug && !/^[a-z0-9-]+$/.test(hotelSlug)) {
+      toast.error("URL slug can only contain lowercase letters, numbers, and hyphens");
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase
       .from('hotels')
       .update({
         name: hotelName,
+        slug: hotelSlug || null,
         address: hotelAddress,
         phone: hotelPhone || null,
         email: hotelEmail || null,
@@ -126,7 +135,11 @@ const ProfileSettings = () => {
 
     setLoading(false);
     if (error) {
-      toast.error("Failed to update hotel information");
+      if (error.code === '23505') {
+        toast.error("This URL slug is already taken. Please choose another one.");
+      } else {
+        toast.error("Failed to update hotel information");
+      }
     } else {
       toast.success("Hotel information updated successfully");
       fetchHotelData();
@@ -215,6 +228,19 @@ const ProfileSettings = () => {
               onChange={(e) => setHotelName(e.target.value)}
               placeholder="Enter hotel name"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hotel-slug">Public URL Slug</Label>
+            <Input
+              id="hotel-slug"
+              value={hotelSlug}
+              onChange={(e) => setHotelSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+              placeholder="my-hotel-name"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your hotel will be accessible at: {window.location.origin}/{hotelSlug || "your-slug"}
+            </p>
           </div>
 
           <div className="space-y-2">
