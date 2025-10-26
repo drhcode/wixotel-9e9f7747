@@ -445,20 +445,20 @@ const RoomsManager = ({ hotelId }: Props) => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rooms.map((room) => (
-          <Card key={room.id}>
+          <Card key={room.id} className="flex flex-col">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle>{room.name}</CardTitle>
-                  <CardDescription className="mt-2">{room.description}</CardDescription>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{room.name}</CardTitle>
+                  <CardDescription className="mt-2 line-clamp-2">{room.description}</CardDescription>
                 </div>
                 <Badge variant={room.is_available ? "default" : "secondary"}>
                   {room.is_available ? "Available" : "Unavailable"}
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="flex-1 flex flex-col">
+              <div className="space-y-3 flex-1">
                 {room.main_photo_url && (
                   <img src={room.main_photo_url} alt={room.name} className="w-full h-32 object-cover rounded" />
                 )}
@@ -476,16 +476,16 @@ const RoomsManager = ({ hotelId }: Props) => {
                     <span className="font-medium">{room.square_meters} m²</span>
                   </div>
                 )}
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(room)}>
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleDeleteAttempt(room.id)}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
+              </div>
+              <div className="flex gap-2 pt-4 mt-auto">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(room)}>
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleDeleteAttempt(room.id)}>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
               </div>
             </CardContent>
           </Card>
