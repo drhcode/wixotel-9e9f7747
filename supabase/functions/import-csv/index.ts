@@ -675,16 +675,17 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           continue;
         }
 
-        // Find or create guest
+        // Find or create guest - match by both name AND phone to avoid false duplicates
         const finalGuestPhone = guestPhone || `temp_${Date.now()}_${Math.random()}`;
         
         let guestId;
-        if (guestPhone) {
-          // Try to find existing guest by phone
+        if (guestPhone && fullName) {
+          // Try to find existing guest by both name and phone
           const { data: existingGuest } = await supabase
             .from('guests')
             .select('id')
             .eq('hotel_id', reservationHotelId)
+            .eq('name', sanitizeString(fullName, 100))
             .eq('phone', guestPhone)
             .maybeSingle();
 
