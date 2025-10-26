@@ -1,10 +1,10 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { X } from "lucide-react";
-import demoCalendar from "@/assets/demo-calendar.jpg";
-import demoBookings from "@/assets/demo-bookings.jpg";
-import demoModal from "@/assets/demo-modal.jpg";
-import demoMobile from "@/assets/demo-mobile.jpg";
+import demoCalendarTimeline from "@/assets/demo-calendar-timeline.png";
+import demoNewReservation from "@/assets/demo-new-reservation.png";
+import demoBookingsList from "@/assets/demo-bookings-list.png";
+import demoMobileCalendar from "@/assets/demo-mobile-calendar.png";
 
 interface DemoModalProps {
   open: boolean;
@@ -13,24 +13,24 @@ interface DemoModalProps {
 
 const demoSlides = [
   {
-    image: demoCalendar,
-    title: "Advanced Calendar Management",
-    description: "View all your bookings at a glance with our intuitive calendar interface"
+    image: demoCalendarTimeline,
+    title: "Reservation Calendar - Timeline View",
+    description: "Visualize room availability and bookings with an intuitive timeline showing all reservations at a glance"
   },
   {
-    image: demoBookings,
-    title: "Smart Booking Management",
-    description: "Manage reservations, guest details, and room assignments effortlessly"
+    image: demoBookingsList,
+    title: "All Bookings Management",
+    description: "Search and manage all reservations with detailed guest information, dates, and booking status"
   },
   {
-    image: demoModal,
+    image: demoNewReservation,
     title: "Quick Reservation Creation",
-    description: "Create new bookings in seconds with our streamlined modal forms"
+    description: "Create new bookings in seconds with our streamlined form including guest search and room selection"
   },
   {
-    image: demoMobile,
-    title: "Mobile-First Design",
-    description: "Manage your hotel on the go with our responsive mobile interface"
+    image: demoMobileCalendar,
+    title: "Mobile Calendar View",
+    description: "Manage your hotel bookings on the go with our fully responsive mobile calendar interface"
   }
 ];
 
