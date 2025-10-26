@@ -49,7 +49,8 @@ const RoomsManager = ({ hotelId }: Props) => {
     capacity: "2",
     square_meters: ""
   });
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [mainPhoto, setMainPhoto] = useState<string>("");
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -101,7 +102,37 @@ const RoomsManager = ({ hotelId }: Props) => {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${hotelId}/main_${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('hotel-assets')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('hotel-assets')
+        .getPublicUrl(fileName);
+
+      setMainPhoto(publicUrl);
+      toast.success("Main photo uploaded successfully");
+    } catch (error: any) {
+      toast.error("Failed to upload main photo");
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -111,9 +142,9 @@ const RoomsManager = ({ hotelId }: Props) => {
     try {
       for (const file of Array.from(files)) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${hotelId}/${Math.random()}.${fileExt}`;
+        const fileName = `${hotelId}/gallery_${Math.random()}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('hotel-assets')
           .upload(fileName, file);
 
@@ -126,26 +157,24 @@ const RoomsManager = ({ hotelId }: Props) => {
         urls.push(publicUrl);
       }
 
-      setUploadedPhotos([...uploadedPhotos, ...urls]);
-      toast.success(`${urls.length} photo(s) uploaded successfully`);
+      setGalleryPhotos([...galleryPhotos, ...urls]);
+      toast.success(`${urls.length} gallery photo(s) uploaded successfully`);
     } catch (error: any) {
-      toast.error("Failed to upload photos");
+      toast.error("Failed to upload gallery photos");
       console.error(error);
     } finally {
       setUploading(false);
     }
   };
 
-  const removePhoto = (url: string) => {
-    setUploadedPhotos(uploadedPhotos.filter(p => p !== url));
+  const removeGalleryPhoto = (url: string) => {
+    setGalleryPhotos(galleryPhotos.filter(p => p !== url));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const mainPhoto = uploadedPhotos.length > 0 ? uploadedPhotos[0] : null;
-      
       if (editingRoom) {
         const { error } = await supabase
           .from('rooms')
@@ -155,7 +184,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
-            images: uploadedPhotos.length > 0 ? uploadedPhotos : editingRoom.images,
+            images: galleryPhotos.length > 0 ? galleryPhotos : editingRoom.images,
             main_photo_url: mainPhoto || editingRoom.main_photo_url
           })
           .eq('id', editingRoom.id);
@@ -179,7 +208,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
-            images: uploadedPhotos,
+            images: galleryPhotos,
             main_photo_url: mainPhoto
           });
 
@@ -190,7 +219,8 @@ const RoomsManager = ({ hotelId }: Props) => {
       setIsDialogOpen(false);
       setEditingRoom(null);
       setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
-      setUploadedPhotos([]);
+      setMainPhoto("");
+      setGalleryPhotos([]);
       fetchRooms();
     } catch (error: any) {
       toast.error("Failed to save room");
@@ -207,7 +237,8 @@ const RoomsManager = ({ hotelId }: Props) => {
       capacity: room.capacity.toString(),
       square_meters: room.square_meters?.toString() || ""
     });
-    setUploadedPhotos(room.images || []);
+    setMainPhoto(room.main_photo_url || "");
+    setGalleryPhotos(room.images || []);
     setIsDialogOpen(true);
   };
 
@@ -269,7 +300,8 @@ const RoomsManager = ({ hotelId }: Props) => {
             <Button className="bg-gradient-primary" onClick={() => {
               setEditingRoom(null);
               setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
-              setUploadedPhotos([]);
+              setMainPhoto("");
+              setGalleryPhotos([]);
             }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Room
@@ -340,32 +372,53 @@ const RoomsManager = ({ hotelId }: Props) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="photos">Room Photos</Label>
+                <Label htmlFor="main_photo">Main Photo</Label>
                 <Input
-                  id="photos"
+                  id="main_photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMainPhotoUpload}
+                  disabled={uploading}
+                />
+                {mainPhoto && (
+                  <div className="relative group mt-2">
+                    <img src={mainPhoto} alt="Main photo" className="w-full h-32 object-cover rounded border" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8"
+                      onClick={() => setMainPhoto("")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gallery">Gallery Photos</Label>
+                <Input
+                  id="gallery"
                   type="file"
                   accept="image/*"
                   multiple
-                  onChange={handlePhotoUpload}
+                  onChange={handleGalleryUpload}
                   disabled={uploading}
                 />
                 {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
-                {uploadedPhotos.length > 0 && (
+                {galleryPhotos.length > 0 && (
                   <div className="space-y-2 mt-3">
-                    <p className="text-sm font-medium">Uploaded Photos (first photo is main):</p>
+                    <p className="text-sm font-medium">Gallery Photos ({galleryPhotos.length}):</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {uploadedPhotos.map((url, index) => (
+                      {galleryPhotos.map((url, index) => (
                         <div key={url} className="relative group">
-                          <img src={url} alt={`Room ${index + 1}`} className="w-full h-20 object-cover rounded border" />
-                          {index === 0 && (
-                            <Badge className="absolute top-1 left-1 text-xs">Main</Badge>
-                          )}
+                          <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-20 object-cover rounded border" />
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
                             className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removePhoto(url)}
+                            onClick={() => removeGalleryPhoto(url)}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
