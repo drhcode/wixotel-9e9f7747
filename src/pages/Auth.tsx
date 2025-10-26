@@ -23,6 +23,7 @@ const signupSchema = z.object({
   hotelName: z.string().trim().min(2).max(100),
   hotelAddress: z.string().trim().min(5).max(500),
   phone: z.string().regex(/^[+\d\s()-]{7,20}$/, "Invalid phone"),
+  roomCount: z.number().min(1, "At least 1 room").max(1000, "Max 1000 rooms"),
 });
 
 const Auth = () => {
@@ -46,7 +47,8 @@ const Auth = () => {
     fullName: "",
     hotelName: "",
     hotelAddress: "",
-    phone: ""
+    phone: "",
+    roomCount: 1
   });
   const [loginData, setLoginData] = useState({
     email: "",
@@ -311,6 +313,20 @@ const Auth = () => {
                       placeholder="123 Main St, City"
                       value={signupData.hotelAddress}
                       onChange={(e) => setSignupData({ ...signupData, hotelAddress: e.target.value })}
+                      className="h-11 border-border/50 focus:border-primary transition-colors"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="room-count" className="text-sm font-semibold">Number of Rooms</Label>
+                    <Input
+                      id="room-count"
+                      type="number"
+                      min="1"
+                      max="1000"
+                      placeholder="10"
+                      value={signupData.roomCount}
+                      onChange={(e) => setSignupData({ ...signupData, roomCount: parseInt(e.target.value) || 1 })}
                       className="h-11 border-border/50 focus:border-primary transition-colors"
                       required
                     />

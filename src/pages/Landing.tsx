@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
+import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 const Landing = () => {
   const navigate = useNavigate();
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
+  
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/dashboard");
@@ -110,7 +113,9 @@ const Landing = () => {
                 <span className="text-sm font-medium">+355682041518</span>
               </a>
               <Link to="/auth">
-                <Button variant="ghost" className="hover-scale">Login to Panel</Button>
+                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105">
+                  Login to Panel
+                </Button>
               </Link>
             </div>
           </div>
@@ -145,7 +150,12 @@ const Landing = () => {
                     </svg>
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="border-2 hover:border-primary hover:bg-primary/5 transition-all">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-2 hover:border-primary hover:bg-primary/5 transition-all"
+                  onClick={() => setIsDemoOpen(true)}
+                >
                   <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
                   </svg>
@@ -154,12 +164,8 @@ const Landing = () => {
               </div>
               <div className="flex items-center gap-12 pt-8">
                 <div className="group">
-                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">500+</div>
+                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">30+</div>
                   <div className="text-sm text-muted-foreground mt-1">Active Hotels</div>
-                </div>
-                <div className="group">
-                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">50K+</div>
-                  <div className="text-sm text-muted-foreground mt-1">Bookings/Month</div>
                 </div>
                 <div className="group">
                   <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">99.9%</div>
@@ -180,6 +186,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Demo Modal */}
+      <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
 
       {/* Features Section */}
       <section className="py-24 px-6 bg-gradient-to-b from-background via-accent/50 to-background">
