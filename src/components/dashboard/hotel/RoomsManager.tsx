@@ -307,37 +307,39 @@ const RoomsManager = ({ hotelId }: Props) => {
               Add Room
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto w-[95vw] max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingRoom ? "Edit Room" : "Add New Room"}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg sm:text-xl">{editingRoom ? "Edit Room" : "Add New Room"}</DialogTitle>
+              <DialogDescription className="text-sm">
                 {editingRoom ? "Update room details" : "Add a new room to your hotel"}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="name">Room Name</Label>
+                <Label htmlFor="name" className="text-sm font-medium">Room Name</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Deluxe Suite"
                   required
+                  className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Beautiful room with ocean view..."
                   rows={3}
+                  className="text-base resize-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price per Night (€)</Label>
+                  <Label htmlFor="price" className="text-sm font-medium">Price per Night (€)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -346,10 +348,11 @@ const RoomsManager = ({ hotelId }: Props) => {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="150.00"
                     required
+                    className="text-base"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="capacity">Capacity (Guests)</Label>
+                  <Label htmlFor="capacity" className="text-sm font-medium">Capacity (Guests)</Label>
                   <Input
                     id="capacity"
                     type="number"
@@ -357,11 +360,12 @@ const RoomsManager = ({ hotelId }: Props) => {
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
                     required
+                    className="text-base"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="square_meters">Room Size (m²)</Label>
+                <Label htmlFor="square_meters" className="text-sm font-medium">Room Size (m²)</Label>
                 <Input
                   id="square_meters"
                   type="number"
@@ -369,25 +373,27 @@ const RoomsManager = ({ hotelId }: Props) => {
                   value={formData.square_meters}
                   onChange={(e) => setFormData({ ...formData, square_meters: e.target.value })}
                   placeholder="25.00"
+                  className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="main_photo">Main Photo</Label>
+                <Label htmlFor="main_photo" className="text-sm font-medium">Main Photo</Label>
                 <Input
                   id="main_photo"
                   type="file"
                   accept="image/*"
                   onChange={handleMainPhotoUpload}
                   disabled={uploading}
+                  className="cursor-pointer"
                 />
                 {mainPhoto && (
                   <div className="relative group mt-2">
-                    <img src={mainPhoto} alt="Main photo" className="w-full h-32 object-cover rounded border" />
+                    <img src={mainPhoto} alt="Main photo" className="w-full h-32 sm:h-40 object-cover rounded border" />
                     <Button
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2 h-8 w-8"
+                      className="absolute top-2 right-2 h-8 w-8 sm:h-9 sm:w-9"
                       onClick={() => setMainPhoto("")}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -396,7 +402,7 @@ const RoomsManager = ({ hotelId }: Props) => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gallery">Gallery Photos</Label>
+                <Label htmlFor="gallery" className="text-sm font-medium">Gallery Photos</Label>
                 <Input
                   id="gallery"
                   type="file"
@@ -404,20 +410,21 @@ const RoomsManager = ({ hotelId }: Props) => {
                   multiple
                   onChange={handleGalleryUpload}
                   disabled={uploading}
+                  className="cursor-pointer"
                 />
-                {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                {uploading && <p className="text-sm text-muted-foreground animate-pulse">Uploading...</p>}
                 {galleryPhotos.length > 0 && (
                   <div className="space-y-2 mt-3">
                     <p className="text-sm font-medium">Gallery Photos ({galleryPhotos.length}):</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {galleryPhotos.map((url, index) => (
                         <div key={url} className="relative group">
-                          <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-20 object-cover rounded border" />
+                          <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-20 sm:h-24 object-cover rounded border" />
                           <Button
                             type="button"
                             variant="destructive"
                             size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 h-6 w-6 sm:h-7 sm:w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={() => removeGalleryPhoto(url)}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -428,7 +435,7 @@ const RoomsManager = ({ hotelId }: Props) => {
                   </div>
                 )}
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full text-base py-5 sm:py-6" disabled={uploading}>
                 {editingRoom ? "Update Room" : "Add Room"}
               </Button>
             </form>
