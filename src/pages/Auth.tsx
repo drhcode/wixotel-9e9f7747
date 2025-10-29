@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useRecaptcha } from "@/hooks/useRecaptcha";
+
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -40,7 +40,6 @@ const Auth = () => {
     checkAuth();
   }, [navigate]);
   const [loading, setLoading] = useState(false);
-  const { executeRecaptcha } = useRecaptcha();
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -65,21 +64,6 @@ const Auth = () => {
         toast.error(validation.error.errors[0].message);
         setLoading(false);
         return;
-      }
-
-      const recaptchaToken = await executeRecaptcha('signup');
-      if (recaptchaToken) {
-        try {
-          const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
-            body: { token: recaptchaToken }
-          });
-
-          if (!verifyData?.success) {
-            console.warn('reCAPTCHA verification failed, continuing anyway');
-          }
-        } catch (error) {
-          console.warn('reCAPTCHA verification error, continuing anyway:', error);
-        }
       }
 
       const { data: authData, error: signupError } = await supabase.auth.signUp({
@@ -129,21 +113,6 @@ const Auth = () => {
         toast.error(validation.error.errors[0].message);
         setLoading(false);
         return;
-      }
-
-      const recaptchaToken = await executeRecaptcha('login');
-      if (recaptchaToken) {
-        try {
-          const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
-            body: { token: recaptchaToken }
-          });
-
-          if (!verifyData?.success) {
-            console.warn('reCAPTCHA verification failed, continuing anyway');
-          }
-        } catch (error) {
-          console.warn('reCAPTCHA verification error, continuing anyway:', error);
-        }
       }
 
       const { error } = await supabase.auth.signInWithPassword({
