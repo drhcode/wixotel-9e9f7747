@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +20,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const AVAILABLE_AMENITIES = [
+  "Free WiFi",
+  "Air Conditioning",
+  "Heating",
+  "TV",
+  "Mini Bar",
+  "Coffee Maker",
+  "Safe",
+  "Hair Dryer",
+  "Iron & Ironing Board",
+  "Telephone",
+  "Desk & Chair",
+  "Balcony",
+  "Sea View",
+  "City View",
+  "Mountain View",
+  "Bathtub",
+  "Shower",
+  "Towels",
+  "Toiletries",
+  "Bathrobe & Slippers",
+  "Room Service",
+  "Daily Housekeeping",
+  "Wake-up Service",
+  "Blackout Curtains",
+  "Soundproofing"
+];
 
 interface Props {
   hotelId: string;
@@ -48,9 +77,9 @@ const RoomsManager = ({ hotelId }: Props) => {
     description: "",
     price: "",
     capacity: "2",
-    square_meters: "",
-    amenities: ""
+    square_meters: ""
   });
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [mainPhoto, setMainPhoto] = useState<string>("");
   const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -186,7 +215,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
-            amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
+            amenities: selectedAmenities,
             images: galleryPhotos.length > 0 ? galleryPhotos : editingRoom.images,
             main_photo_url: mainPhoto || editingRoom.main_photo_url
           })
@@ -211,7 +240,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
-            amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
+            amenities: selectedAmenities,
             images: galleryPhotos,
             main_photo_url: mainPhoto
           });
@@ -222,7 +251,8 @@ const RoomsManager = ({ hotelId }: Props) => {
 
       setIsDialogOpen(false);
       setEditingRoom(null);
-      setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "", amenities: "" });
+      setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+      setSelectedAmenities([]);
       setMainPhoto("");
       setGalleryPhotos([]);
       fetchRooms();
@@ -239,12 +269,20 @@ const RoomsManager = ({ hotelId }: Props) => {
       description: room.description || "",
       price: room.price.toString(),
       capacity: room.capacity.toString(),
-      square_meters: room.square_meters?.toString() || "",
-      amenities: room.amenities?.join(', ') || ""
+      square_meters: room.square_meters?.toString() || ""
     });
+    setSelectedAmenities(room.amenities || []);
     setMainPhoto(room.main_photo_url || "");
     setGalleryPhotos(room.images || []);
     setIsDialogOpen(true);
+  };
+
+  const toggleAmenity = (amenity: string) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenity)
+        ? prev.filter(a => a !== amenity)
+        : [...prev, amenity]
+    );
   };
 
   const handleDeleteAttempt = (roomId: string) => {
@@ -304,7 +342,8 @@ const RoomsManager = ({ hotelId }: Props) => {
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary" onClick={() => {
               setEditingRoom(null);
-              setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "", amenities: "" });
+              setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+              setSelectedAmenities([]);
               setMainPhoto("");
               setGalleryPhotos([]);
             }}>
@@ -381,16 +420,28 @@ const RoomsManager = ({ hotelId }: Props) => {
                   className="text-base"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="amenities" className="text-sm font-medium">Amenities</Label>
-                <Input
-                  id="amenities"
-                  value={formData.amenities}
-                  onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
-                  placeholder="WiFi, TV, Mini Bar, Air Conditioning (comma separated)"
-                  className="text-base"
-                />
-                <p className="text-xs text-muted-foreground">Separate amenities with commas</p>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Amenities</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-3 border rounded-md">
+                  {AVAILABLE_AMENITIES.map((amenity) => (
+                    <div key={amenity} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={amenity}
+                        checked={selectedAmenities.includes(amenity)}
+                        onCheckedChange={() => toggleAmenity(amenity)}
+                      />
+                      <label
+                        htmlFor={amenity}
+                        className="text-sm cursor-pointer select-none"
+                      >
+                        {amenity}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedAmenities.length} amenities selected
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="main_photo" className="text-sm font-medium">Main Photo</Label>
