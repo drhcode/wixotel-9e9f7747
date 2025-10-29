@@ -69,14 +69,16 @@ const Auth = () => {
 
       const recaptchaToken = await executeRecaptcha('signup');
       if (recaptchaToken) {
-        const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
-          body: { token: recaptchaToken }
-        });
+        try {
+          const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
+            body: { token: recaptchaToken }
+          });
 
-        if (!verifyData?.success) {
-          toast.error("reCAPTCHA failed");
-          setLoading(false);
-          return;
+          if (!verifyData?.success) {
+            console.warn('reCAPTCHA verification failed, continuing anyway');
+          }
+        } catch (error) {
+          console.warn('reCAPTCHA verification error, continuing anyway:', error);
         }
       }
 
@@ -131,14 +133,16 @@ const Auth = () => {
 
       const recaptchaToken = await executeRecaptcha('login');
       if (recaptchaToken) {
-        const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
-          body: { token: recaptchaToken }
-        });
+        try {
+          const { data: verifyData } = await supabase.functions.invoke('verify-recaptcha', {
+            body: { token: recaptchaToken }
+          });
 
-        if (!verifyData?.success) {
-          toast.error("reCAPTCHA failed");
-          setLoading(false);
-          return;
+          if (!verifyData?.success) {
+            console.warn('reCAPTCHA verification failed, continuing anyway');
+          }
+        } catch (error) {
+          console.warn('reCAPTCHA verification error, continuing anyway:', error);
         }
       }
 

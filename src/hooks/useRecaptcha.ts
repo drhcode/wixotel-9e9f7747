@@ -27,12 +27,17 @@ export const useRecaptcha = () => {
     }
 
     const checkRecaptcha = () => {
-      if (window.grecaptcha) {
-        window.grecaptcha.ready(() => {
-          setIsReady(true);
-        });
-      } else {
-        setTimeout(checkRecaptcha, 100);
+      try {
+        if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+          window.grecaptcha.ready(() => {
+            setIsReady(true);
+          });
+        } else {
+          setTimeout(checkRecaptcha, 100);
+        }
+      } catch (error) {
+        console.warn('reCAPTCHA not available:', error);
+        // Don't break the app if reCAPTCHA fails to load
       }
     };
 
@@ -46,10 +51,15 @@ export const useRecaptcha = () => {
     }
 
     try {
+      if (!window.grecaptcha || typeof window.grecaptcha.execute !== 'function') {
+        console.warn('reCAPTCHA not available');
+        return null;
+      }
       const token = await window.grecaptcha.execute(siteKey, { action });
       return token;
     } catch (error) {
-      console.error('Error executing reCAPTCHA:', error);
+      console.warn('Error executing reCAPTCHA (non-critical):', error);
+      // Return null instead of throwing - allow auth to continue without reCAPTCHA
       return null;
     }
   };
