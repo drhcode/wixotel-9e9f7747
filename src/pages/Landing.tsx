@@ -6,9 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
+
+
 const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // useEffect(() => {
   //   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -17,20 +20,19 @@ const Landing = () => {
   // }, [navigate]);
 
   useEffect(() => {
-  const checkSession = async () => {
-    try {
-      const { data } = await supabase.auth.getSession();
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
-        navigate("/dashboard", { replace: true });
+        // Only navigate if we’re not already there
+        if (window.location.pathname !== "/dashboard") {
+          navigate("/dashboard", { replace: true });
+        }
       }
-    } catch (error) {
-      console.error("Error checking session:", error);
-    }
-  };
-  checkSession();
-}, [navigate]);
+      setLoading(false);
+    };
 
-  
+    checkSession();
+  }, [navigate]);
   const features = [
     {
       icon: Hotel,
