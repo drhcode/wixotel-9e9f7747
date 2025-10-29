@@ -4,7 +4,6 @@ import legacy from "@vitejs/plugin-legacy";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: true,
@@ -13,10 +12,26 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     legacy({
-      targets: ["defaults", "safari >= 10.1", "ios_saf >= 10.3"],
+      // Use modern Safari targets, not iOS 10.x
+      targets: ["defaults", "safari >= 13", "ios_saf >= 13"],
+      // Generate modern and legacy bundles correctly
+      additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
+      modernPolyfills: true,
     }),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
+
+  build: {
+    target: ["es2019", "safari13"], // important for SWC & Safari support
+    sourcemap: true,                // helps debug white screens
+  },
+
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2019", // ensures code works on Safari 13+
+    },
+  },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
