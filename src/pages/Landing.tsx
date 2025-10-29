@@ -10,11 +10,27 @@ const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   
+  // useEffect(() => {
+  //   supabase.auth.getSession().then(({ data: { session } }) => {
+  //     if (session) navigate("/dashboard");
+  //   });
+  // }, [navigate]);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard");
-    });
-  }, [navigate]);
+  const checkSession = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+    }
+  };
+  checkSession();
+}, [navigate]);
+
+  
   const features = [
     {
       icon: Hotel,
