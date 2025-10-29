@@ -46,7 +46,12 @@ const CalendarManager = ({ hotelId }: Props) => {
 
   const fetchRooms = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase.from("rooms").select("*").eq("hotel_id", hotelId).order("room_number");
+    const { data, error } = await supabase
+  .from("rooms")
+  .select("*")
+  .eq("hotel_id", hotelId)
+  .order("created_at", { ascending: true });
+
 
     if (error) {
       toast.error("Failed to load rooms");
