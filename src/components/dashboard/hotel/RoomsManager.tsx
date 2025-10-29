@@ -34,6 +34,7 @@ interface Room {
   square_meters: number | null;
   main_photo_url: string | null;
   images: string[] | null;
+  amenities: string[] | null;
 }
 
 const RoomsManager = ({ hotelId }: Props) => {
@@ -47,7 +48,8 @@ const RoomsManager = ({ hotelId }: Props) => {
     description: "",
     price: "",
     capacity: "2",
-    square_meters: ""
+    square_meters: "",
+    amenities: ""
   });
   const [mainPhoto, setMainPhoto] = useState<string>("");
   const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
@@ -184,6 +186,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
+            amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
             images: galleryPhotos.length > 0 ? galleryPhotos : editingRoom.images,
             main_photo_url: mainPhoto || editingRoom.main_photo_url
           })
@@ -208,6 +211,7 @@ const RoomsManager = ({ hotelId }: Props) => {
             price: parseFloat(formData.price),
             capacity: parseInt(formData.capacity),
             square_meters: formData.square_meters ? parseFloat(formData.square_meters) : null,
+            amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()).filter(a => a) : [],
             images: galleryPhotos,
             main_photo_url: mainPhoto
           });
@@ -218,7 +222,7 @@ const RoomsManager = ({ hotelId }: Props) => {
 
       setIsDialogOpen(false);
       setEditingRoom(null);
-      setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+      setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "", amenities: "" });
       setMainPhoto("");
       setGalleryPhotos([]);
       fetchRooms();
@@ -235,7 +239,8 @@ const RoomsManager = ({ hotelId }: Props) => {
       description: room.description || "",
       price: room.price.toString(),
       capacity: room.capacity.toString(),
-      square_meters: room.square_meters?.toString() || ""
+      square_meters: room.square_meters?.toString() || "",
+      amenities: room.amenities?.join(', ') || ""
     });
     setMainPhoto(room.main_photo_url || "");
     setGalleryPhotos(room.images || []);
@@ -299,7 +304,7 @@ const RoomsManager = ({ hotelId }: Props) => {
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary" onClick={() => {
               setEditingRoom(null);
-              setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "" });
+              setFormData({ name: "", description: "", price: "", capacity: "2", square_meters: "", amenities: "" });
               setMainPhoto("");
               setGalleryPhotos([]);
             }}>
@@ -375,6 +380,17 @@ const RoomsManager = ({ hotelId }: Props) => {
                   placeholder="25.00"
                   className="text-base"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amenities" className="text-sm font-medium">Amenities</Label>
+                <Input
+                  id="amenities"
+                  value={formData.amenities}
+                  onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
+                  placeholder="WiFi, TV, Mini Bar, Air Conditioning (comma separated)"
+                  className="text-base"
+                />
+                <p className="text-xs text-muted-foreground">Separate amenities with commas</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="main_photo" className="text-sm font-medium">Main Photo</Label>
@@ -474,6 +490,18 @@ const RoomsManager = ({ hotelId }: Props) => {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Size:</span>
                     <span className="font-medium">{room.square_meters} m²</span>
+                  </div>
+                )}
+                {room.amenities && room.amenities.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Amenities:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {room.amenities.map((amenity, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {amenity}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
