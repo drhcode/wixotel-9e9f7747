@@ -19,12 +19,13 @@ const Dashboard = () => {
           .from('user_roles')
           .select('role')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
-        if (mounted && roleData?.role) {
-          setUserRole(roleData.role);
-          sessionStorage.setItem('user_role', roleData.role);
+        if (error && (error as any).code !== 'PGRST116') throw error;
+        const role = roleData?.role ?? 'hotel_admin';
+        if (mounted) {
+          setUserRole(role);
+          sessionStorage.setItem('user_role', role);
         }
       } catch (err) {
         console.error('Failed to fetch role', err);
