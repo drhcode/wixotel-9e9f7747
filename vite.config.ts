@@ -11,11 +11,15 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    legacy({
+      targets: ["defaults", "not IE 11", "safari >= 12", "ios_saf >= 12.2"],
+      additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
+      modernPolyfills: true,
+    }),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
 
   build: {
-    target: "es2020",
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -29,7 +33,7 @@ export default defineConfig(({ mode }) => ({
 
   optimizeDeps: {
     esbuildOptions: {
-      target: "es2020",
+      target: "es2019",
     },
   },
 
