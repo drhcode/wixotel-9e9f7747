@@ -11,24 +11,25 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    legacy({
-      // Use modern Safari targets, not iOS 10.x
-      targets: ["defaults", "safari >= 13", "ios_saf >= 13"],
-      // Generate modern and legacy bundles correctly
-      additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
-      modernPolyfills: true,
-    }),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
 
   build: {
-    target: ["es2019", "safari13"], // important for SWC & Safari support
-    sourcemap: true,                // helps debug white screens
+    target: "es2020",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+        },
+      },
+    },
   },
 
   optimizeDeps: {
     esbuildOptions: {
-      target: "es2019", // ensures code works on Safari 13+
+      target: "es2020",
     },
   },
 
