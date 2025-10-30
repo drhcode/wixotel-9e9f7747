@@ -11,28 +11,28 @@ import heroImage from "@/assets/hotel-hero.jpg";
 const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   
-  // useEffect(() => {
-  //   supabase.auth.getSession().then(({ data: { session } }) => {
-  //     if (session) navigate("/dashboard");
-  //   });
-  // }, [navigate]);
-
   useEffect(() => {
+    let mounted = true;
+    
     const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (data?.session) {
-        // Only navigate if we’re not already there
-        if (window.location.pathname !== "/dashboard") {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted && data?.session && window.location.pathname === "/") {
           navigate("/dashboard", { replace: true });
         }
+      } catch (error) {
+        console.error("Session check error:", error);
       }
-      setLoading(false);
     };
 
     checkSession();
-  }, [navigate]);
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  
   const features = [
     {
       icon: Hotel,

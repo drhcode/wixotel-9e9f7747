@@ -31,14 +31,25 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
+    let mounted = true;
+    
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted && session) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
       }
     };
+    
     checkAuth();
-  }, [navigate]);
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
   const [loading, setLoading] = useState(false);
   const [signupData, setSignupData] = useState({
     email: "",
