@@ -1,5 +1,8 @@
+// vite.config.js
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import legacy from "@vitejs/plugin-legacy";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -8,12 +11,22 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    // ✅ Add legacy build for iPhone/iPad Safari
+    legacy({
+      targets: ["defaults", "safari >= 12", "iOS >= 12"],
+      additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
+      modernPolyfills: true,
+    }),
+  ].filter(Boolean),
 
   build: {
-    target: ["es2017", "safari13"], // ← better compatibility
+    target: ["es2017", "safari13"], // ✅ ensures compatibility
     sourcemap: false,
-    minify: "esbuild", // ← switch from terser to esbuild (more stable)
+    minify: "esbuild", // ✅ safer than terser for Safari
     rollupOptions: {
       output: {
         manualChunks: {
@@ -26,7 +39,7 @@ export default defineConfig(({ mode }) => ({
 
   optimizeDeps: {
     esbuildOptions: {
-      target: "es2015",
+      target: "es2017",
     },
   },
 
