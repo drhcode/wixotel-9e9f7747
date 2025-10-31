@@ -1,3 +1,5 @@
+window.addEventListener("error", (e) => alert(`Error: ${e.message}`));
+window.addEventListener("unhandledrejection", (e) => alert(`Promise: ${e.reason}`));
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
