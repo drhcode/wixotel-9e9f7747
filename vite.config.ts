@@ -3,27 +3,22 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-
 export default defineConfig(({ mode }) => ({
   server: {
     host: true,
     port: 8080,
   },
-  plugins: [
-    react(),
-    mode === 'development' && componentTagger(),
-  ].filter(Boolean),
-
+  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
 
   build: {
-    target: "es2015",
+    target: ["es2017", "safari13"], // ← better compatibility
     sourcemap: false,
-    minify: "terser",
+    minify: "esbuild", // ← switch from terser to esbuild (more stable)
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "ui-vendor": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
         },
       },
     },
