@@ -531,11 +531,16 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
           || cleanValue(reservation['Guest Phone'])
           || '';
         
-        const guestEmail = cleanValue(reservation.guest_email) 
+        let guestEmail = cleanValue(reservation.guest_email) 
           || cleanValue(reservation.email) 
           || cleanValue(reservation.Email)
           || cleanValue(reservation['Guest Email'])
           || null;
+        
+        // Validate email format - if invalid, set to null instead of rejecting the row
+        if (guestEmail && !validateEmail(guestEmail)) {
+          guestEmail = null;
+        }
         
         const guestCountry = cleanValue(reservation.guest_country) 
           || cleanValue(reservation.country) 
@@ -559,18 +564,6 @@ async function importReservations(supabase: any, csvData: any[], userHotelId: st
         }
         if (fullName.length > 100) {
           errors.push(`Row ${rowNumber}: Guest name too long (max 100 chars)`);
-          continue;
-        }
-        
-        // Validate email if provided
-        if (guestEmail && !validateEmail(guestEmail)) {
-          errors.push(`Row ${rowNumber}: Invalid email format`);
-          continue;
-        }
-        
-        // Validate phone if provided
-        if (guestPhone && !validatePhone(guestPhone)) {
-          errors.push(`Row ${rowNumber}: Invalid phone format`);
           continue;
         }
 
