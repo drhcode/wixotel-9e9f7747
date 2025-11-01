@@ -23,6 +23,7 @@ interface Hotel {
   email: string | null;
   description: string | null;
   about_us: string | null;
+  about_us_image: string | null;
   logo_url: string | null;
   amenities: string[] | null;
 }
@@ -451,7 +452,7 @@ const HotelPublicView = () => {
       {/* About Us Section */}
       <section id="about" className="py-16 px-4 bg-accent/50 scroll-mt-16">
         <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+          <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold tracking-tight">About Us</h2>
               <p className="text-xl text-muted-foreground">
@@ -459,47 +460,62 @@ const HotelPublicView = () => {
               </p>
             </div>
             
-            {hotel?.about_us && (
-              <Card className="border-border/50">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                    {hotel.about_us}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              {/* About Us Text */}
+              <div>
+                {hotel?.about_us ? (
+                  <Card className="border-border/50">
+                    <CardContent className="pt-6">
+                      <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                        {hotel.about_us}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-border/50">
+                    <CardContent className="pt-6 text-center text-muted-foreground">
+                      <p>Learn more about our exceptional hospitality and services.</p>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {hotel?.amenities && hotel.amenities.length > 0 && (
+                  <Card className="border-border/50 mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Coffee className="h-5 w-5 text-primary" />
+                        Hotel Amenities
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {hotel.amenities.map((amenity, index) => (
+                          <Badge key={index} variant="secondary" className="text-sm">
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    Location
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{hotel?.address}</p>
-                </CardContent>
-              </Card>
-              {hotel?.amenities && hotel.amenities.length > 0 && (
-                <Card className="border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Coffee className="h-5 w-5 text-primary" />
-                      Hotel Amenities
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {hotel.amenities.map((amenity, index) => (
-                        <Badge key={index} variant="secondary" className="text-sm">
-                          {amenity}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* About Us Image */}
+              <div>
+                {hotel?.about_us_image ? (
+                  <div className="relative rounded-lg overflow-hidden shadow-elegant">
+                    <img
+                      src={hotel.about_us_image}
+                      alt={`${hotel.name} - About Us`}
+                      className="w-full h-[400px] object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 h-[400px] flex items-center justify-center">
+                    <Hotel className="h-24 w-24 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

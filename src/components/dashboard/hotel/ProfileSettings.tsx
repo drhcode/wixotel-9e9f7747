@@ -18,6 +18,7 @@ interface Hotel {
   email: string | null;
   description: string | null;
   about_us: string | null;
+  about_us_image: string | null;
   logo_url: string | null;
 }
 
@@ -30,8 +31,10 @@ const ProfileSettings = () => {
   const [hotelEmail, setHotelEmail] = useState("");
   const [hotelDescription, setHotelDescription] = useState("");
   const [hotelAboutUs, setHotelAboutUs] = useState("");
+  const [aboutUsImageUrl, setAboutUsImageUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
   
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -62,6 +65,7 @@ const ProfileSettings = () => {
       setHotelEmail(hotelData.email || "");
       setHotelDescription(hotelData.description || "");
       setHotelAboutUs(hotelData.about_us || "");
+      setAboutUsImageUrl(hotelData.about_us_image || "");
       setLogoUrl(hotelData.logo_url || "");
     }
   };
@@ -109,6 +113,48 @@ const ProfileSettings = () => {
     }
   };
 
+  const handleAboutUsImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingAboutUsImage(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !hotel) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-about-${Date.now()}.${fileExt}`;
+      const filePath = `hotel-about/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('hotel-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('hotel-assets')
+        .getPublicUrl(filePath);
+
+      setAboutUsImageUrl(publicUrl);
+      toast.success("About Us image uploaded successfully");
+    } catch (error: any) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingAboutUsImage(false);
+    }
+  };
+
   const handleSaveHotelInfo = async () => {
     if (!hotel) return;
 
@@ -133,6 +179,7 @@ const ProfileSettings = () => {
         email: hotelEmail || null,
         description: hotelDescription || null,
         about_us: hotelAboutUs || null,
+        about_us_image: aboutUsImageUrl || null,
         logo_url: logoUrl || null
       })
       .eq('id', hotel.id);
@@ -300,6 +347,40 @@ const ProfileSettings = () => {
               placeholder="Tell visitors about your hotel's story, values, and what makes it special"
               rows={6}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>About Us Image</Label>
+            <div className="flex items-center gap-4">
+              {aboutUsImageUrl && (
+                <img
+                  src={aboutUsImageUrl}
+                  alt="About us"
+                  className="h-32 w-48 object-cover rounded-lg border"
+                />
+              )}
+              <div className="flex-1">
+                <Input
+                  id="about-us-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAboutUsImageUpload}
+                  disabled={uploadingAboutUsImage}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('about-us-image-upload')?.click()}
+                  disabled={uploadingAboutUsImage}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadingAboutUsImage ? "Uploading..." : aboutUsImageUrl ? "Change Image" : "Upload Image"}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  This image will appear in the About Us section. Max size: 5MB
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
