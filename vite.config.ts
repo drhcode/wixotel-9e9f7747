@@ -24,9 +24,11 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
 
   build: {
-    target: ["es2017", "safari13"], // ✅ ensures compatibility
+    // Let @vitejs/plugin-legacy handle browser targets; avoid overriding
     sourcemap: false,
-    minify: "esbuild", // ✅ safer than terser for Safari
+    minify: "esbuild",
+    reportCompressedSize: false, // avoid OOM when computing gzip for legacy bundle
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
         manualChunks: {
