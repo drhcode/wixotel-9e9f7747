@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,6 @@ import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const LazyHotelsMap = lazy(() => import("@/components/HotelsMap").then(m => ({ default: m.HotelsMap })));
 
 
 interface PublicHotel {
@@ -362,113 +360,97 @@ const Landing = () => {
               </p>
             </div>
 
-            {/* Split View: Filters/Hotels + Map */}
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Left Side: Filters and Hotels */}
-              <div className="flex flex-col gap-6">
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4">
-                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Countries</SelectItem>
-                      {availableCountries.map(country => (
-                        <SelectItem key={country} value={country}>{country}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedCity} onValueChange={setSelectedCity}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select City" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Cities</SelectItem>
-                      {availableCities.map(city => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={sortByLocation}
-                    className="flex items-center gap-2"
-                  >
-                    <Navigation className="h-4 w-4" />
-                    Near Me
-                  </Button>
-                </div>
-
-                {/* Hotels List */}
-                <div className="space-y-4 overflow-y-auto max-h-[700px] pr-2">
-                  {filteredHotels.map((hotel) => (
-                    <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
-                      <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300">
-                        <div className="flex gap-4">
-                          <div className="w-32 h-32 relative overflow-hidden bg-accent flex-shrink-0">
-                            {hotel.about_us_image ? (
-                              <img 
-                                src={hotel.about_us_image} 
-                                alt={hotel.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                            ) : hotel.images?.[0] ? (
-                              <img 
-                                src={hotel.images[0]} 
-                                alt={hotel.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                            ) : hotel.logo_url ? (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <img 
-                                  src={hotel.logo_url} 
-                                  alt={hotel.name}
-                                  className="max-w-[70%] max-h-[70%] object-contain"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Hotel className="h-8 w-8 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 p-4">
-                            <CardTitle className="text-lg group-hover:text-primary transition-colors mb-2">{hotel.name}</CardTitle>
-                            <CardDescription className="flex items-start gap-2">
-                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                              <span>{hotel.city && hotel.country ? `${hotel.city}, ${hotel.country}` : hotel.address}</span>
-                            </CardDescription>
-                            {hotel.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{hotel.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-12 max-w-4xl mx-auto">
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {availableCountries.map(country => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
 
-                  {filteredHotels.length === 0 && (
-                    <div className="text-center py-12">
-                      <Hotel className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-xl text-muted-foreground">No hotels found with the selected filters</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select City" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {availableCities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              {/* Right Side: Map */}
-              <div className="h-[700px] rounded-lg overflow-hidden border border-border/50 shadow-lg">
-                <Suspense fallback={<div className="h-full w-full" />}> 
-                  <LazyHotelsMap 
-                    hotels={filteredHotels} 
-                    onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
-                  />
-                </Suspense>
-              </div>
+              <Button 
+                variant="outline" 
+                onClick={sortByLocation}
+                className="flex items-center gap-2"
+              >
+                <Navigation className="h-4 w-4" />
+                Near Me
+              </Button>
             </div>
+
+            {/* Hotels Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredHotels.map((hotel) => (
+                <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
+                  <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                    <div className="aspect-video relative overflow-hidden bg-accent">
+                      {hotel.about_us_image ? (
+                        <img 
+                          src={hotel.about_us_image} 
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : hotel.images?.[0] ? (
+                        <img 
+                          src={hotel.images[0]} 
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : hotel.logo_url ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <img 
+                            src={hotel.logo_url} 
+                            alt={hotel.name}
+                            className="max-w-[60%] max-h-[60%] object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="h-16 w-16 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
+                      <CardDescription className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>{hotel.city && hotel.country ? `${hotel.city}, ${hotel.country}` : hotel.address}</span>
+                      </CardDescription>
+                    </CardHeader>
+                    {hotel.description && (
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{hotel.description}</p>
+                      </CardContent>
+                    )}
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {filteredHotels.length === 0 && (
+              <div className="text-center py-12">
+                <Hotel className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-xl text-muted-foreground">No hotels found with the selected filters</p>
+              </div>
+            )}
           </div>
         </section>
       )}
