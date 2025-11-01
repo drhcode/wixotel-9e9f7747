@@ -21,7 +21,7 @@ export const CalendarBookingsList = ({
     <>
       <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
         <span className="text-sm font-medium">
-          Reserved Rooms ({bookings.length}) | Free Rooms ({rooms.length - bookings.length})
+          Reserved Rooms ({bookings.length}) | Free Rooms ({Math.max(0, rooms.length - bookings.length)})
         </span>
       </div>
 
