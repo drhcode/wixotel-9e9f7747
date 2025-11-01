@@ -10,10 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { format } from "date-fns";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import { cn } from "@/lib/utils";
 
 interface Hotel {
   id: string;
@@ -42,6 +48,7 @@ interface Room {
   square_meters: number | null;
   amenities: string[] | null;
   is_available: boolean;
+  images: string[] | null;
 }
 
 const HotelPublicView = () => {
@@ -53,6 +60,7 @@ const HotelPublicView = () => {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [submittingLead, setSubmittingLead] = useState(false);
+  const [userCountry, setUserCountry] = useState<string>("US");
 
   // Track page analytics
   useAnalyticsTracking(hotel?.id, `/hotel/${hotelSlug}`);
@@ -73,11 +81,12 @@ const HotelPublicView = () => {
   const [bookingRequestMode, setBookingRequestMode] = useState(false);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [bookingRequest, setBookingRequest] = useState({
-    checkIn: "",
-    checkOut: "",
+    checkIn: undefined as Date | undefined,
+    checkOut: undefined as Date | undefined,
     fullName: "",
     email: "",
     phone: "",
+    guests: 1,
   });
 
   const leadSchema = z.object({
@@ -100,7 +109,20 @@ const HotelPublicView = () => {
 
   useEffect(() => {
     fetchHotelData();
+    detectUserCountry();
   }, [hotelSlug]);
+
+  const detectUserCountry = async () => {
+    try {
+      const response = await fetch("https://ipapi.co/json/");
+      const data = await response.json();
+      if (data.country_code) {
+        setUserCountry(data.country_code);
+      }
+    } catch (error) {
+      console.error("Failed to detect country:", error);
+    }
+  };
 
   const fetchHotelData = async () => {
     try {
@@ -165,15 +187,16 @@ const HotelPublicView = () => {
         fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
         email: z.string().trim().email("Invalid email address").max(255),
         phone: z.string().trim().min(5, "Phone number is too short").max(20),
-        checkIn: z.string().min(1, "Check-in date is required"),
-        checkOut: z.string().min(1, "Check-out date is required"),
+        checkIn: z.date({ required_error: "Check-in date is required" }),
+        checkOut: z.date({ required_error: "Check-out date is required" }),
+        guests: z.number().min(1, "At least 1 guest required"),
       });
 
       const validated = requestSchema.parse(bookingRequest);
 
       // Check for overlapping dates
-      const checkIn = new Date(validated.checkIn);
-      const checkOut = new Date(validated.checkOut);
+      const checkIn = validated.checkIn;
+      const checkOut = validated.checkOut;
       
       if (checkOut <= checkIn) {
         toast.error("Check-out date must be after check-in date");
@@ -186,9 +209,9 @@ const HotelPublicView = () => {
         full_name: validated.fullName,
         email: validated.email,
         phone: validated.phone,
-        check_in: validated.checkIn,
-        check_out: validated.checkOut,
-        guests: selectedRoom.capacity,
+        check_in: format(validated.checkIn, "yyyy-MM-dd"),
+        check_out: format(validated.checkOut, "yyyy-MM-dd"),
+        guests: validated.guests,
         status: "new",
         message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || 'N/A'})`,
       });
@@ -196,7 +219,7 @@ const HotelPublicView = () => {
       if (error) throw error;
 
       toast.success("Booking request sent successfully! We'll contact you soon.");
-      setBookingRequest({ checkIn: "", checkOut: "", fullName: "", email: "", phone: "" });
+      setBookingRequest({ checkIn: undefined, checkOut: undefined, fullName: "", email: "", phone: "", guests: 1 });
       setBookingRequestMode(false);
       setSelectedRoom(null);
     } catch (error: any) {
@@ -445,7 +468,7 @@ const HotelPublicView = () => {
                         <div className="text-xs text-muted-foreground">per night</div>
                       </div>
                       <Button size="sm" className="group-hover:bg-gradient-primary transition-all">
-                        View Details
+                        View & Book
                       </Button>
                     </div>
                   </CardContent>
@@ -823,17 +846,44 @@ const HotelPublicView = () => {
                 <DialogTitle className="text-2xl">{selectedRoom.name}</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
-                {selectedRoom.main_photo_url && (
+                {((selectedRoom.images && selectedRoom.images.length > 0) || selectedRoom.main_photo_url) && (
                   <div className="relative rounded-lg overflow-hidden">
-                    <img
-                      src={selectedRoom.main_photo_url}
-                      alt={selectedRoom.name}
-                      className="w-full h-72 object-cover"
-                    />
-                    {selectedRoom.room_number && (
-                      <Badge className="absolute top-4 right-4 bg-background/90 backdrop-blur">
-                        Room {selectedRoom.room_number}
-                      </Badge>
+                    {selectedRoom.images && selectedRoom.images.length > 0 ? (
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {selectedRoom.images.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="relative">
+                                <img
+                                  src={image}
+                                  alt={`${selectedRoom.name} - Image ${index + 1}`}
+                                  className="w-full h-72 object-cover"
+                                />
+                                {selectedRoom.room_number && index === 0 && (
+                                  <Badge className="absolute top-4 right-4 bg-background/90 backdrop-blur">
+                                    Room {selectedRoom.room_number}
+                                  </Badge>
+                                )}
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-4" />
+                        <CarouselNext className="right-4" />
+                      </Carousel>
+                    ) : (
+                      <div className="relative">
+                        <img
+                          src={selectedRoom.main_photo_url!}
+                          alt={selectedRoom.name}
+                          className="w-full h-72 object-cover"
+                        />
+                        {selectedRoom.room_number && (
+                          <Badge className="absolute top-4 right-4 bg-background/90 backdrop-blur">
+                            Room {selectedRoom.room_number}
+                          </Badge>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -910,11 +960,15 @@ const HotelPublicView = () => {
                       className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
                       onClick={() => {
                         setBookingRequestMode(true);
+                        setBookingRequest({ 
+                          ...bookingRequest, 
+                          guests: selectedRoom.capacity 
+                        });
                         fetchAvailableDates();
                       }}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
-                      Request to Book
+                      View & Book
                     </Button>
                   </div>
                 ) : (
@@ -928,25 +982,60 @@ const HotelPublicView = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckIn">Check-in Date *</Label>
-                            <Input
-                              id="bookingCheckIn"
-                              type="date"
-                              value={bookingRequest.checkIn}
-                              onChange={(e) => setBookingRequest({ ...bookingRequest, checkIn: e.target.value })}
-                              min={format(new Date(), "yyyy-MM-dd")}
-                              required
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !bookingRequest.checkIn && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {bookingRequest.checkIn ? format(bookingRequest.checkIn, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={bookingRequest.checkIn}
+                                  onSelect={(date) => setBookingRequest({ ...bookingRequest, checkIn: date })}
+                                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckOut">Check-out Date *</Label>
-                            <Input
-                              id="bookingCheckOut"
-                              type="date"
-                              value={bookingRequest.checkOut}
-                              onChange={(e) => setBookingRequest({ ...bookingRequest, checkOut: e.target.value })}
-                              min={bookingRequest.checkIn || format(new Date(), "yyyy-MM-dd")}
-                              required
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !bookingRequest.checkOut && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {bookingRequest.checkOut ? format(bookingRequest.checkOut, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={bookingRequest.checkOut}
+                                  onSelect={(date) => setBookingRequest({ ...bookingRequest, checkOut: date })}
+                                  disabled={(date) => {
+                                    const minDate = bookingRequest.checkIn || new Date();
+                                    return date <= minDate;
+                                  }}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         </div>
 
@@ -970,14 +1059,35 @@ const HotelPublicView = () => {
 
                         <div className="space-y-2">
                           <Label htmlFor="bookingPhone">Phone *</Label>
-                          <Input
-                            id="bookingPhone"
-                            type="tel"
+                          <PhoneInput
+                            international
+                            defaultCountry={userCountry as any}
                             value={bookingRequest.phone}
-                            onChange={(e) => setBookingRequest({ ...bookingRequest, phone: e.target.value })}
-                            placeholder="Enter your phone number"
+                            onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                             required
                           />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bookingGuests">Number of Guests *</Label>
+                          <Input
+                            id="bookingGuests"
+                            type="number"
+                            min="1"
+                            max={selectedRoom.capacity}
+                            value={bookingRequest.guests}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (value <= selectedRoom.capacity) {
+                                setBookingRequest({ ...bookingRequest, guests: value });
+                              }
+                            }}
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Maximum capacity: {selectedRoom.capacity} guests
+                          </p>
                         </div>
 
                         <div className="space-y-2">
@@ -998,7 +1108,7 @@ const HotelPublicView = () => {
                             variant="outline" 
                             onClick={() => {
                               setBookingRequestMode(false);
-                              setBookingRequest({ checkIn: "", checkOut: "", fullName: "", email: "", phone: "" });
+                              setBookingRequest({ checkIn: undefined, checkOut: undefined, fullName: "", email: "", phone: "", guests: 1 });
                             }}
                             className="flex-1"
                           >

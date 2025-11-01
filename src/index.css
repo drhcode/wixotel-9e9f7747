@@ -151,4 +151,13 @@ All colors MUST be HSL.
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
+
+  /* Phone Input Styling */
+  .PhoneInputInput {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm;
+  }
+  
+  .PhoneInputCountrySelect {
+    @apply mr-2 bg-transparent border-0 focus:outline-none focus:ring-0;
+  }
 }
