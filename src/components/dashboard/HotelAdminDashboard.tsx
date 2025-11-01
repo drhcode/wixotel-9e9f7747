@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hotel, LogOut, AlertCircle, Menu } from "lucide-react";
+import { Hotel, LogOut, AlertCircle, Menu, ExternalLink } from "lucide-react";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,6 @@ import CalendarManager from "./hotel/CalendarManager";
 import ProfileSettings from "./hotel/ProfileSettings";
 import LeadsManager from "./hotel/LeadsManager";
 import Notifications from "@/pages/Notifications";
-import AnalyticsDashboard from "./hotel/AnalyticsDashboard";
 
 interface HotelData {
   id: string;
@@ -26,6 +25,7 @@ interface HotelData {
   status: string;
   subscription_plan: string;
   logo_url: string | null;
+  slug: string | null;
 }
 
 const HotelAdminDashboard = () => {
@@ -176,8 +176,6 @@ const HotelAdminDashboard = () => {
     switch (activeTab) {
       case "overview":
         return <HotelOverview hotelId={hotel.id} />;
-      case "analytics":
-        return <AnalyticsDashboard />;
       case "calendar":
         return <CalendarManager hotelId={hotel.id} />;
       case "rooms":
@@ -229,6 +227,17 @@ const HotelAdminDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {hotel.slug && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => window.open(`/hotel/${hotel.slug}`, '_blank')}
+                      title="View public page"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Public Page</span>
+                    </Button>
+                  )}
                   <NotificationDropdown hotelId={hotel.id} />
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
