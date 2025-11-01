@@ -26,6 +26,8 @@ interface Hotel {
   name: string;
   slug: string | null;
   address: string;
+  city: string | null;
+  country: string | null;
   phone: string | null;
   email: string | null;
   description: string | null;
@@ -42,6 +44,8 @@ const ProfileSettings = () => {
   const [hotelName, setHotelName] = useState("");
   const [hotelSlug, setHotelSlug] = useState("");
   const [hotelAddress, setHotelAddress] = useState("");
+  const [hotelCity, setHotelCity] = useState("");
+  const [hotelCountry, setHotelCountry] = useState("");
   const [hotelPhone, setHotelPhone] = useState("");
   const [hotelEmail, setHotelEmail] = useState("");
   const [hotelDescription, setHotelDescription] = useState("");
@@ -84,6 +88,8 @@ const ProfileSettings = () => {
       setHotelDescription(hotelData.description || "");
       setHotelAboutUs(hotelData.about_us || "");
       setAboutUsImageUrl(hotelData.about_us_image || "");
+      setHotelCity(hotelData.city || "");
+      setHotelCountry(hotelData.country || "");
       setFacebookUrl(hotelData.facebook_url || "");
       setInstagramUrl(hotelData.instagram_url || "");
       setGoogleBusinessUrl(hotelData.google_business_url || "");
@@ -202,6 +208,8 @@ const ProfileSettings = () => {
         name: hotelName,
         slug: hotelSlug || null,
         address: hotelAddress,
+        city: hotelCity || null,
+        country: hotelCountry || null,
         phone: hotelPhone || null,
         email: hotelEmail || null,
         description: hotelDescription || null,
@@ -344,6 +352,27 @@ const ProfileSettings = () => {
               placeholder="Enter hotel address"
               rows={3}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hotel-city">City</Label>
+              <Input
+                id="hotel-city"
+                value={hotelCity}
+                onChange={(e) => setHotelCity(e.target.value)}
+                placeholder="Enter city"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hotel-country">Country</Label>
+              <Input
+                id="hotel-country"
+                value={hotelCountry}
+                onChange={(e) => setHotelCountry(e.target.value)}
+                placeholder="Enter country"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
