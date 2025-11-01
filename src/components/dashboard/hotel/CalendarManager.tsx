@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -100,7 +100,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     });
   };
 
-  const selectedDateBookings = getBookingsForDate(selectedDate);
+  const selectedDateBookings = useMemo(() => getBookingsForDate(selectedDate), [bookings, selectedDate]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,16 +158,14 @@ const CalendarManager = ({ hotelId }: Props) => {
     return null;
   };
 
-  const generateTimelineDates = () => {
+  const timelineDates = useMemo(() => {
     const dates: Date[] = [];
     const normalizedStart = startOfDay(timelineStartDate);
     for (let i = 0; i < TIMELINE_DAYS; i++) {
       dates.push(startOfDay(addDays(normalizedStart, i)));
     }
     return dates;
-  };
-
-  const timelineDates = generateTimelineDates();
+  }, [timelineStartDate, TIMELINE_DAYS]);
 
   const getBookingPosition = (booking: any, date: Date) => {
     const checkIn = startOfDay(new Date(booking.check_in));
@@ -195,7 +193,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     return { start: false, span: 0 };
   };
 
-  const modifiers = {
+  const modifiers = useMemo(() => ({
     booked: bookings
       .map((b) => {
         const dates: Date[] = [];
@@ -208,9 +206,9 @@ const CalendarManager = ({ hotelId }: Props) => {
         return dates;
       })
       .flat(),
-  };
+  }), [bookings]);
 
-  const modifiersStyles = {
+  const modifiersStyles = useMemo(() => ({
     booked: {
       backgroundColor: "hsl(var(--primary) / 0.15)",
       color: "hsl(var(--primary))",
@@ -218,7 +216,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       borderRadius: "10px",
       border: "2px solid hsl(var(--primary) / 0.3)",
     },
-  };
+  }), []);
 
   if (isLoading && bookings.length === 0 && rooms.length === 0) {
     return (
