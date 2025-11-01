@@ -33,19 +33,36 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
   useEffect(() => {
     fetchNotifications();
     
-    // Subscribe to new notifications
+    // Subscribe to all notification changes (real-time)
     const channel = supabase
-      .channel('notifications')
+      .channel('notifications-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'notifications',
           filter: `hotel_id=eq.${hotelId}`,
         },
-        () => {
-          fetchNotifications();
+        (payload) => {
+          console.log('Notification change:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            // Add new notification
+            setNotifications(prev => [payload.new as Notification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          } else if (payload.eventType === 'UPDATE') {
+            // Update existing notification
+            setNotifications(prev => 
+              prev.map(n => n.id === payload.new.id ? payload.new as Notification : n)
+            );
+            // Recalculate unread count
+            fetchNotifications();
+          } else if (payload.eventType === 'DELETE') {
+            // Remove deleted notification
+            setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+            fetchNotifications();
+          }
         }
       )
       .subscribe();

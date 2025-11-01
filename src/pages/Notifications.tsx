@@ -1,0 +1,296 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Search, CheckCheck, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+
+interface Notification {
+  id: string;
+  hotel_id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+const Notifications = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [hotelId, setHotelId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchHotelId();
+  }, []);
+
+  useEffect(() => {
+    if (hotelId) {
+      fetchNotifications();
+      
+      // Set up real-time subscription
+      const channel = supabase
+        .channel('all-notifications-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `hotel_id=eq.${hotelId}`
+          },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setNotifications(prev => [payload.new as Notification, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              setNotifications(prev => 
+                prev.map(n => n.id === payload.new.id ? payload.new as Notification : n)
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [hotelId]);
+
+  useEffect(() => {
+    // Filter notifications based on search query
+    if (searchQuery.trim() === "") {
+      setFilteredNotifications(notifications);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredNotifications(
+        notifications.filter(
+          n => 
+            n.title.toLowerCase().includes(query) ||
+            n.message.toLowerCase().includes(query) ||
+            n.type.toLowerCase().includes(query)
+        )
+      );
+    }
+  }, [searchQuery, notifications]);
+
+  const fetchHotelId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: hotelData } = await supabase
+      .from('hotels')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single();
+
+    if (hotelData) {
+      setHotelId(hotelData.id);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('hotel_id', hotelId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error: any) {
+      console.error('Error fetching notifications:', error);
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error marking notification as read:', error);
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('hotel_id', hotelId)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      toast.success('All notifications marked as read');
+    } catch (error: any) {
+      console.error('Error marking all as read:', error);
+      toast.error('Failed to mark all as read');
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Notification deleted');
+    } catch (error: any) {
+      console.error('Error deleting notification:', error);
+      toast.error('Failed to delete notification');
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    return <Bell className="h-5 w-5" />;
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'booking_created':
+      case 'booking_accepted':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'booking_deleted':
+      case 'booking_rejected':
+      case 'lead_rejected':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'new_lead':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'status_change':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      default:
+        return 'bg-primary/10 text-primary border-primary/20';
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Notifications</h2>
+          <p className="text-muted-foreground">
+            View and manage all your notifications
+            {unreadCount > 0 && (
+              <span className="ml-2 text-primary font-medium">
+                ({unreadCount} unread)
+              </span>
+            )}
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <Button onClick={markAllAsRead} variant="outline">
+            <CheckCheck className="h-4 w-4 mr-2" />
+            Mark All as Read
+          </Button>
+        )}
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search notifications..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {loading ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">Loading notifications...</p>
+          </CardContent>
+        </Card>
+      ) : filteredNotifications.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              {searchQuery ? 'No notifications found matching your search' : 'No notifications yet'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filteredNotifications.map((notification) => (
+            <Card
+              key={notification.id}
+              className={`transition-all ${
+                !notification.is_read 
+                  ? 'border-primary/50 bg-primary/5' 
+                  : 'hover:bg-accent/50'
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className={`p-2 rounded-lg border ${getNotificationColor(notification.type)}`}>
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CardTitle className="text-base">{notification.title}</CardTitle>
+                        {!notification.is_read && (
+                          <Badge variant="default" className="text-xs">New</Badge>
+                        )}
+                      </div>
+                      <CardDescription className="text-sm">
+                        {notification.message}
+                      </CardDescription>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {format(new Date(notification.created_at), 'PPp')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!notification.is_read && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => markAsRead(notification.id)}
+                        title="Mark as read"
+                      >
+                        <CheckCheck className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteNotification(notification.id)}
+                      title="Delete notification"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Notifications;

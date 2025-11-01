@@ -17,6 +17,7 @@ import GuestsManager from "./hotel/GuestsManager";
 import CalendarManager from "./hotel/CalendarManager";
 import ProfileSettings from "./hotel/ProfileSettings";
 import LeadsManager from "./hotel/LeadsManager";
+import Notifications from "@/pages/Notifications";
 
 interface HotelData {
   id: string;
@@ -184,6 +185,8 @@ const HotelAdminDashboard = () => {
         return <GuestsManager hotelId={hotel.id} />;
       case "leads":
         return <LeadsManager hotelId={hotel.id} />;
+      case "notifications":
+        return <Notifications />;
       case "settings":
         return <ProfileSettings />;
       default:
