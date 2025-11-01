@@ -32,7 +32,7 @@ const HotelAdminDashboard = () => {
   const navigate = useNavigate();
   const [hotel, setHotel] = useState<HotelData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchHotelData();
@@ -52,7 +52,10 @@ const HotelAdminDashboard = () => {
         .eq('owner_id', session.user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error && (error as any).code !== 'PGRST116') {
+        throw error;
+      }
+      
       setHotel(hotelData);
     } catch (error: any) {
       toast.error("Failed to load hotel data");
