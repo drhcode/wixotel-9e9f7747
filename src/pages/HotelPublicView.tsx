@@ -599,7 +599,14 @@ const HotelPublicView = () => {
                       </div>
                       <div>
                         <CardTitle className="text-lg">Address</CardTitle>
-                        <p className="text-muted-foreground">{hotel?.address}</p>
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel?.address || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {hotel?.address}
+                        </a>
                       </div>
                     </div>
                   </CardHeader>
