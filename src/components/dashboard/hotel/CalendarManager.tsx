@@ -507,6 +507,7 @@ const CalendarManager = ({ hotelId }: Props) => {
             </div>
           </div>
           <Calendar
+            key={isSafari ? "safari" : "default"}
             mode="single"
             selected={selectedDate}
             onSelect={(date) => {
@@ -514,10 +515,14 @@ const CalendarManager = ({ hotelId }: Props) => {
                 setSelectedDate(date);
               }
             }}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            modifiers={!isSafari ? (modifiers as any) : undefined}
-            modifiersStyles={!isSafari ? (modifiersStyles as any) : undefined}
+            {...(!isSafari
+              ? ({
+                  month: currentMonth,
+                  onMonthChange: setCurrentMonth,
+                  modifiers: modifiers as any,
+                  modifiersStyles: modifiersStyles as any,
+                } as any)
+              : ({ month: currentMonth } as any))}
             className="w-full"
             classNames={{
               caption: "hidden",
