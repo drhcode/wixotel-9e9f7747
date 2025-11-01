@@ -15,12 +15,13 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    // ✅ Add legacy build for iPhone/iPad Safari
-    legacy({
-      targets: ["defaults", "safari >= 12", "iOS >= 12"],
-      additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
-      modernPolyfills: true,
-    }),
+    // Use legacy plugin only for production builds to reduce dev bundle size
+    mode !== "development" &&
+      legacy({
+        targets: ["defaults", "safari >= 12", "iOS >= 12"],
+        additionalLegacyPolyfills: ["regenerator-runtime/runtime"],
+        modernPolyfills: true,
+      }),
   ].filter(Boolean),
 
   build: {
@@ -33,7 +34,18 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          "ui-vendor": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+          ],
+          "recharts": ["recharts"],
+          "supabase-vendor": ["@supabase/supabase-js"],
+          "lucide-vendor": ["lucide-react"],
+          "date-vendor": ["date-fns"],
         },
       },
     },

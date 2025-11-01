@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import SuperAdminDashboard from "@/components/dashboard/SuperAdminDashboard";
-import HotelAdminDashboard from "@/components/dashboard/HotelAdminDashboard";
 import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
@@ -97,6 +95,8 @@ const Dashboard = () => {
     };
   }, [navigate]);
 
+const LazySuperAdminDashboard = lazy(() => import("@/components/dashboard/SuperAdminDashboard"));
+const LazyHotelAdminDashboard = lazy(() => import("@/components/dashboard/HotelAdminDashboard"));
 
   if (loading) {
     return (
@@ -106,11 +106,15 @@ const Dashboard = () => {
     );
   }
 
-  if (userRole === 'super_admin') {
-    return <SuperAdminDashboard />;
-  }
-
-  return <HotelAdminDashboard />;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      {userRole === 'super_admin' ? <LazySuperAdminDashboard /> : <LazyHotelAdminDashboard />}
+    </Suspense>
+  );
 };
 
 export default Dashboard;

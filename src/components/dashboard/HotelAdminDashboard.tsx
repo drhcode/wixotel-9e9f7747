@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +10,14 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { HotelSidebar } from "./hotel/HotelSidebar";
-import HotelOverview from "./hotel/HotelOverview";
-import RoomsManager from "./hotel/RoomsManager";
-import BookingsManager from "./hotel/BookingsManager";
-import GuestsManager from "./hotel/GuestsManager";
-import CalendarManager from "./hotel/CalendarManager";
-import ProfileSettings from "./hotel/ProfileSettings";
-import LeadsManager from "./hotel/LeadsManager";
-import Notifications from "@/pages/Notifications";
+const HotelOverview = lazy(() => import("./hotel/HotelOverview"));
+const RoomsManager = lazy(() => import("./hotel/RoomsManager"));
+const BookingsManager = lazy(() => import("./hotel/BookingsManager"));
+const GuestsManager = lazy(() => import("./hotel/GuestsManager"));
+const CalendarManager = lazy(() => import("./hotel/CalendarManager"));
+const ProfileSettings = lazy(() => import("./hotel/ProfileSettings"));
+const LeadsManager = lazy(() => import("./hotel/LeadsManager"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
 
 interface HotelData {
   id: string;
@@ -268,7 +268,9 @@ const HotelAdminDashboard = () => {
           {/* Content Area */}
           <main className={activeTab === "calendar" ? "" : "container mx-auto px-4 lg:px-6 py-6"}>
             <div className={activeTab === "calendar" ? "px-4 lg:px-6 py-6" : ""}>
-              {renderContent()}
+              <Suspense fallback={<div className="py-10 text-center">Loading...</div>}>
+                {renderContent()}
+              </Suspense>
             </div>
           </main>
         </div>
