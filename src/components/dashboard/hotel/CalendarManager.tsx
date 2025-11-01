@@ -94,8 +94,6 @@ const CalendarManager = ({ hotelId }: Props) => {
       setBookings(data || []);
     }
     setIsLoading(false);
-
-    setIsLoading(false);
   };
 
   const fetchBookings = async () => {
