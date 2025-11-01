@@ -281,9 +281,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <Select
                   value={format(timelineStartDate, "M")}
                   onValueChange={(value) => {
-                    const newDate = startOfDay(new Date(timelineStartDate));
-                    newDate.setMonth(parseInt(value) - 1);
-                    setTimelineStartDate(newDate);
+                    if (value) {
+                      const newDate = startOfDay(new Date(timelineStartDate));
+                      newDate.setMonth(parseInt(value) - 1);
+                      setTimelineStartDate(newDate);
+                    }
                   }}
                 >
                   <SelectTrigger className="w-[130px]">
@@ -300,9 +302,11 @@ const CalendarManager = ({ hotelId }: Props) => {
                 <Select
                   value={format(timelineStartDate, "yyyy")}
                   onValueChange={(value) => {
-                    const newDate = startOfDay(new Date(timelineStartDate));
-                    newDate.setFullYear(parseInt(value));
-                    setTimelineStartDate(newDate);
+                    if (value) {
+                      const newDate = startOfDay(new Date(timelineStartDate));
+                      newDate.setFullYear(parseInt(value));
+                      setTimelineStartDate(newDate);
+                    }
                   }}
                 >
                   <SelectTrigger className="w-[100px]">
@@ -413,8 +417,8 @@ const CalendarManager = ({ hotelId }: Props) => {
                             <div
                               className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg group"
                               style={{
-                                backgroundColor: `${getStatusColor(startBooking.status)}20`,
-                                border: `2px solid ${getStatusColor(startBooking.status)}`,
+                                backgroundColor: getStatusColor(startBooking.status) + '20',
+                                border: '2px solid ' + getStatusColor(startBooking.status),
                                 color: getStatusColor(startBooking.status),
                                 left: "8px",
                                 right: "8px",
