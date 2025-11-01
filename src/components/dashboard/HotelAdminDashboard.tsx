@@ -18,6 +18,7 @@ import CalendarManager from "./hotel/CalendarManager";
 import ProfileSettings from "./hotel/ProfileSettings";
 import LeadsManager from "./hotel/LeadsManager";
 import Notifications from "@/pages/Notifications";
+import AnalyticsDashboard from "./hotel/AnalyticsDashboard";
 
 interface HotelData {
   id: string;
@@ -175,6 +176,8 @@ const HotelAdminDashboard = () => {
     switch (activeTab) {
       case "overview":
         return <HotelOverview hotelId={hotel.id} />;
+      case "analytics":
+        return <AnalyticsDashboard />;
       case "calendar":
         return <CalendarManager hotelId={hotel.id} />;
       case "rooms":

@@ -314,6 +314,51 @@ export type Database = {
         }
         Relationships: []
       }
+      page_analytics: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          hotel_id: string
+          id: string
+          page_path: string
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+          visitor_id: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          hotel_id: string
+          id?: string
+          page_path: string
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+          visitor_id: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          hotel_id?: string
+          id?: string
+          page_path?: string
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

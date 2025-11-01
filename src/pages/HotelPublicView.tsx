@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAnalyticsTracking } from "@/hooks/useAnalyticsTracking";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,9 @@ const HotelPublicView = () => {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [submittingLead, setSubmittingLead] = useState(false);
+
+  // Track page analytics
+  useAnalyticsTracking(hotel?.id, `/hotel/${hotelSlug}`);
 
   // Lead form state
   const [leadForm, setLeadForm] = useState({
