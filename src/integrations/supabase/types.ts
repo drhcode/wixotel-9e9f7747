@@ -148,6 +148,7 @@ export type Database = {
       }
       hotels: {
         Row: {
+          about_us: string | null
           address: string
           allow_data_clear: boolean
           amenities: string[] | null
@@ -168,6 +169,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          about_us?: string | null
           address: string
           allow_data_clear?: boolean
           amenities?: string[] | null
@@ -188,6 +190,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          about_us?: string | null
           address?: string
           allow_data_clear?: boolean
           amenities?: string[] | null

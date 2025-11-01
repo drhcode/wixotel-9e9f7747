@@ -22,6 +22,7 @@ interface Hotel {
   phone: string | null;
   email: string | null;
   description: string | null;
+  about_us: string | null;
   logo_url: string | null;
   amenities: string[] | null;
 }
@@ -375,6 +376,17 @@ const HotelPublicView = () => {
                 Experience exceptional hospitality
               </p>
             </div>
+            
+            {hotel?.about_us && (
+              <Card className="border-border/50">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {hotel.about_us}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="border-border/50">
                 <CardHeader>
@@ -414,53 +426,79 @@ const HotelPublicView = () => {
       {/* Contact Us Section */}
       <section id="contact" className="py-16 px-4 scroll-mt-16">
         <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+          <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold tracking-tight">Contact Us</h2>
               <p className="text-xl text-muted-foreground">
                 Get in touch with us for any inquiries
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {hotel?.phone && (
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Contact Details - Left */}
+              <div className="space-y-6">
+                {hotel?.phone && (
+                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <Phone className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">Phone</CardTitle>
+                          <a href={`tel:${hotel.phone}`} className="text-muted-foreground hover:text-primary transition-colors">
+                            {hotel.phone}
+                          </a>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                )}
+                
+                {hotel?.email && (
+                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <Mail className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">Email</CardTitle>
+                          <a href={`mailto:${hotel.email}`} className="text-muted-foreground hover:text-primary transition-colors break-all">
+                            {hotel.email}
+                          </a>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                )}
+                
                 <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                   <CardHeader>
-                    <div className="mx-auto w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
-                      <Phone className="h-7 w-7 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <MapPin className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">Address</CardTitle>
+                        <p className="text-muted-foreground">{hotel?.address}</p>
+                      </div>
                     </div>
-                    <CardTitle className="text-center text-lg">Phone</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <a href={`tel:${hotel.phone}`} className="text-center block text-muted-foreground hover:text-primary transition-colors">
-                      {hotel.phone}
-                    </a>
-                  </CardContent>
                 </Card>
-              )}
-              {hotel?.email && (
-                <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                  <CardHeader>
-                    <div className="mx-auto w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
-                      <Mail className="h-7 w-7 text-primary" />
-                    </div>
-                    <CardTitle className="text-center text-lg">Email</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a href={`mailto:${hotel.email}`} className="text-center block text-muted-foreground hover:text-primary transition-colors break-all">
-                      {hotel.email}
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
-              <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                <CardHeader>
-                  <div className="mx-auto w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
-                    <MapPin className="h-7 w-7 text-primary" />
-                  </div>
-                  <CardTitle className="text-center text-lg">Address</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-center text-muted-foreground">{hotel?.address}</p>
+              </div>
+
+              {/* Map - Right */}
+              <Card className="border-border/50 overflow-hidden h-full min-h-[400px]">
+                <CardContent className="p-0 h-full">
+                  <iframe
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || '')}&output=embed`}
+                    className="w-full h-full min-h-[400px]"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
                 </CardContent>
               </Card>
             </div>

@@ -17,6 +17,7 @@ interface Hotel {
   phone: string | null;
   email: string | null;
   description: string | null;
+  about_us: string | null;
   logo_url: string | null;
 }
 
@@ -28,6 +29,7 @@ const ProfileSettings = () => {
   const [hotelPhone, setHotelPhone] = useState("");
   const [hotelEmail, setHotelEmail] = useState("");
   const [hotelDescription, setHotelDescription] = useState("");
+  const [hotelAboutUs, setHotelAboutUs] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   
@@ -59,6 +61,7 @@ const ProfileSettings = () => {
       setHotelPhone(hotelData.phone || "");
       setHotelEmail(hotelData.email || "");
       setHotelDescription(hotelData.description || "");
+      setHotelAboutUs(hotelData.about_us || "");
       setLogoUrl(hotelData.logo_url || "");
     }
   };
@@ -129,6 +132,7 @@ const ProfileSettings = () => {
         phone: hotelPhone || null,
         email: hotelEmail || null,
         description: hotelDescription || null,
+        about_us: hotelAboutUs || null,
         logo_url: logoUrl || null
       })
       .eq('id', hotel.id);
@@ -284,6 +288,17 @@ const ProfileSettings = () => {
               onChange={(e) => setHotelDescription(e.target.value)}
               placeholder="Brief description of your hotel"
               rows={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hotel-about-us">About Us</Label>
+            <Textarea
+              id="hotel-about-us"
+              value={hotelAboutUs}
+              onChange={(e) => setHotelAboutUs(e.target.value)}
+              placeholder="Tell visitors about your hotel's story, values, and what makes it special"
+              rows={6}
             />
           </div>
 
