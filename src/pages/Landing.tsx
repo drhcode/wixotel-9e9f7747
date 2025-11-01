@@ -94,6 +94,7 @@ const Landing = () => {
     
     if (data) {
       setHotels(data);
+      setFilteredHotels(data); // Initialize filtered hotels
     }
   };
 
@@ -152,12 +153,12 @@ const Landing = () => {
 
     // Filter by country
     if (selectedCountry !== "all") {
-      filtered = filtered.filter(h => h.country === selectedCountry);
+      filtered = filtered.filter(h => h.country?.trim() === selectedCountry.trim());
     }
 
     // Filter by city
     if (selectedCity !== "all") {
-      filtered = filtered.filter(h => h.city === selectedCity);
+      filtered = filtered.filter(h => h.city?.trim() === selectedCity.trim());
     }
 
     setFilteredHotels(filtered);
