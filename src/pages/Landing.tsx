@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,8 @@ import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { HotelsMap } from "@/components/HotelsMap";
+
+const LazyHotelsMap = lazy(() => import("@/components/HotelsMap").then(m => ({ default: m.HotelsMap })));
 
 
 interface PublicHotel {
@@ -460,10 +461,12 @@ const Landing = () => {
 
               {/* Right Side: Map */}
               <div className="h-[700px] rounded-lg overflow-hidden border border-border/50 shadow-lg">
-                <HotelsMap 
-                  hotels={filteredHotels} 
-                  onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
-                />
+                <Suspense fallback={<div className="h-full w-full" />}> 
+                  <LazyHotelsMap 
+                    hotels={filteredHotels} 
+                    onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>

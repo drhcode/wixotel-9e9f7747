@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -30,6 +30,9 @@ const hotelIcon = new Icon({
 });
 
 export const HotelsMap = ({ hotels, onHotelClick }: HotelsMapProps) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const hotelsWithCoordinates = hotels.filter(h => h.latitude && h.longitude);
   
   // Calculate center based on hotels
@@ -39,6 +42,10 @@ export const HotelsMap = ({ hotels, onHotelClick }: HotelsMapProps) => {
         hotelsWithCoordinates.reduce((sum, h) => sum + (h.longitude || 0), 0) / hotelsWithCoordinates.length
       ] as [number, number]
     : [41.3275, 19.8187] as [number, number]; // Default to Tirana, Albania
+
+  if (!mounted) {
+    return <div className="h-full w-full" />;
+  }
 
   return (
     <MapContainer
