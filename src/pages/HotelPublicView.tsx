@@ -104,6 +104,7 @@ const HotelPublicView = () => {
   // Booking request state
   const [bookingRequestMode, setBookingRequestMode] = useState(false);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [isRoomAvailable, setIsRoomAvailable] = useState(true);
   const [bookingRequest, setBookingRequest] = useState({
     checkIn: undefined as Date | undefined,
     checkOut: undefined as Date | undefined,
@@ -187,14 +188,25 @@ const HotelPublicView = () => {
     }
   };
 
-  const fetchAvailableDates = async () => {
+  const checkRoomAvailability = async (checkIn: Date, checkOut: Date) => {
     if (!selectedRoom || !hotel) return;
 
     try {
       setLoadingAvailability(true);
-      // This will check availability when the form opens
+      
+      // Check if there are any overlapping bookings
+      const { data, error } = await supabase.rpc('check_booking_overlap', {
+        p_room_id: selectedRoom.id,
+        p_check_in: format(checkIn, "yyyy-MM-dd"),
+        p_check_out: format(checkOut, "yyyy-MM-dd"),
+      });
+
+      if (error) throw error;
+      
+      setIsRoomAvailable(!data);
     } catch (error: any) {
-      console.error("Error fetching availability:", error);
+      console.error("Error checking availability:", error);
+      toast.error("Failed to check availability");
     } finally {
       setLoadingAvailability(false);
     }
@@ -1018,11 +1030,11 @@ const HotelPublicView = () => {
                       className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
                       onClick={() => {
                         setBookingRequestMode(true);
+                        setIsRoomAvailable(true);
                         setBookingRequest({
                           ...bookingRequest,
                           guests: selectedRoom.capacity,
                         });
-                        fetchAvailableDates();
                       }}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
@@ -1061,7 +1073,14 @@ const HotelPublicView = () => {
                                 <CalendarComponent
                                   mode="single"
                                   selected={bookingRequest.checkIn}
-                                  onSelect={(date) => setBookingRequest({ ...bookingRequest, checkIn: date })}
+                                  onSelect={(date) => {
+                                    setBookingRequest({ ...bookingRequest, checkIn: date });
+                                    if (date && bookingRequest.checkOut) {
+                                      checkRoomAvailability(date, bookingRequest.checkOut);
+                                    } else {
+                                      setIsRoomAvailable(true);
+                                    }
+                                  }}
                                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                   initialFocus
                                   className="pointer-events-auto"
@@ -1092,7 +1111,14 @@ const HotelPublicView = () => {
                                 <CalendarComponent
                                   mode="single"
                                   selected={bookingRequest.checkOut}
-                                  onSelect={(date) => setBookingRequest({ ...bookingRequest, checkOut: date })}
+                                  onSelect={(date) => {
+                                    setBookingRequest({ ...bookingRequest, checkOut: date });
+                                    if (date && bookingRequest.checkIn) {
+                                      checkRoomAvailability(bookingRequest.checkIn, date);
+                                    } else {
+                                      setIsRoomAvailable(true);
+                                    }
+                                  }}
                                   disabled={(date) => {
                                     const minDate = bookingRequest.checkIn || new Date();
                                     return date <= minDate;
@@ -1109,6 +1135,12 @@ const HotelPublicView = () => {
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Checking availability...
+                          </div>
+                        )}
+
+                        {!loadingAvailability && !isRoomAvailable && bookingRequest.checkIn && bookingRequest.checkOut && (
+                          <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+                            This room is not available for the selected dates. Please choose different dates.
                           </div>
                         )}
 
@@ -1174,6 +1206,7 @@ const HotelPublicView = () => {
                             variant="outline"
                             onClick={() => {
                               setBookingRequestMode(false);
+                              setIsRoomAvailable(true);
                               setBookingRequest({
                                 checkIn: undefined,
                                 checkOut: undefined,
@@ -1190,7 +1223,7 @@ const HotelPublicView = () => {
                           <Button
                             type="submit"
                             className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
-                            disabled={submittingLead}
+                            disabled={submittingLead || !isRoomAvailable || loadingAvailability}
                           >
                             {submittingLead ? (
                               <>
