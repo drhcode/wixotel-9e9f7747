@@ -32,20 +32,22 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-tooltip",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-select",
-            "@radix-ui/react-tabs",
-          ],
-          "recharts": ["recharts"],
-          "supabase-vendor": ["@supabase/supabase-js"],
-          "lucide-vendor": ["lucide-react"],
-          "date-vendor": ["date-fns"],
+        manualChunks: (id) => {
+          // Let Vite handle chunking automatically to avoid circular dependency issues
+          // Only split the largest vendors to reduce bundle size
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'recharts-vendor';
+            }
+            // Group all other node_modules into vendor chunk
+            return 'vendor';
+          }
         },
       },
     },
