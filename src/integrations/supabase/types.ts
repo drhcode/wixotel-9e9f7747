@@ -209,6 +209,59 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          email: string
+          full_name: string
+          guests: number
+          hotel_id: string
+          id: string
+          message: string | null
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          email: string
+          full_name: string
+          guests?: number
+          hotel_id: string
+          id?: string
+          message?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          guests?: number
+          hotel_id?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number

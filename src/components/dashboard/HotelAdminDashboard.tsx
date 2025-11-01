@@ -15,6 +15,7 @@ import BookingsManager from "./hotel/BookingsManager";
 import GuestsManager from "./hotel/GuestsManager";
 import CalendarManager from "./hotel/CalendarManager";
 import ProfileSettings from "./hotel/ProfileSettings";
+import LeadsManager from "./hotel/LeadsManager";
 
 interface HotelData {
   id: string;
@@ -180,6 +181,8 @@ const HotelAdminDashboard = () => {
         return <BookingsManager hotelId={hotel.id} />;
       case "guests":
         return <GuestsManager hotelId={hotel.id} />;
+      case "leads":
+        return <LeadsManager hotelId={hotel.id} />;
       case "settings":
         return <ProfileSettings />;
       default:
@@ -228,7 +231,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "calendar", "rooms", "bookings", "guests", "settings"].map((tab) => (
+                {["overview", "calendar", "rooms", "bookings", "guests", "leads", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}

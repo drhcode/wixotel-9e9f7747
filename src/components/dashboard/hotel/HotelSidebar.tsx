@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ const menuItems = [
   { id: "rooms", label: "Rooms", icon: DoorOpen },
   { id: "bookings", label: "Bookings", icon: BookOpen },
   { id: "guests", label: "Guests", icon: Users },
+  { id: "leads", label: "Leads", icon: UserPlus },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

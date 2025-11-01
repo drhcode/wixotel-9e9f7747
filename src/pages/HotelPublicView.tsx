@@ -4,9 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X } from "lucide-react";
+import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { format } from "date-fns";
 
 interface Hotel {
   id: string;
@@ -42,6 +48,29 @@ const HotelPublicView = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [submittingLead, setSubmittingLead] = useState(false);
+
+  // Lead form state
+  const [leadForm, setLeadForm] = useState({
+    fullName: "",
+    email: "",
+    phonePrefix: "+1",
+    phone: "",
+    checkIn: "",
+    checkOut: "",
+    guests: "1",
+    message: "",
+  });
+
+  const leadSchema = z.object({
+    fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+    email: z.string().trim().email("Invalid email address").max(255),
+    phone: z.string().trim().min(5, "Phone number is too short").max(20),
+    checkIn: z.string().min(1, "Check-in date is required"),
+    checkOut: z.string().min(1, "Check-out date is required"),
+    guests: z.number().min(1, "At least 1 guest required").max(50),
+    message: z.string().max(1000).optional(),
+  });
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -91,6 +120,73 @@ const HotelPublicView = () => {
       toast.error("Failed to load hotel information");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!hotel) return;
+
+    try {
+      setSubmittingLead(true);
+
+      // Validate form data
+      const validatedData = leadSchema.parse({
+        fullName: leadForm.fullName,
+        email: leadForm.email,
+        phone: leadForm.phone,
+        checkIn: leadForm.checkIn,
+        checkOut: leadForm.checkOut,
+        guests: parseInt(leadForm.guests),
+        message: leadForm.message || null,
+      });
+
+      // Validate date range
+      const checkIn = new Date(validatedData.checkIn);
+      const checkOut = new Date(validatedData.checkOut);
+      if (checkOut <= checkIn) {
+        toast.error("Check-out date must be after check-in date");
+        return;
+      }
+
+      // Submit lead
+      const { error } = await supabase.from("leads").insert({
+        hotel_id: hotel.id,
+        full_name: validatedData.fullName,
+        email: validatedData.email,
+        phone: `${leadForm.phonePrefix}${validatedData.phone}`,
+        check_in: validatedData.checkIn,
+        check_out: validatedData.checkOut,
+        guests: validatedData.guests,
+        message: validatedData.message || null,
+      });
+
+      if (error) throw error;
+
+      toast.success("Thank you! Your inquiry has been submitted successfully.");
+      
+      // Reset form
+      setLeadForm({
+        fullName: "",
+        email: "",
+        phonePrefix: "+1",
+        phone: "",
+        checkIn: "",
+        checkOut: "",
+        guests: "1",
+        message: "",
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        console.error("Error submitting lead:", error);
+        toast.error("Failed to submit inquiry. Please try again.");
+      }
+    } finally {
+      setSubmittingLead(false);
     }
   };
 
@@ -368,6 +464,176 @@ const HotelPublicView = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Lead Inquiry Form Section */}
+      <section id="inquiry" className="py-16 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10 scroll-mt-16">
+        <div className="container mx-auto">
+          <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl font-bold tracking-tight">Plan Your Stay</h2>
+              <p className="text-xl text-muted-foreground">
+                Send us your inquiry and we'll get back to you shortly
+              </p>
+            </div>
+
+            <Card className="border-border/50 shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5 text-primary" />
+                  Inquiry Form
+                </CardTitle>
+                <CardDescription>
+                  Fill out the form below and our team will contact you
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLeadSubmit} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Input
+                        id="fullName"
+                        value={leadForm.fullName}
+                        onChange={(e) => setLeadForm({ ...leadForm, fullName: e.target.value })}
+                        placeholder="John Doe"
+                        required
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={leadForm.email}
+                        onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                        placeholder="john@example.com"
+                        required
+                        maxLength={255}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <div className="flex gap-2">
+                      <Select
+                        value={leadForm.phonePrefix}
+                        onValueChange={(value) => setLeadForm({ ...leadForm, phonePrefix: value })}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="+1">+1 (US/CA)</SelectItem>
+                          <SelectItem value="+44">+44 (UK)</SelectItem>
+                          <SelectItem value="+33">+33 (FR)</SelectItem>
+                          <SelectItem value="+49">+49 (DE)</SelectItem>
+                          <SelectItem value="+34">+34 (ES)</SelectItem>
+                          <SelectItem value="+39">+39 (IT)</SelectItem>
+                          <SelectItem value="+61">+61 (AU)</SelectItem>
+                          <SelectItem value="+81">+81 (JP)</SelectItem>
+                          <SelectItem value="+86">+86 (CN)</SelectItem>
+                          <SelectItem value="+91">+91 (IN)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={leadForm.phone}
+                        onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value.replace(/[^0-9]/g, "") })}
+                        placeholder="1234567890"
+                        required
+                        className="flex-1"
+                        maxLength={20}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="checkIn">Check-in Date *</Label>
+                      <Input
+                        id="checkIn"
+                        type="date"
+                        value={leadForm.checkIn}
+                        onChange={(e) => setLeadForm({ ...leadForm, checkIn: e.target.value })}
+                        min={format(new Date(), "yyyy-MM-dd")}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="checkOut">Check-out Date *</Label>
+                      <Input
+                        id="checkOut"
+                        type="date"
+                        value={leadForm.checkOut}
+                        onChange={(e) => setLeadForm({ ...leadForm, checkOut: e.target.value })}
+                        min={leadForm.checkIn || format(new Date(), "yyyy-MM-dd")}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="guests">Number of Guests *</Label>
+                    <Select
+                      value={leadForm.guests}
+                      onValueChange={(value) => setLeadForm({ ...leadForm, guests: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? "Guest" : "Guests"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message (Optional)</Label>
+                    <Textarea
+                      id="message"
+                      value={leadForm.message}
+                      onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
+                      placeholder="Any special requests or questions..."
+                      rows={4}
+                      maxLength={1000}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {leadForm.message.length}/1000 characters
+                    </p>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow transition-all"
+                    disabled={submittingLead}
+                  >
+                    {submittingLead ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit Inquiry
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
