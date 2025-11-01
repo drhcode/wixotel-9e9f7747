@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -36,13 +36,24 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const TIMELINE_DAYS = 12;
 
+  // Detect Safari
+  const isSafari = useMemo(() => {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  }, []);
+
   useEffect(() => {
     fetchRooms();
   }, [hotelId]);
 
   useEffect(() => {
-    fetchBookings();
-  }, [hotelId, currentMonth, timelineStartDate]);
+    if (isSafari) {
+      // Safari: only fetch for selected date
+      fetchBookingsForDate(selectedDate);
+    } else {
+      // Other browsers: fetch full month + timeline
+      fetchBookings();
+    }
+  }, [hotelId, currentMonth, timelineStartDate, selectedDate, isSafari]);
 
   const fetchRooms = async () => {
     setIsLoading(true);
@@ -59,6 +70,27 @@ const CalendarManager = ({ hotelId }: Props) => {
       return;
     }
     setRooms(data || []);
+  };
+
+  const fetchBookingsForDate = async (date: Date) => {
+    setIsLoading(true);
+    const dateStr = format(startOfDay(date), "yyyy-MM-dd");
+
+    // Fetch bookings that overlap with the selected date
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*, rooms(name, room_number), guests(name)")
+      .eq("hotel_id", hotelId)
+      .lte("check_in", dateStr)
+      .gt("check_out", dateStr);
+
+    if (error) {
+      toast.error("Failed to load bookings");
+      setIsLoading(false);
+      return;
+    }
+    setBookings(data || []);
+    setIsLoading(false);
   };
 
   const fetchBookings = async () => {
@@ -271,8 +303,9 @@ const CalendarManager = ({ hotelId }: Props) => {
         </div>
       </Card>
 
-      {/* Desktop Timeline View */}
-      <div className="hidden lg:block">
+      {/* Desktop Timeline View - Hidden on Safari */}
+      {!isSafari && (
+        <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4 gap-4">
             <h3 className="font-semibold text-lg">Timeline View</h3>
@@ -455,6 +488,7 @@ const CalendarManager = ({ hotelId }: Props) => {
           </div>
         </Card>
       </div>
+      )}
 
       {/* Mobile Calendar View */}
       <div className="lg:hidden space-y-4">
