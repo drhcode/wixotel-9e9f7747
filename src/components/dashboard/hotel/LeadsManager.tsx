@@ -21,6 +21,13 @@ interface Lead {
   message: string | null;
   status: string;
   created_at: string;
+  room_id: string | null;
+}
+
+interface Room {
+  id: string;
+  name: string;
+  room_number: string | null;
 }
 
 interface LeadsManagerProps {
@@ -31,10 +38,27 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [acceptingLead, setAcceptingLead] = useState(false);
 
   useEffect(() => {
     fetchLeads();
+    fetchRooms();
   }, [hotelId]);
+
+  const fetchRooms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id, name, room_number")
+        .eq("hotel_id", hotelId);
+
+      if (error) throw error;
+      setRooms(data || []);
+    } catch (error: any) {
+      console.error("Error fetching rooms:", error);
+    }
+  };
 
   const fetchLeads = async () => {
     try {
@@ -69,6 +93,66 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       console.error("Error updating lead:", error);
       toast.error("Failed to update lead status");
     }
+  };
+
+  const acceptBookingRequest = async (lead: Lead) => {
+    if (!lead.room_id) {
+      toast.error("This lead doesn't have a room associated");
+      return;
+    }
+
+    try {
+      setAcceptingLead(true);
+
+      // First, create a guest entry
+      const { data: guestData, error: guestError } = await supabase
+        .from("guests")
+        .insert({
+          hotel_id: hotelId,
+          name: lead.full_name,
+          email: lead.email,
+          phone: lead.phone,
+        })
+        .select()
+        .single();
+
+      if (guestError) throw guestError;
+
+      // Then create booking from lead
+      const { error: bookingError } = await supabase.from("bookings").insert({
+        hotel_id: hotelId,
+        room_id: lead.room_id,
+        guest_id: guestData.id,
+        full_name: lead.full_name,
+        guest_email: lead.email,
+        guest_phone: lead.phone,
+        check_in: lead.check_in,
+        check_out: lead.check_out,
+        guest_count: lead.guests,
+        total_amount: 0,
+        status: "pending",
+        payment_status: "pending",
+        notes: lead.message || "Created from booking request",
+      });
+
+      if (bookingError) throw bookingError;
+
+      // Update lead status to converted
+      await updateLeadStatus(lead.id, "converted");
+      
+      toast.success("Booking request accepted! Reservation created successfully.");
+      setSelectedLead(null);
+    } catch (error: any) {
+      console.error("Error accepting booking request:", error);
+      toast.error("Failed to accept booking request");
+    } finally {
+      setAcceptingLead(false);
+    }
+  };
+
+  const rejectBookingRequest = async (leadId: string) => {
+    await updateLeadStatus(leadId, "lost");
+    toast.success("Booking request rejected");
   };
 
   const deleteLead = async (leadId: string) => {
@@ -254,6 +338,17 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                           {selectedLead.guests}
                         </div>
                       </div>
+                      {selectedLead.room_id && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">Requested Room</div>
+                          <div className="font-medium">
+                            {rooms.find(r => r.id === selectedLead.room_id)?.name || "Unknown Room"}
+                            {rooms.find(r => r.id === selectedLead.room_id)?.room_number && 
+                              ` (${rooms.find(r => r.id === selectedLead.room_id)?.room_number})`
+                            }
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -268,6 +363,39 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground leading-relaxed">{selectedLead.message}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedLead.room_id && selectedLead.status === "new" && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="pt-6">
+                      <h4 className="font-semibold mb-3">Booking Request Actions</h4>
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={() => acceptBookingRequest(selectedLead)}
+                          disabled={acceptingLead}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          {acceptingLead ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            <>
+                              ✓ Accept & Create Booking
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          onClick={() => rejectBookingRequest(selectedLead.id)}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          ✗ Reject Request
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}

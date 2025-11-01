@@ -63,6 +63,17 @@ const HotelPublicView = () => {
     message: "",
   });
 
+  // Booking request state
+  const [bookingRequestMode, setBookingRequestMode] = useState(false);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [bookingRequest, setBookingRequest] = useState({
+    checkIn: "",
+    checkOut: "",
+    fullName: "",
+    email: "",
+    phone: "",
+  });
+
   const leadSchema = z.object({
     fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
     email: z.string().trim().email("Invalid email address").max(255),
@@ -121,6 +132,77 @@ const HotelPublicView = () => {
       toast.error("Failed to load hotel information");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableDates = async () => {
+    if (!selectedRoom || !hotel) return;
+    
+    try {
+      setLoadingAvailability(true);
+      // This will check availability when the form opens
+    } catch (error: any) {
+      console.error("Error fetching availability:", error);
+    } finally {
+      setLoadingAvailability(false);
+    }
+  };
+
+  const handleBookingRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hotel || !selectedRoom) return;
+
+    try {
+      setSubmittingLead(true);
+
+      const requestSchema = z.object({
+        fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+        email: z.string().trim().email("Invalid email address").max(255),
+        phone: z.string().trim().min(5, "Phone number is too short").max(20),
+        checkIn: z.string().min(1, "Check-in date is required"),
+        checkOut: z.string().min(1, "Check-out date is required"),
+      });
+
+      const validated = requestSchema.parse(bookingRequest);
+
+      // Check for overlapping dates
+      const checkIn = new Date(validated.checkIn);
+      const checkOut = new Date(validated.checkOut);
+      
+      if (checkOut <= checkIn) {
+        toast.error("Check-out date must be after check-in date");
+        return;
+      }
+
+      const { error } = await supabase.from("leads").insert({
+        hotel_id: hotel.id,
+        room_id: selectedRoom.id,
+        full_name: validated.fullName,
+        email: validated.email,
+        phone: validated.phone,
+        check_in: validated.checkIn,
+        check_out: validated.checkOut,
+        guests: selectedRoom.capacity,
+        status: "new",
+        message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || 'N/A'})`,
+      });
+
+      if (error) throw error;
+
+      toast.success("Booking request sent successfully! We'll contact you soon.");
+      setBookingRequest({ checkIn: "", checkOut: "", fullName: "", email: "", phone: "" });
+      setBookingRequestMode(false);
+      setSelectedRoom(null);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        console.error("Error submitting booking request:", error);
+        toast.error("Failed to submit booking request. Please try again.");
+      }
+    } finally {
+      setSubmittingLead(false);
     }
   };
 
@@ -770,14 +852,131 @@ const HotelPublicView = () => {
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1">
-                    Close
-                  </Button>
-                  <Button className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant">
-                    Book Now
-                  </Button>
-                </div>
+                {!bookingRequestMode ? (
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1">
+                      Close
+                    </Button>
+                    <Button 
+                      className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
+                      onClick={() => {
+                        setBookingRequestMode(true);
+                        fetchAvailableDates();
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Request to Book
+                    </Button>
+                  </div>
+                ) : (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="pt-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        Booking Request
+                      </h4>
+                      <form onSubmit={handleBookingRequest} className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="bookingCheckIn">Check-in Date *</Label>
+                            <Input
+                              id="bookingCheckIn"
+                              type="date"
+                              value={bookingRequest.checkIn}
+                              onChange={(e) => setBookingRequest({ ...bookingRequest, checkIn: e.target.value })}
+                              min={format(new Date(), "yyyy-MM-dd")}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="bookingCheckOut">Check-out Date *</Label>
+                            <Input
+                              id="bookingCheckOut"
+                              type="date"
+                              value={bookingRequest.checkOut}
+                              onChange={(e) => setBookingRequest({ ...bookingRequest, checkOut: e.target.value })}
+                              min={bookingRequest.checkIn || format(new Date(), "yyyy-MM-dd")}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        {loadingAvailability && (
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Checking availability...
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bookingName">Full Name *</Label>
+                          <Input
+                            id="bookingName"
+                            value={bookingRequest.fullName}
+                            onChange={(e) => setBookingRequest({ ...bookingRequest, fullName: e.target.value })}
+                            placeholder="Enter your full name"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bookingPhone">Phone *</Label>
+                          <Input
+                            id="bookingPhone"
+                            type="tel"
+                            value={bookingRequest.phone}
+                            onChange={(e) => setBookingRequest({ ...bookingRequest, phone: e.target.value })}
+                            placeholder="Enter your phone number"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bookingEmail">Email *</Label>
+                          <Input
+                            id="bookingEmail"
+                            type="email"
+                            value={bookingRequest.email}
+                            onChange={(e) => setBookingRequest({ ...bookingRequest, email: e.target.value })}
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setBookingRequestMode(false);
+                              setBookingRequest({ checkIn: "", checkOut: "", fullName: "", email: "", phone: "" });
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
+                            disabled={submittingLead}
+                          >
+                            {submittingLead ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send Request
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </>
           )}
