@@ -158,9 +158,12 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          facebook_url: string | null
+          google_business_url: string | null
           google_maps_url: string | null
           id: string
           images: string[] | null
+          instagram_url: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -186,9 +189,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          facebook_url?: string | null
+          google_business_url?: string | null
           google_maps_url?: string | null
           id?: string
           images?: string[] | null
+          instagram_url?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -214,9 +220,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          facebook_url?: string | null
+          google_business_url?: string | null
           google_maps_url?: string | null
           id?: string
           images?: string[] | null
+          instagram_url?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null

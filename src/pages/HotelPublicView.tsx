@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send, CalendarIcon, ChevronLeft, ChevronRight, Facebook, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -32,7 +32,9 @@ interface Hotel {
   about_us: string | null;
   about_us_image: string | null;
   logo_url: string | null;
-  google_maps_url: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  google_business_url: string | null;
   amenities: string[] | null;
 }
 
@@ -563,27 +565,8 @@ const HotelPublicView = () => {
             </div>
             
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Contact Details & Map - Left */}
+              {/* Contact Details - Left */}
               <div className="space-y-6">
-                {hotel?.google_maps_url && (
-                  <Card className="border-border/50 overflow-hidden">
-                    <CardContent className="p-0">
-                      <iframe
-                        src={hotel.google_maps_url.includes('embed') 
-                          ? `${hotel.google_maps_url}${hotel.google_maps_url.includes('?') ? '&' : '?'}zoom=17`
-                          : `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d${hotel.google_maps_url}&z=17`
-                        }
-                        width="100%"
-                        height="300"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        className="w-full"
-                      />
-                    </CardContent>
-                  </Card>
-                )}
                 {hotel?.phone && (
                   <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                     <CardHeader>
@@ -640,6 +623,50 @@ const HotelPublicView = () => {
                     </div>
                   </CardHeader>
                 </Card>
+                
+                {/* Social Media Links */}
+                {(hotel?.facebook_url || hotel?.instagram_url || hotel?.google_business_url) && (
+                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg mb-4">Connect With Us</CardTitle>
+                      <div className="flex items-center gap-4">
+                        {hotel?.facebook_url && (
+                          <a
+                            href={hotel.facebook_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
+                            aria-label="Visit our Facebook page"
+                          >
+                            <Facebook className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                          </a>
+                        )}
+                        {hotel?.instagram_url && (
+                          <a
+                            href={hotel.instagram_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
+                            aria-label="Visit our Instagram page"
+                          >
+                            <Instagram className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                          </a>
+                        )}
+                        {hotel?.google_business_url && (
+                          <a
+                            href={hotel.google_business_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
+                            aria-label="View on Google My Business"
+                          >
+                            <MapPin className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                          </a>
+                        )}
+                      </div>
+                    </CardHeader>
+                  </Card>
+                )}
               </div>
 
               {/* Map - Right */}

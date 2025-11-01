@@ -20,7 +20,9 @@ interface Hotel {
   about_us: string | null;
   about_us_image: string | null;
   logo_url: string | null;
-  google_maps_url: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  google_business_url: string | null;
 }
 
 const ProfileSettings = () => {
@@ -33,7 +35,9 @@ const ProfileSettings = () => {
   const [hotelDescription, setHotelDescription] = useState("");
   const [hotelAboutUs, setHotelAboutUs] = useState("");
   const [aboutUsImageUrl, setAboutUsImageUrl] = useState("");
-  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [googleBusinessUrl, setGoogleBusinessUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
@@ -68,7 +72,9 @@ const ProfileSettings = () => {
       setHotelDescription(hotelData.description || "");
       setHotelAboutUs(hotelData.about_us || "");
       setAboutUsImageUrl(hotelData.about_us_image || "");
-      setGoogleMapsUrl(hotelData.google_maps_url || "");
+      setFacebookUrl(hotelData.facebook_url || "");
+      setInstagramUrl(hotelData.instagram_url || "");
+      setGoogleBusinessUrl(hotelData.google_business_url || "");
       setLogoUrl(hotelData.logo_url || "");
     }
   };
@@ -183,7 +189,9 @@ const ProfileSettings = () => {
         description: hotelDescription || null,
         about_us: hotelAboutUs || null,
         about_us_image: aboutUsImageUrl || null,
-        google_maps_url: googleMapsUrl || null,
+        facebook_url: facebookUrl || null,
+        instagram_url: instagramUrl || null,
+        google_business_url: googleBusinessUrl || null,
         logo_url: logoUrl || null
       })
       .eq('id', hotel.id);
@@ -354,15 +362,35 @@ const ProfileSettings = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="google-maps-url">Google My Business / Maps URL</Label>
+            <Label htmlFor="facebook-url">Facebook URL</Label>
             <Input
-              id="google-maps-url"
-              value={googleMapsUrl}
-              onChange={(e) => setGoogleMapsUrl(e.target.value)}
-              placeholder="Paste your Google My Business or Google Maps URL"
+              id="facebook-url"
+              value={facebookUrl}
+              onChange={(e) => setFacebookUrl(e.target.value)}
+              placeholder="https://facebook.com/yourhotel"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="instagram-url">Instagram URL</Label>
+            <Input
+              id="instagram-url"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+              placeholder="https://instagram.com/yourhotel"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="google-business-url">Google My Business URL</Label>
+            <Input
+              id="google-business-url"
+              value={googleBusinessUrl}
+              onChange={(e) => setGoogleBusinessUrl(e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
             />
             <p className="text-xs text-muted-foreground">
-              Get this from your Google Business Profile or share link from Google Maps
+              Get this from your Google Business Profile share link
             </p>
           </div>
 
