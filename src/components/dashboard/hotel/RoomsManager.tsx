@@ -20,6 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { z } from "zod";
+import { mapDatabaseError } from "@/lib/errorUtils";
 
 const AVAILABLE_AMENITIES = [
   "Free WiFi",
@@ -48,6 +50,24 @@ const AVAILABLE_AMENITIES = [
   "Blackout Curtains",
   "Soundproofing"
 ];
+
+const roomSchema = z.object({
+  name: z.string().trim().min(1, "Room name is required").max(100, "Name too long"),
+  description: z.string().max(1000, "Description too long").optional(),
+  price: z.string().min(1, "Price is required").refine((val) => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num > 0 && num <= 100000;
+  }, "Price must be between 0 and 100,000"),
+  capacity: z.string().min(1, "Capacity is required").refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1 && num <= 50;
+  }, "Capacity must be between 1 and 50"),
+  square_meters: z.string().optional().refine((val) => {
+    if (!val) return true;
+    const num = parseFloat(val);
+    return !isNaN(num) && num > 0;
+  }, "Square meters must be positive"),
+});
 
 interface Props {
   hotelId: string;
@@ -205,6 +225,13 @@ const RoomsManager = ({ hotelId }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate form data
+    const validation = roomSchema.safeParse(formData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     try {
       if (editingRoom) {
         const { error } = await supabase
@@ -257,8 +284,7 @@ const RoomsManager = ({ hotelId }: Props) => {
       setGalleryPhotos([]);
       fetchRooms();
     } catch (error: any) {
-      toast.error("Failed to save room");
-      console.error(error);
+      toast.error(mapDatabaseError(error));
     }
   };
 

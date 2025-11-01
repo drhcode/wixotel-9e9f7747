@@ -8,6 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Shield, Hotel, Lock, Upload } from "lucide-react";
+import { z } from "zod";
+import { mapAuthError, mapDatabaseError } from "@/lib/errorUtils";
+
+const hotelSchema = z.object({
+  name: z.string().trim().min(2, "Hotel name must be at least 2 characters").max(200, "Name too long"),
+  address: z.string().trim().min(5, "Address must be at least 5 characters").max(500, "Address too long"),
+  email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal('')),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/, "Invalid phone number").optional().or(z.literal('')),
+  description: z.string().max(2000, "Description too long").optional(),
+  about_us: z.string().max(5000, "About us too long").optional(),
+  slug: z.string().trim().min(2, "Slug must be at least 2 characters").max(100, "Slug too long").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+});
 
 interface Hotel {
   id: string;
@@ -167,13 +179,19 @@ const ProfileSettings = () => {
   const handleSaveHotelInfo = async () => {
     if (!hotel) return;
 
-    if (!hotelName.trim() || !hotelAddress.trim()) {
-      toast.error("Hotel name and address are required");
-      return;
-    }
+    // Validate form data
+    const validation = hotelSchema.safeParse({
+      name: hotelName,
+      address: hotelAddress,
+      email: hotelEmail,
+      phone: hotelPhone,
+      description: hotelDescription,
+      about_us: hotelAboutUs,
+      slug: hotelSlug || hotel.slug || ''
+    });
 
-    if (hotelSlug && !/^[a-z0-9-]+$/.test(hotelSlug)) {
-      toast.error("URL slug can only contain lowercase letters, numbers, and hyphens");
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
 
@@ -198,11 +216,7 @@ const ProfileSettings = () => {
 
     setLoading(false);
     if (error) {
-      if (error.code === '23505') {
-        toast.error("This URL slug is already taken. Please choose another one.");
-      } else {
-        toast.error("Failed to update hotel information");
-      }
+      toast.error(mapDatabaseError(error));
     } else {
       toast.success("Hotel information updated successfully");
       fetchHotelData();
@@ -221,8 +235,23 @@ const ProfileSettings = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error("Password must contain at least one lowercase letter");
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error("Password must contain at least one number");
       return;
     }
 
@@ -243,7 +272,7 @@ const ProfileSettings = () => {
     });
 
     if (signInError) {
-      toast.error("Current password is incorrect");
+      toast.error(mapAuthError(signInError));
       setLoading(false);
       return;
     }
@@ -255,7 +284,7 @@ const ProfileSettings = () => {
 
     setLoading(false);
     if (error) {
-      toast.error("Failed to update password");
+      toast.error(mapAuthError(error));
     } else {
       toast.success("Login password updated successfully");
       setCurrentPassword("");

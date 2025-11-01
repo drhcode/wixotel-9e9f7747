@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-
 import { z } from "zod";
+import { mapAuthError } from "@/lib/errorUtils";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
@@ -108,7 +108,7 @@ const Auth = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during signup");
+      toast.error(mapAuthError(error));
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ const Auth = () => {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Invalid email or password");
+      toast.error(mapAuthError(error));
     } finally {
       setLoading(false);
     }

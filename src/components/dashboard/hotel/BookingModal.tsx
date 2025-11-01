@@ -13,13 +13,17 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Country, City } from "country-state-city";
 import { z } from "zod";
+import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
   phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
+  email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal('')),
   country: z.string().min(1, "Country is required"),
   city: z.string().min(1, "City is required"),
   guestCount: z.number().min(1, "At least 1 guest required"),
+  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+  totalPrice: z.number().positive("Total price must be positive"),
 });
 
 interface Props {
@@ -165,9 +169,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         const validation = guestSchema.safeParse({
           fullName: guestName,
           phone: guestPhone,
+          email: guestEmail,
           country: guestCountry,
           city: guestCity,
           guestCount: guestCount,
+          notes: notes,
+          totalPrice: totalPrice,
         });
 
         if (!validation.success) {
@@ -258,7 +265,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(mapDatabaseError(error));
     } finally {
       setLoading(false);
     }
