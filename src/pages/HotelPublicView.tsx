@@ -383,7 +383,7 @@ const HotelPublicView = () => {
               {rooms.map((room, index) => (
                 <Card 
                   key={room.id} 
-                  className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in"
+                  className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in flex flex-col"
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => setSelectedRoom(room)}
                 >
@@ -413,25 +413,27 @@ const HotelPublicView = () => {
                       <CardDescription className="text-base">{room.room_type}</CardDescription>
                     )}
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span>{room.capacity} guests</span>
-                      </div>
-                      {room.square_meters && (
+                  <CardContent className="flex-1 flex flex-col">
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-center gap-6 text-sm">
                         <div className="flex items-center gap-2">
-                          <Home className="h-4 w-4 text-primary" />
-                          <span>{room.square_meters} m²</span>
+                          <Users className="h-4 w-4 text-primary" />
+                          <span>{room.capacity} guests</span>
                         </div>
+                        {room.square_meters && (
+                          <div className="flex items-center gap-2">
+                            <Home className="h-4 w-4 text-primary" />
+                            <span>{room.square_meters} m²</span>
+                          </div>
+                        )}
+                      </div>
+                      {room.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          {room.description}
+                        </p>
                       )}
                     </div>
-                    {room.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                        {room.description}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="flex items-center justify-between pt-4 border-t mt-4">
                       <div>
                         <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                           €{room.price}
