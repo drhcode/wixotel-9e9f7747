@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
+// Lazy load components OUTSIDE the component to prevent recreation on every render
+const LazySuperAdminDashboard = lazy(() => import("@/components/dashboard/SuperAdminDashboard"));
+const LazyHotelAdminDashboard = lazy(() => import("@/components/dashboard/HotelAdminDashboard"));
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -94,9 +98,6 @@ const Dashboard = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
-
-const LazySuperAdminDashboard = lazy(() => import("@/components/dashboard/SuperAdminDashboard"));
-const LazyHotelAdminDashboard = lazy(() => import("@/components/dashboard/HotelAdminDashboard"));
 
   if (loading) {
     return (
