@@ -367,7 +367,7 @@ const Landing = () => {
             {plans.map((plan) => (
               <Card 
                 key={plan.name} 
-                className={`relative ${plan.popular ? 'border-primary shadow-elegant' : 'border-border'}`}
+                className={`relative flex flex-col ${plan.popular ? 'border-primary shadow-elegant' : 'border-border'}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -383,8 +383,8 @@ const Landing = () => {
                     <span className="text-muted-foreground">{plan.period}</span>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-3">
+                <CardContent className="flex-1 flex flex-col space-y-4">
+                  <ul className="space-y-3 flex-1">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-primary"></div>
@@ -392,7 +392,7 @@ const Landing = () => {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/auth" className="block">
+                  <Link to="/auth" className="block mt-auto">
                     <Button 
                       className={`w-full ${plan.popular ? 'bg-gradient-primary' : ''}`}
                       variant={plan.popular ? 'default' : 'outline'}
