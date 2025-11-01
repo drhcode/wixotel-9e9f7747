@@ -20,6 +20,7 @@ interface PublicHotel {
   description: string | null;
   logo_url: string | null;
   images: string[] | null;
+  about_us_image: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -68,7 +69,7 @@ const Landing = () => {
   const fetchHotels = async () => {
     const { data } = await supabase
       .from('hotels')
-      .select('id, name, slug, address, city, country, description, logo_url, images, latitude, longitude')
+      .select('id, name, slug, address, city, country, description, logo_url, images, about_us_image, latitude, longitude')
       .eq('status', 'active')
       .eq('show_on_landing', true);
     
@@ -463,7 +464,13 @@ const Landing = () => {
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
                   <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-video relative overflow-hidden bg-accent">
-                      {hotel.images?.[0] ? (
+                      {hotel.about_us_image ? (
+                        <img 
+                          src={hotel.about_us_image} 
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : hotel.images?.[0] ? (
                         <img 
                           src={hotel.images[0]} 
                           alt={hotel.name}
