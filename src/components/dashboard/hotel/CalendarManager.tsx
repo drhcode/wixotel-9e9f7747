@@ -132,7 +132,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     });
   };
 
-  const selectedDateBookings = getBookingsForDate(selectedDate);
+  const selectedDateBookings = useMemo(() => getBookingsForDate(selectedDate), [bookings, selectedDate]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -227,8 +227,9 @@ const CalendarManager = ({ hotelId }: Props) => {
     return { start: false, span: 0 };
   };
 
-  const modifiers = {
-    booked: bookings
+  const modifiers = useMemo(() => {
+    if (isSafari) return {} as Record<string, Date[]>;
+    const booked = bookings
       .map((b) => {
         const dates: Date[] = [];
         let current = startOfDay(new Date(b.check_in));
@@ -239,8 +240,9 @@ const CalendarManager = ({ hotelId }: Props) => {
         }
         return dates;
       })
-      .flat(),
-  };
+      .flat();
+    return { booked } as Record<string, Date[]>;
+  }, [bookings, isSafari]);
 
   const modifiersStyles = {
     booked: {
@@ -514,8 +516,8 @@ const CalendarManager = ({ hotelId }: Props) => {
             }}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
+            modifiers={!isSafari ? (modifiers as any) : undefined}
+            modifiersStyles={!isSafari ? (modifiersStyles as any) : undefined}
             className="w-full"
             classNames={{
               caption: "hidden",
@@ -592,14 +594,14 @@ const CalendarManager = ({ hotelId }: Props) => {
         hotelId={hotelId}
         prefilledDates={null}
         prefilledRoomId={null}
-        onSuccess={fetchBookings}
+        onSuccess={isSafari ? () => fetchBookingsForDate(selectedDate) : fetchBookings}
       />
 
       {selectedBooking && (
         <BookingDetailsModal
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
-          onUpdate={fetchBookings}
+          onUpdate={isSafari ? () => fetchBookingsForDate(selectedDate) : fetchBookings}
         />
       )}
     </div>
