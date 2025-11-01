@@ -6,12 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Shield, Hotel, Lock, Upload } from "lucide-react";
 import { z } from "zod";
 import { mapAuthError, mapDatabaseError } from "@/lib/errorUtils";
-import { Country, City } from 'country-state-city';
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2, "Hotel name must be at least 2 characters").max(200, "Name too long"),
@@ -65,26 +63,6 @@ const ProfileSettings = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   
   const [loading, setLoading] = useState(false);
-
-  const [allCountries, setAllCountries] = useState<Array<{code: string, name: string}>>([]);
-  const [availableCities, setAvailableCities] = useState<Array<{name: string}>>([]);
-
-  useEffect(() => {
-    const countries = Country.getAllCountries();
-    setAllCountries(countries.map(c => ({ code: c.isoCode, name: c.name })));
-  }, []);
-
-  useEffect(() => {
-    if (hotelCountry) {
-      const countryData = allCountries.find(c => c.name === hotelCountry);
-      if (countryData) {
-        const cities = City.getCitiesOfCountry(countryData.code) || [];
-        setAvailableCities(cities);
-      }
-    } else {
-      setAvailableCities([]);
-    }
-  }, [hotelCountry, allCountries]);
 
   useEffect(() => {
     fetchHotelData();
@@ -379,29 +357,21 @@ const ProfileSettings = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="hotel-country">Country</Label>
-              <Select value={hotelCountry} onValueChange={setHotelCountry}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allCountries.map(country => (
-                    <SelectItem key={country.code} value={country.name}>{country.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="hotel-country"
+                value={hotelCountry}
+                onChange={(e) => setHotelCountry(e.target.value)}
+                placeholder="Enter country"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="hotel-city">City</Label>
-              <Select value={hotelCity} onValueChange={setHotelCity} disabled={!hotelCountry}>
-                <SelectTrigger>
-                  <SelectValue placeholder={hotelCountry ? "Select city" : "Select country first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCities.map(city => (
-                    <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="hotel-city"
+                value={hotelCity}
+                onChange={(e) => setHotelCity(e.target.value)}
+                placeholder="Enter city"
+              />
             </div>
           </div>
 

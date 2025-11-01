@@ -8,7 +8,6 @@ import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Country, City } from 'country-state-city';
 
 
 interface PublicHotel {
@@ -34,8 +33,8 @@ const Landing = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [allCountries, setAllCountries] = useState<Array<{code: string, name: string}>>([]);
-  const [availableCities, setAvailableCities] = useState<Array<{name: string}>>([]);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   
   useEffect(() => {
     let mounted = true;
@@ -60,30 +59,34 @@ const Landing = () => {
 
   useEffect(() => {
     fetchHotels();
-    loadCountries();
   }, []);
 
   useEffect(() => {
+    // Update available cities when country changes
     if (selectedCountry !== "all") {
-      const countryData = allCountries.find(c => c.name === selectedCountry);
-      if (countryData) {
-        const cities = City.getCitiesOfCountry(countryData.code) || [];
-        setAvailableCities(cities);
-      }
+      const cities = hotels
+        .filter(h => h.country === selectedCountry && h.city)
+        .map(h => h.city as string)
+        .filter((city, index, self) => self.indexOf(city) === index)
+        .sort();
+      setAvailableCities(cities);
     } else {
       setAvailableCities([]);
     }
     setSelectedCity("all");
-  }, [selectedCountry, allCountries]);
+  }, [selectedCountry, hotels]);
 
   useEffect(() => {
     filterHotels();
+    
+    // Extract unique countries from hotels
+    const countries = hotels
+      .filter(h => h.country)
+      .map(h => h.country as string)
+      .filter((country, index, self) => self.indexOf(country) === index)
+      .sort();
+    setAvailableCountries(countries);
   }, [selectedCountry, selectedCity, hotels]);
-
-  const loadCountries = () => {
-    const countries = Country.getAllCountries();
-    setAllCountries(countries.map(c => ({ code: c.isoCode, name: c.name })));
-  };
 
   const fetchHotels = async () => {
     const { data } = await supabase
@@ -365,8 +368,8 @@ const Landing = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Countries</SelectItem>
-                  {allCountries.map(country => (
-                    <SelectItem key={country.code} value={country.name}>{country.name}</SelectItem>
+                  {availableCountries.map(country => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -378,7 +381,7 @@ const Landing = () => {
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
                   {availableCities.map(city => (
-                    <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
