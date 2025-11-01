@@ -25,6 +25,7 @@ interface Hotel {
   about_us: string | null;
   about_us_image: string | null;
   logo_url: string | null;
+  google_maps_url: string | null;
   amenities: string[] | null;
 }
 
@@ -533,8 +534,27 @@ const HotelPublicView = () => {
             </div>
             
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Contact Details - Left */}
+              {/* Contact Details & Map - Left */}
               <div className="space-y-6">
+                {hotel?.google_maps_url && (
+                  <Card className="border-border/50 overflow-hidden">
+                    <CardContent className="p-0">
+                      <iframe
+                        src={hotel.google_maps_url.includes('embed') 
+                          ? hotel.google_maps_url 
+                          : `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d${hotel.google_maps_url}`
+                        }
+                        width="100%"
+                        height="300"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        className="w-full"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
                 {hotel?.phone && (
                   <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                     <CardHeader>

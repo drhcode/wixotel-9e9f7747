@@ -20,6 +20,7 @@ interface Hotel {
   about_us: string | null;
   about_us_image: string | null;
   logo_url: string | null;
+  google_maps_url: string | null;
 }
 
 const ProfileSettings = () => {
@@ -32,6 +33,7 @@ const ProfileSettings = () => {
   const [hotelDescription, setHotelDescription] = useState("");
   const [hotelAboutUs, setHotelAboutUs] = useState("");
   const [aboutUsImageUrl, setAboutUsImageUrl] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
@@ -66,6 +68,7 @@ const ProfileSettings = () => {
       setHotelDescription(hotelData.description || "");
       setHotelAboutUs(hotelData.about_us || "");
       setAboutUsImageUrl(hotelData.about_us_image || "");
+      setGoogleMapsUrl(hotelData.google_maps_url || "");
       setLogoUrl(hotelData.logo_url || "");
     }
   };
@@ -180,6 +183,7 @@ const ProfileSettings = () => {
         description: hotelDescription || null,
         about_us: hotelAboutUs || null,
         about_us_image: aboutUsImageUrl || null,
+        google_maps_url: googleMapsUrl || null,
         logo_url: logoUrl || null
       })
       .eq('id', hotel.id);
@@ -347,6 +351,19 @@ const ProfileSettings = () => {
               placeholder="Tell visitors about your hotel's story, values, and what makes it special"
               rows={6}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="google-maps-url">Google My Business / Maps URL</Label>
+            <Input
+              id="google-maps-url"
+              value={googleMapsUrl}
+              onChange={(e) => setGoogleMapsUrl(e.target.value)}
+              placeholder="Paste your Google My Business or Google Maps URL"
+            />
+            <p className="text-xs text-muted-foreground">
+              Get this from your Google Business Profile or share link from Google Maps
+            </p>
           </div>
 
           <div className="space-y-2">

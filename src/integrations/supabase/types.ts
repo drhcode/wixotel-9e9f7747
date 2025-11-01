@@ -156,6 +156,7 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          google_maps_url: string | null
           id: string
           images: string[] | null
           logo_url: string | null
@@ -178,6 +179,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          google_maps_url?: string | null
           id?: string
           images?: string[] | null
           logo_url?: string | null
@@ -200,6 +202,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          google_maps_url?: string | null
           id?: string
           images?: string[] | null
           logo_url?: string | null
