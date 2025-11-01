@@ -209,7 +209,7 @@ const HotelPublicView = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               {hotel?.logo_url ? (
                 <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
               ) : (
@@ -218,7 +218,7 @@ const HotelPublicView = () => {
               <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 {hotel?.name}
               </span>
-            </div>
+            </button>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
