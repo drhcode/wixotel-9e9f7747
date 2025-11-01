@@ -13,7 +13,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Loader2, MapPin, Mail, Phone, Bed, Users, Hotel, Wifi, Coffee, Tv, Wind, Home, Menu, X, Calendar, Send, CalendarIcon, ChevronLeft, ChevronRight, Facebook, Instagram } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Mail,
+  Phone,
+  Bed,
+  Users,
+  Hotel,
+  Wifi,
+  Coffee,
+  Tv,
+  Wind,
+  Home,
+  Menu,
+  X,
+  Calendar,
+  Send,
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Facebook,
+  Instagram,
+} from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -167,7 +189,7 @@ const HotelPublicView = () => {
 
   const fetchAvailableDates = async () => {
     if (!selectedRoom || !hotel) return;
-    
+
     try {
       setLoadingAvailability(true);
       // This will check availability when the form opens
@@ -199,7 +221,7 @@ const HotelPublicView = () => {
       // Check for overlapping dates
       const checkIn = validated.checkIn;
       const checkOut = validated.checkOut;
-      
+
       if (checkOut <= checkIn) {
         toast.error("Check-out date must be after check-in date");
         return;
@@ -215,7 +237,7 @@ const HotelPublicView = () => {
         check_out: format(validated.checkOut, "yyyy-MM-dd"),
         guests: validated.guests,
         status: "new",
-        message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || 'N/A'})`,
+        message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
       });
 
       if (error) throw error;
@@ -239,7 +261,7 @@ const HotelPublicView = () => {
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!hotel) return;
 
     try {
@@ -279,7 +301,7 @@ const HotelPublicView = () => {
       if (error) throw error;
 
       toast.success("Thank you! Your inquiry has been submitted successfully.");
-      
+
       // Reset form
       setLeadForm({
         fullName: "",
@@ -322,26 +344,36 @@ const HotelPublicView = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <button onClick={() => navigate("/")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
               {hotel?.logo_url ? (
                 <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
               ) : (
                 <Hotel className="h-8 w-8 text-primary" />
               )}
-              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                {hotel?.name}
-              </span>
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
             </button>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <button onClick={() => scrollToSection("rooms")} className="text-sm font-medium hover:text-primary transition-colors">
+              <button
+                onClick={() => scrollToSection("rooms")}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 Rooms
               </button>
-              <button onClick={() => scrollToSection("about")} className="text-sm font-medium hover:text-primary transition-colors">
+              <button
+                onClick={() => scrollToSection("about")}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 About Us
               </button>
-              <button onClick={() => scrollToSection("contact")} className="text-sm font-medium hover:text-primary transition-colors">
+              <button
+                onClick={() => scrollToSection("contact")}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 Contact Us
               </button>
             </nav>
@@ -356,13 +388,22 @@ const HotelPublicView = () => {
           {mobileMenuOpen && (
             <nav className="md:hidden py-4 border-t animate-fade-in">
               <div className="flex flex-col gap-4">
-                <button onClick={() => scrollToSection("rooms")} className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors">
+                <button
+                  onClick={() => scrollToSection("rooms")}
+                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                >
                   Rooms
                 </button>
-                <button onClick={() => scrollToSection("about")} className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors">
+                <button
+                  onClick={() => scrollToSection("about")}
+                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                >
                   About Us
                 </button>
-                <button onClick={() => scrollToSection("contact")} className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors">
+                <button
+                  onClick={() => scrollToSection("contact")}
+                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                >
                   Contact Us
                 </button>
               </div>
@@ -375,17 +416,16 @@ const HotelPublicView = () => {
       <section className="relative py-20 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10">
         <div className="container mx-auto text-center space-y-6 animate-fade-in">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Welcome to{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              {hotel?.name}
-            </span>
+            Welcome to <span className="bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
           </h1>
           {hotel?.description && (
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {hotel.description}
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">{hotel.description}</p>
           )}
-          <Button size="lg" onClick={() => scrollToSection("rooms")} className="bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow hover:scale-105 transition-all">
+          <Button
+            size="lg"
+            onClick={() => scrollToSection("rooms")}
+            className="bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow hover:scale-105 transition-all"
+          >
             Explore Our Rooms
           </Button>
         </div>
@@ -396,11 +436,9 @@ const HotelPublicView = () => {
         <div className="container mx-auto">
           <div className="text-center mb-12 space-y-4 animate-fade-in">
             <h2 className="text-4xl font-bold tracking-tight">Our Rooms</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover comfort and luxury in every room
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Discover comfort and luxury in every room</p>
           </div>
-          
+
           {rooms.length === 0 ? (
             <Card className="border-border/50">
               <CardContent className="py-12 text-center text-muted-foreground">
@@ -410,8 +448,8 @@ const HotelPublicView = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {rooms.map((room, index) => (
-                <Card 
-                  key={room.id} 
+                <Card
+                  key={room.id}
                   className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in flex flex-col"
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => setSelectedRoom(room)}
@@ -435,12 +473,8 @@ const HotelPublicView = () => {
                     )}
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {room.name}
-                    </CardTitle>
-                    {room.room_type && (
-                      <CardDescription className="text-base">{room.room_type}</CardDescription>
-                    )}
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{room.name}</CardTitle>
+                    {room.room_type && <CardDescription className="text-base">{room.room_type}</CardDescription>}
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col">
                     <div className="flex-1 space-y-4">
@@ -457,9 +491,7 @@ const HotelPublicView = () => {
                         )}
                       </div>
                       {room.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                          {room.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{room.description}</p>
                       )}
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t mt-4">
@@ -487,20 +519,16 @@ const HotelPublicView = () => {
           <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold tracking-tight">About Us</h2>
-              <p className="text-xl text-muted-foreground">
-                Experience exceptional hospitality
-              </p>
+              <p className="text-xl text-muted-foreground">Experience exceptional hospitality</p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8 items-center">
               {/* About Us Text */}
               <div>
                 {hotel?.about_us ? (
                   <Card className="border-border/50">
                     <CardContent className="pt-6">
-                      <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                        {hotel.about_us}
-                      </p>
+                      <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{hotel.about_us}</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -510,7 +538,7 @@ const HotelPublicView = () => {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {hotel?.amenities && hotel.amenities.length > 0 && (
                   <Card className="border-border/50 mt-6">
                     <CardHeader>
@@ -559,11 +587,9 @@ const HotelPublicView = () => {
           <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold tracking-tight">Contact Us</h2>
-              <p className="text-xl text-muted-foreground">
-                Get in touch with us for any inquiries
-              </p>
+              <p className="text-xl text-muted-foreground">Get in touch with us for any inquiries</p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
               {/* Contact Details - Left */}
               <div className="space-y-6">
@@ -576,7 +602,10 @@ const HotelPublicView = () => {
                         </div>
                         <div>
                           <CardTitle className="text-lg">Phone</CardTitle>
-                          <a href={`tel:${hotel.phone}`} className="text-muted-foreground hover:text-primary transition-colors">
+                          <a
+                            href={`tel:${hotel.phone}`}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
                             {hotel.phone}
                           </a>
                         </div>
@@ -584,7 +613,7 @@ const HotelPublicView = () => {
                     </CardHeader>
                   </Card>
                 )}
-                
+
                 {hotel?.email && (
                   <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                     <CardHeader>
@@ -594,7 +623,10 @@ const HotelPublicView = () => {
                         </div>
                         <div>
                           <CardTitle className="text-lg">Email</CardTitle>
-                          <a href={`mailto:${hotel.email}`} className="text-muted-foreground hover:text-primary transition-colors break-all">
+                          <a
+                            href={`mailto:${hotel.email}`}
+                            className="text-muted-foreground hover:text-primary transition-colors break-all"
+                          >
                             {hotel.email}
                           </a>
                         </div>
@@ -602,7 +634,7 @@ const HotelPublicView = () => {
                     </CardHeader>
                   </Card>
                 )}
-                
+
                 <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                   <CardHeader>
                     <div className="flex items-center gap-4">
@@ -611,8 +643,8 @@ const HotelPublicView = () => {
                       </div>
                       <div>
                         <CardTitle className="text-lg">Address</CardTitle>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel?.address || '')}`}
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel?.address || "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-muted-foreground hover:text-primary transition-colors"
@@ -623,7 +655,7 @@ const HotelPublicView = () => {
                     </div>
                   </CardHeader>
                 </Card>
-                
+
                 {/* Social Media Links */}
                 {(hotel?.facebook_url || hotel?.instagram_url || hotel?.google_business_url) && (
                   <Card className="border-border/50 hover:shadow-elegant transition-shadow">
@@ -673,7 +705,7 @@ const HotelPublicView = () => {
               <Card className="border-border/50 overflow-hidden h-full min-h-[400px]">
                 <CardContent className="p-0 h-full">
                   <iframe
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || '')}&output=embed`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || "")}&output=embed`}
                     className="w-full h-full min-h-[400px]"
                     style={{ border: 0 }}
                     allowFullScreen
@@ -688,14 +720,15 @@ const HotelPublicView = () => {
       </section>
 
       {/* Lead Inquiry Form Section */}
-      <section id="inquiry" className="py-16 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10 scroll-mt-16">
+      <section
+        id="inquiry"
+        className="py-16 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10 scroll-mt-16"
+      >
         <div className="container mx-auto">
           <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold tracking-tight">Plan Your Stay</h2>
-              <p className="text-xl text-muted-foreground">
-                Send us your inquiry and we'll get back to you shortly
-              </p>
+              <p className="text-xl text-muted-foreground">Send us your inquiry and we'll get back to you shortly</p>
             </div>
 
             <Card className="border-border/50 shadow-elegant">
@@ -704,9 +737,7 @@ const HotelPublicView = () => {
                   <Send className="h-5 w-5 text-primary" />
                   Inquiry Form
                 </CardTitle>
-                <CardDescription>
-                  Fill out the form below and our team will contact you
-                </CardDescription>
+                <CardDescription>Fill out the form below and our team will contact you</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLeadSubmit} className="space-y-6">
@@ -828,13 +859,11 @@ const HotelPublicView = () => {
                       rows={4}
                       maxLength={1000}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {leadForm.message.length}/1000 characters
-                    </p>
+                    <p className="text-xs text-muted-foreground">{leadForm.message.length}/1000 characters</p>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow transition-all"
                     disabled={submittingLead}
                   >
@@ -860,7 +889,9 @@ const HotelPublicView = () => {
       {/* Footer */}
       <footer className="py-8 px-4 border-t bg-accent/20">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} {hotel?.name}. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {hotel?.name}. All rights reserved.
+          </p>
         </div>
       </footer>
 
@@ -983,19 +1014,19 @@ const HotelPublicView = () => {
                     <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1">
                       Close
                     </Button>
-                    <Button 
+                    <Button
                       className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
                       onClick={() => {
                         setBookingRequestMode(true);
-                        setBookingRequest({ 
-                          ...bookingRequest, 
-                          guests: selectedRoom.capacity 
+                        setBookingRequest({
+                          ...bookingRequest,
+                          guests: selectedRoom.capacity,
                         });
                         fetchAvailableDates();
                       }}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
-                      View & Book
+                      Request To Book
                     </Button>
                   </div>
                 ) : (
@@ -1015,11 +1046,15 @@ const HotelPublicView = () => {
                                   variant="outline"
                                   className={cn(
                                     "w-full justify-start text-left font-normal",
-                                    !bookingRequest.checkIn && "text-muted-foreground"
+                                    !bookingRequest.checkIn && "text-muted-foreground",
                                   )}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {bookingRequest.checkIn ? format(bookingRequest.checkIn, "PPP") : <span>Pick a date</span>}
+                                  {bookingRequest.checkIn ? (
+                                    format(bookingRequest.checkIn, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
@@ -1042,11 +1077,15 @@ const HotelPublicView = () => {
                                   variant="outline"
                                   className={cn(
                                     "w-full justify-start text-left font-normal",
-                                    !bookingRequest.checkOut && "text-muted-foreground"
+                                    !bookingRequest.checkOut && "text-muted-foreground",
                                   )}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {bookingRequest.checkOut ? format(bookingRequest.checkOut, "PPP") : <span>Pick a date</span>}
+                                  {bookingRequest.checkOut ? (
+                                    format(bookingRequest.checkOut, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
@@ -1130,19 +1169,26 @@ const HotelPublicView = () => {
                         </div>
 
                         <div className="flex gap-3 pt-4">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                               setBookingRequestMode(false);
-                              setBookingRequest({ checkIn: undefined, checkOut: undefined, fullName: "", email: "", phone: "", guests: 1 });
+                              setBookingRequest({
+                                checkIn: undefined,
+                                checkOut: undefined,
+                                fullName: "",
+                                email: "",
+                                phone: "",
+                                guests: 1,
+                              });
                             }}
                             className="flex-1"
                           >
                             Cancel
                           </Button>
-                          <Button 
-                            type="submit" 
+                          <Button
+                            type="submit"
                             className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
                             disabled={submittingLead}
                           >
