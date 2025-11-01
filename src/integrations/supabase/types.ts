@@ -153,16 +153,21 @@ export type Database = {
           address: string
           allow_data_clear: boolean
           amenities: string[] | null
+          city: string | null
+          country: string | null
           created_at: string
           description: string | null
           email: string | null
           google_maps_url: string | null
           id: string
           images: string[] | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           name: string
           owner_id: string
           phone: string | null
+          show_on_landing: boolean
           slug: string | null
           status: Database["public"]["Enums"]["hotel_status"]
           subscription_plan:
@@ -176,16 +181,21 @@ export type Database = {
           address: string
           allow_data_clear?: boolean
           amenities?: string[] | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
           google_maps_url?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           owner_id: string
           phone?: string | null
+          show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
           subscription_plan?:
@@ -199,16 +209,21 @@ export type Database = {
           address?: string
           allow_data_clear?: boolean
           amenities?: string[] | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
           google_maps_url?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           owner_id?: string
           phone?: string | null
+          show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
           subscription_plan?:

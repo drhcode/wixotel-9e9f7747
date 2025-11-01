@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Switch } from "@/components/ui/switch";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -32,6 +33,9 @@ interface Hotel {
   subscription_plan: string;
   description: string;
   owner_id: string;
+  show_on_landing: boolean;
+  city: string | null;
+  country: string | null;
 }
 
 const HotelManagement = () => {
@@ -183,6 +187,20 @@ const HotelManagement = () => {
     });
   };
 
+  const toggleShowOnLanding = async (hotelId: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from('hotels')
+      .update({ show_on_landing: !currentValue })
+      .eq('id', hotelId);
+
+    if (error) {
+      toast.error("Failed to update landing page visibility");
+    } else {
+      toast.success(currentValue ? "Hotel hidden from landing page" : "Hotel visible on landing page");
+      fetchHotels();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -332,6 +350,7 @@ const HotelManagement = () => {
                 <TableHead>Address</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Plan</TableHead>
+                <TableHead>Landing Page</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -353,6 +372,19 @@ const HotelManagement = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{hotel.subscription_plan}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={hotel.show_on_landing}
+                        onCheckedChange={() => toggleShowOnLanding(hotel.id, hotel.show_on_landing)}
+                      />
+                      {hotel.show_on_landing ? (
+                        <Eye className="h-4 w-4 text-primary" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

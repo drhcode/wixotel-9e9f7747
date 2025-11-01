@@ -3,14 +3,37 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, Calendar, Users, TrendingUp, Shield, Zap } from "lucide-react";
+import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+
+interface PublicHotel {
+  id: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string | null;
+  country: string | null;
+  description: string | null;
+  logo_url: string | null;
+  images: string[] | null;
+  latitude: number | null;
+  longitude: number | null;
+}
 
 const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const [hotels, setHotels] = useState<PublicHotel[]>([]);
+  const [filteredHotels, setFilteredHotels] = useState<PublicHotel[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>("all");
+  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
   
   useEffect(() => {
     let mounted = true;
@@ -32,6 +55,97 @@ const Landing = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    fetchHotels();
+    getUserLocation();
+  }, []);
+
+  useEffect(() => {
+    filterHotels();
+  }, [selectedCountry, selectedCity, hotels, userLocation]);
+
+  const fetchHotels = async () => {
+    const { data } = await supabase
+      .from('hotels')
+      .select('id, name, slug, address, city, country, description, logo_url, images, latitude, longitude')
+      .eq('status', 'active')
+      .eq('show_on_landing', true);
+    
+    if (data) {
+      setHotels(data);
+      
+      // Extract unique countries and cities
+      const uniqueCountries = [...new Set(data.map(h => h.country).filter(Boolean))] as string[];
+      const uniqueCities = [...new Set(data.map(h => h.city).filter(Boolean))] as string[];
+      setCountries(uniqueCountries);
+      setCities(uniqueCities);
+    }
+  };
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log("Location access denied", error);
+        }
+      );
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const filterHotels = () => {
+    let filtered = [...hotels];
+
+    // Filter by country
+    if (selectedCountry !== "all") {
+      filtered = filtered.filter(h => h.country === selectedCountry);
+    }
+
+    // Filter by city
+    if (selectedCity !== "all") {
+      filtered = filtered.filter(h => h.city === selectedCity);
+    }
+
+    // Sort by distance if user location is available
+    if (userLocation) {
+      filtered = filtered
+        .map(hotel => ({
+          ...hotel,
+          distance: hotel.latitude && hotel.longitude 
+            ? calculateDistance(userLocation.lat, userLocation.lng, hotel.latitude, hotel.longitude)
+            : Infinity
+        }))
+        .sort((a, b) => a.distance - b.distance);
+    }
+
+    setFilteredHotels(filtered);
+  };
+
+  const sortByLocation = () => {
+    if (!userLocation) {
+      getUserLocation();
+    } else {
+      filterHotels();
+    }
+  };
   
   const features = [
     {
@@ -292,6 +406,109 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Hotels Section */}
+      {hotels.length > 0 && (
+        <section className="py-24 px-6 bg-gradient-to-b from-background to-accent/30">
+          <div className="container mx-auto">
+            <div className="text-center mb-16 space-y-4">
+              <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
+                DISCOVER HOTELS
+              </div>
+              <h2 className="text-5xl font-bold tracking-tight">Find Your Perfect Stay</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Explore our collection of premium hotels powered by Wixotel
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-12 max-w-4xl mx-auto">
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {countries.map(country => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select City" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button 
+                variant="outline" 
+                onClick={sortByLocation}
+                className="flex items-center gap-2"
+              >
+                <Navigation className="h-4 w-4" />
+                Near Me
+              </Button>
+            </div>
+
+            {/* Hotels Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredHotels.map((hotel) => (
+                <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
+                  <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                    <div className="aspect-video relative overflow-hidden bg-accent">
+                      {hotel.images?.[0] ? (
+                        <img 
+                          src={hotel.images[0]} 
+                          alt={hotel.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : hotel.logo_url ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <img 
+                            src={hotel.logo_url} 
+                            alt={hotel.name}
+                            className="max-w-[60%] max-h-[60%] object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="h-16 w-16 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
+                      <CardDescription className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>{hotel.city && hotel.country ? `${hotel.city}, ${hotel.country}` : hotel.address}</span>
+                      </CardDescription>
+                    </CardHeader>
+                    {hotel.description && (
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{hotel.description}</p>
+                      </CardContent>
+                    )}
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {filteredHotels.length === 0 && (
+              <div className="text-center py-12">
+                <Hotel className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-xl text-muted-foreground">No hotels found with the selected filters</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-hero">
