@@ -35,6 +35,9 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
   const TIMELINE_DAYS = 12;
+  const isSafari = typeof navigator !== 'undefined'
+    && /Safari/i.test(navigator.userAgent)
+    && !/Chrome|Chromium|CriOS/i.test(navigator.userAgent);
 
   useEffect(() => {
     fetchRooms();
@@ -270,7 +273,8 @@ const CalendarManager = ({ hotelId }: Props) => {
       </Card>
 
       {/* Desktop Timeline View */}
-      <div className="hidden lg:block">
+      {!isSafari && (
+        <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4 gap-4">
             <h3 className="font-semibold text-lg">Timeline View</h3>
@@ -453,6 +457,7 @@ const CalendarManager = ({ hotelId }: Props) => {
           </div>
         </Card>
       </div>
+      )}
 
       {/* Mobile Calendar View */}
       <div className="lg:hidden space-y-4">
@@ -468,33 +473,50 @@ const CalendarManager = ({ hotelId }: Props) => {
               </Button>
             </div>
           </div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => {
-              if (date) {
-                setSelectedDate(date);
-              }
-            }}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
-            className="w-full"
-            classNames={{
-              caption: "hidden",
-              nav: "hidden",
-              months: "flex w-full",
-              month: "w-full",
-              table: "w-full border-collapse",
-              head_row: "flex w-full",
-              head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
-              row: "flex w-full mt-2",
-              cell: "flex-1 text-center text-sm p-1 relative",
-              day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
-              day_selected: "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
-            }}
-          />
+          {isSafari ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="text-sm font-medium">{format(selectedDate, "PPP")}</div>
+                <Button variant="outline" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground text-center">
+                Safari lightweight mode (full calendar disabled)
+              </div>
+            </div>
+          ) : (
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => {
+                if (date) {
+                  setSelectedDate(date);
+                }
+              }}
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              modifiers={modifiers}
+              modifiersStyles={modifiersStyles}
+              className="w-full"
+              classNames={{
+                caption: "hidden",
+                nav: "hidden",
+                months: "flex w-full",
+                month: "w-full",
+                table: "w-full border-collapse",
+                head_row: "flex w-full",
+                head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
+                row: "flex w-full mt-2",
+                cell: "flex-1 text-center text-sm p-1 relative",
+                day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
+                day_selected: "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
+              }}
+            />
+          )}
         </Card>
 
         <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
