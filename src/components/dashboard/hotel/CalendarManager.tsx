@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,9 +35,6 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
   const TIMELINE_DAYS = 12;
-  const isSafari = typeof navigator !== 'undefined'
-    && /Safari/i.test(navigator.userAgent)
-    && !/Chrome|Chromium|CriOS/i.test(navigator.userAgent);
 
   useEffect(() => {
     fetchRooms();
@@ -103,7 +100,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     });
   };
 
-  const selectedDateBookings = useMemo(() => getBookingsForDate(selectedDate), [bookings, selectedDate]);
+  const selectedDateBookings = getBookingsForDate(selectedDate);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -161,14 +158,16 @@ const CalendarManager = ({ hotelId }: Props) => {
     return null;
   };
 
-  const timelineDates = useMemo(() => {
+  const generateTimelineDates = () => {
     const dates: Date[] = [];
     const normalizedStart = startOfDay(timelineStartDate);
     for (let i = 0; i < TIMELINE_DAYS; i++) {
       dates.push(startOfDay(addDays(normalizedStart, i)));
     }
     return dates;
-  }, [timelineStartDate, TIMELINE_DAYS]);
+  };
+
+  const timelineDates = generateTimelineDates();
 
   const getBookingPosition = (booking: any, date: Date) => {
     const checkIn = startOfDay(new Date(booking.check_in));
@@ -196,7 +195,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     return { start: false, span: 0 };
   };
 
-  const modifiers = useMemo(() => ({
+  const modifiers = {
     booked: bookings
       .map((b) => {
         const dates: Date[] = [];
@@ -209,9 +208,9 @@ const CalendarManager = ({ hotelId }: Props) => {
         return dates;
       })
       .flat(),
-  }), [bookings]);
+  };
 
-  const modifiersStyles = useMemo(() => ({
+  const modifiersStyles = {
     booked: {
       backgroundColor: "hsl(var(--primary) / 0.15)",
       color: "hsl(var(--primary))",
@@ -219,7 +218,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       borderRadius: "10px",
       border: "2px solid hsl(var(--primary) / 0.3)",
     },
-  }), []);
+  };
 
   if (isLoading && bookings.length === 0 && rooms.length === 0) {
     return (
@@ -273,8 +272,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       </Card>
 
       {/* Desktop Timeline View */}
-      {!isSafari && (
-        <div className="hidden lg:block">
+      <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4 gap-4">
             <h3 className="font-semibold text-lg">Timeline View</h3>
@@ -457,7 +455,6 @@ const CalendarManager = ({ hotelId }: Props) => {
           </div>
         </Card>
       </div>
-      )}
 
       {/* Mobile Calendar View */}
       <div className="lg:hidden space-y-4">
@@ -473,50 +470,33 @@ const CalendarManager = ({ hotelId }: Props) => {
               </Button>
             </div>
           </div>
-          {isSafari ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Button variant="outline" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <div className="text-sm font-medium">{format(selectedDate, "PPP")}</div>
-                <Button variant="outline" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="text-xs text-muted-foreground text-center">
-                Safari lightweight mode (full calendar disabled)
-              </div>
-            </div>
-          ) : (
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              modifiers={modifiers}
-              modifiersStyles={modifiersStyles}
-              className="w-full"
-              classNames={{
-                caption: "hidden",
-                nav: "hidden",
-                months: "flex w-full",
-                month: "w-full",
-                table: "w-full border-collapse",
-                head_row: "flex w-full",
-                head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
-                row: "flex w-full mt-2",
-                cell: "flex-1 text-center text-sm p-1 relative",
-                day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
-                day_selected: "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
-              }}
-            />
-          )}
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            modifiers={modifiers}
+            modifiersStyles={modifiersStyles}
+            className="w-full"
+            classNames={{
+              caption: "hidden",
+              nav: "hidden",
+              months: "flex w-full",
+              month: "w-full",
+              table: "w-full border-collapse",
+              head_row: "flex w-full",
+              head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
+              row: "flex w-full mt-2",
+              cell: "flex-1 text-center text-sm p-1 relative",
+              day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
+              day_selected: "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
+            }}
+          />
         </Card>
 
         <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
