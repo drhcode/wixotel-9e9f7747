@@ -87,7 +87,17 @@ ${colorConfig
   );
 };
 
-const ChartTooltip = RechartsPrimitive.Tooltip;
+// iOS Safari tooltip guard
+const isMobileSafari =
+  typeof navigator !== "undefined" &&
+  /iP(hone|ad|od)/.test(navigator.userAgent) &&
+  /Safari/.test(navigator.userAgent) &&
+  !/CriOS|FxiOS|OPiOS/.test(navigator.userAgent);
+
+const ChartTooltip = (props: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) => {
+  if (isMobileSafari) return null;
+  return <RechartsPrimitive.Tooltip {...props} />;
+};
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,

@@ -7,6 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
+const isMobileSafari =
+  typeof navigator !== "undefined" &&
+  /iP(hone|ad|od)/.test(navigator.userAgent) &&
+  /Safari/.test(navigator.userAgent) &&
+  !/CriOS|FxiOS|OPiOS/.test(navigator.userAgent);
+
 interface Props {
   hotelId: string;
 }
@@ -300,13 +306,15 @@ const HotelOverview = ({ hotelId }: Props) => {
                         tick={{ fontSize: 12 }}
                         stroke="hsl(var(--muted-foreground))"
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
+                      {!isMobileSafari && (
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      )}
                       <Bar 
                         dataKey="count" 
                         fill="hsl(var(--primary))" 
@@ -342,13 +350,15 @@ const HotelOverview = ({ hotelId }: Props) => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
+                      {!isMobileSafari && (
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      )}
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
