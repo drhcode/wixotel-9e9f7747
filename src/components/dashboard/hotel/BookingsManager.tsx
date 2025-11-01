@@ -272,44 +272,6 @@ const BookingsManager = ({ hotelId }: Props) => {
         </div>
       </div>
 
-      <Card className="border-muted bg-muted/30">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            📋 CSV Import Requirements
-          </CardTitle>
-          <CardDescription className="text-xs space-y-2 mt-2">
-            <div className="bg-background rounded-lg p-3 space-y-2">
-              <div>
-                <p className="font-semibold text-foreground mb-1">Required Fields (must be present):</p>
-                <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                  <li><code className="bg-muted px-1 rounded">full_name</code> - Full name of the guest</li>
-                  <li><code className="bg-muted px-1 rounded">room_number</code> - Room identifier (e.g., "101", "102 - Double Room", "Fshat Tili")</li>
-                  <li><code className="bg-muted px-1 rounded">check_in</code> - Check-in date in YYYY-MM-DD format</li>
-                  <li><code className="bg-muted px-1 rounded">check_out</code> - Check-out date in YYYY-MM-DD format</li>
-                </ul>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Optional Fields (accept any text/number):</p>
-                <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                  <li><code className="bg-muted px-1 rounded">guest_phone</code> - Phone number (any format accepted)</li>
-                  <li><code className="bg-muted px-1 rounded">guest_email</code> - Email address</li>
-                  <li><code className="bg-muted px-1 rounded">guest_country</code>, <code className="bg-muted px-1 rounded">guest_city</code>, <code className="bg-muted px-1 rounded">guest_address</code> - Guest location info</li>
-                  <li><code className="bg-muted px-1 rounded">guest_count</code> - Number of guests</li>
-                  <li><code className="bg-muted px-1 rounded">total_amount</code> - Total booking amount</li>
-                  <li><code className="bg-muted px-1 rounded">status</code> - Booking status (any text accepted)</li>
-                  <li><code className="bg-muted px-1 rounded">payment_status</code> - Payment status (any text accepted)</li>
-                  <li><code className="bg-muted px-1 rounded">notes</code> - Additional notes or special requests</li>
-                </ul>
-              </div>
-            </div>
-            <div className="flex items-start gap-2 text-primary bg-primary/10 rounded-lg p-2 mt-2">
-              <span>💡</span>
-              <span>Download the template above to see the exact format with example data. You can then map any CSV headers to these fields during import.</span>
-            </div>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>All Bookings</CardTitle>
