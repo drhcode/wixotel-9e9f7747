@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,6 +21,11 @@ import BookingDetailsModal from "./BookingDetailsModal";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Detect Safari for performance optimizations
+const isSafari = typeof navigator !== "undefined" && 
+  /Safari/.test(navigator.userAgent) && 
+  !/Chrome/.test(navigator.userAgent);
+
 interface Props {
   hotelId: string;
 }
@@ -34,7 +39,8 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
-  const TIMELINE_DAYS = 12;
+  const [viewMode, setViewMode] = useState<'calendar' | 'timeline'>(isSafari ? 'calendar' : 'timeline');
+  const TIMELINE_DAYS = isSafari ? 7 : 12; // Reduce complexity on Safari
 
   useEffect(() => {
     fetchRooms();
@@ -100,7 +106,9 @@ const CalendarManager = ({ hotelId }: Props) => {
     });
   };
 
-  const selectedDateBookings = getBookingsForDate(selectedDate);
+  // Memoize expensive calculations to prevent excessive re-renders
+  const selectedDateBookings = useMemo(() => getBookingsForDate(selectedDate), [selectedDate, bookings]);
+  const timelineDates = useMemo(() => generateTimelineDates(), [timelineStartDate, TIMELINE_DAYS]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -167,7 +175,7 @@ const CalendarManager = ({ hotelId }: Props) => {
     return dates;
   };
 
-  const timelineDates = generateTimelineDates();
+  // Removed - now memoized above
 
   const getBookingPosition = (booking: any, date: Date) => {
     const checkIn = startOfDay(new Date(booking.check_in));
@@ -247,10 +255,30 @@ const CalendarManager = ({ hotelId }: Props) => {
           <h2 className="text-2xl font-bold">Reservation Calendar</h2>
           <p className="text-muted-foreground text-sm">Manage your hotel bookings</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          New Reservation
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          {!isSafari && (
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'calendar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('calendar')}
+              >
+                Calendar
+              </Button>
+              <Button
+                variant={viewMode === 'timeline' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('timeline')}
+              >
+                Timeline
+              </Button>
+            </div>
+          )}
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            New Reservation
+          </Button>
+        </div>
       </div>
 
       {/* Color Legend */}
@@ -271,8 +299,9 @@ const CalendarManager = ({ hotelId }: Props) => {
         </div>
       </Card>
 
-      {/* Desktop Timeline View */}
-      <div className="hidden lg:block">
+      {/* Timeline View - Hidden on Safari by default */}
+      {viewMode === 'timeline' && !isSafari && (
+        <div className="hidden lg:block">
         <Card className="p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4 gap-4">
             <h3 className="font-semibold text-lg">Timeline View</h3>
@@ -342,10 +371,10 @@ const CalendarManager = ({ hotelId }: Props) => {
             </div>
           </div>
 
-          <div className="overflow-x-auto relative rounded-lg border">
-            <div className="min-w-[1400px] bg-background">
+            <div className="overflow-x-auto relative rounded-lg border">
+            <div className={`bg-background ${isSafari ? 'min-w-[800px]' : 'min-w-[1400px]'}`}>
               {/* Header */}
-              <div className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
+              <div className="grid relative" style={{ gridTemplateColumns: `250px repeat(${TIMELINE_DAYS}, 1fr)` }}>
                 <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                   Room
                 </div>
@@ -373,7 +402,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                 const renderedDateIndices = new Set<number>();
 
                 return (
-                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
+                  <div key={room.id} className="grid relative" style={{ gridTemplateColumns: `250px repeat(${TIMELINE_DAYS}, 1fr)` }}>
                     <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                       <div className="text-sm font-bold flex items-center gap-2">
                         {room.main_photo_url && (
@@ -454,7 +483,8 @@ const CalendarManager = ({ hotelId }: Props) => {
             </div>
           </div>
         </Card>
-      </div>
+        </div>
+      )}
 
       {/* Mobile Calendar View */}
       <div className="lg:hidden space-y-4">
@@ -550,7 +580,7 @@ const CalendarManager = ({ hotelId }: Props) => {
             )}
           </div>
         </Card>
-      </div>
+        </div>
 
       <BookingModal
         isOpen={isModalOpen}
