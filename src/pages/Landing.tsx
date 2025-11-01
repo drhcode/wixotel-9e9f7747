@@ -8,6 +8,7 @@ import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Country, City } from 'country-state-city';
 
 
 interface PublicHotel {
@@ -33,8 +34,8 @@ const Landing = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [countries, setCountries] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
+  const [allCountries, setAllCountries] = useState<Array<{code: string, name: string}>>([]);
+  const [availableCities, setAvailableCities] = useState<Array<{name: string}>>([]);
   
   useEffect(() => {
     let mounted = true;
@@ -59,12 +60,30 @@ const Landing = () => {
 
   useEffect(() => {
     fetchHotels();
-    getUserLocation();
+    loadCountries();
   }, []);
 
   useEffect(() => {
+    if (selectedCountry !== "all") {
+      const countryData = allCountries.find(c => c.name === selectedCountry);
+      if (countryData) {
+        const cities = City.getCitiesOfCountry(countryData.code) || [];
+        setAvailableCities(cities);
+      }
+    } else {
+      setAvailableCities([]);
+    }
+    setSelectedCity("all");
+  }, [selectedCountry, allCountries]);
+
+  useEffect(() => {
     filterHotels();
-  }, [selectedCountry, selectedCity, hotels, userLocation]);
+  }, [selectedCountry, selectedCity, hotels]);
+
+  const loadCountries = () => {
+    const countries = Country.getAllCountries();
+    setAllCountries(countries.map(c => ({ code: c.isoCode, name: c.name })));
+  };
 
   const fetchHotels = async () => {
     const { data } = await supabase
@@ -75,12 +94,26 @@ const Landing = () => {
     
     if (data) {
       setHotels(data);
-      
-      // Extract unique countries and cities
-      const uniqueCountries = [...new Set(data.map(h => h.country).filter(Boolean))] as string[];
-      const uniqueCities = [...new Set(data.map(h => h.city).filter(Boolean))] as string[];
-      setCountries(uniqueCountries);
-      setCities(uniqueCities);
+    }
+  };
+
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await response.json();
+      if (data.address) {
+        const country = data.address.country;
+        const city = data.address.city || data.address.town || data.address.village;
+        
+        if (country) {
+          setSelectedCountry(country);
+        }
+        if (city) {
+          setTimeout(() => setSelectedCity(city), 100);
+        }
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
     }
   };
 
@@ -88,10 +121,12 @@ const Landing = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setUserLocation(location);
+          reverseGeocode(location.lat, location.lng);
         },
         (error) => {
           console.log("Location access denied", error);
@@ -125,27 +160,11 @@ const Landing = () => {
       filtered = filtered.filter(h => h.city === selectedCity);
     }
 
-    // Sort by distance if user location is available
-    if (userLocation) {
-      filtered = filtered
-        .map(hotel => ({
-          ...hotel,
-          distance: hotel.latitude && hotel.longitude 
-            ? calculateDistance(userLocation.lat, userLocation.lng, hotel.latitude, hotel.longitude)
-            : Infinity
-        }))
-        .sort((a, b) => a.distance - b.distance);
-    }
-
     setFilteredHotels(filtered);
   };
 
   const sortByLocation = () => {
-    if (!userLocation) {
-      getUserLocation();
-    } else {
-      filterHotels();
-    }
+    getUserLocation();
   };
   
   const features = [
@@ -323,91 +342,6 @@ const Landing = () => {
       {/* Demo Modal */}
       <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
 
-      {/* Features Section */}
-      <section className="py-24 px-6 bg-gradient-to-b from-background via-accent/50 to-background">
-        <div className="container mx-auto">
-          <div className="text-center mb-20 space-y-4 animate-fade-in">
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-              POWERFUL FEATURES
-            </div>
-            <h2 className="text-5xl font-bold tracking-tight">Everything You Need to Succeed</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Enterprise-grade tools designed to transform your hotel operations and accelerate growth
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card 
-                key={feature.title} 
-                className="group border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <CardHeader className="space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    <feature.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{feature.title}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that best fits your hotel's needs. All plans include 14-day free trial.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
-              <Card 
-                key={plan.name} 
-                className={`relative flex flex-col ${plan.popular ? 'border-primary shadow-elegant' : 'border-border'}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-5xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col space-y-4">
-                  <ul className="space-y-3 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-primary"></div>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/auth" className="block mt-auto">
-                    <Button 
-                      className={`w-full ${plan.popular ? 'bg-gradient-primary' : ''}`}
-                      variant={plan.popular ? 'default' : 'outline'}
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Hotels Section */}
       {hotels.length > 0 && (
         <section className="py-24 px-6 bg-gradient-to-b from-background to-accent/30">
@@ -430,8 +364,8 @@ const Landing = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Countries</SelectItem>
-                  {countries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  {allCountries.map(country => (
+                    <SelectItem key={country.code} value={country.name}>{country.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -442,8 +376,8 @@ const Landing = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
-                  {cities.map(city => (
-                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  {availableCities.map(city => (
+                    <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -517,6 +451,91 @@ const Landing = () => {
         </section>
       )}
 
+      {/* Features Section */}
+      <section className="py-24 px-6 bg-gradient-to-b from-background via-accent/50 to-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-20 space-y-4 animate-fade-in">
+            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
+              POWERFUL FEATURES
+            </div>
+            <h2 className="text-5xl font-bold tracking-tight">Everything You Need to Succeed</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Enterprise-grade tools designed to transform your hotel operations and accelerate growth
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card 
+                key={feature.title} 
+                className="group border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <CardHeader className="space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
+                    <feature.icon className="h-7 w-7 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{feature.title}</CardTitle>
+                  <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl font-bold">Simple, Transparent Pricing</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Choose the plan that best fits your hotel's needs
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan) => (
+              <Card 
+                key={plan.name} 
+                className={`relative flex flex-col ${plan.popular ? 'border-primary shadow-elegant' : 'border-border'}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle>{plan.name}</CardTitle>
+                  <div className="mt-4">
+                    <span className="text-5xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground">{plan.period}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col space-y-4">
+                  <ul className="space-y-3 flex-1">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary"></div>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/auth" className="block mt-auto">
+                    <Button 
+                      className={`w-full ${plan.popular ? 'bg-gradient-primary' : ''}`}
+                      variant={plan.popular ? 'default' : 'outline'}
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-hero">
         <div className="container mx-auto text-center text-white">
@@ -528,7 +547,7 @@ const Landing = () => {
           </p>
           <Link to="/auth">
             <Button size="lg" variant="secondary" className="shadow-lg hover:scale-105 transition-transform">
-              Start Your Free Trial
+              Get Started Now
             </Button>
           </Link>
         </div>
