@@ -68,7 +68,9 @@ export function SafariMonthGrid({
                 return (
                   <button
                     key={j}
-                    onClick={() => onSelectedDateChange(d)}
+                    onClick={() => {
+                      if (!isSameDay(d, selectedDate)) onSelectedDateChange(d);
+                    }}
                     className={
                       "h-10 w-full rounded-md border transition-colors " +
                       (selected

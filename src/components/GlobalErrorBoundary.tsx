@@ -17,7 +17,12 @@ export default class GlobalErrorBoundary extends React.Component<React.PropsWith
 
   componentDidCatch(error: unknown, errorInfo: unknown) {
     // Surface details to the console so we can capture Safari-specific crashes
-    console.error("GlobalErrorBoundary caught an error:", error, errorInfo);
+    try {
+      console.error("GlobalErrorBoundary caught an error:", error, errorInfo);
+      console.error("UA:", navigator.userAgent, "Platform:", navigator.platform, "URL:", window.location.href);
+    } catch (_) {
+      // no-op
+    }
   }
 
   render() {

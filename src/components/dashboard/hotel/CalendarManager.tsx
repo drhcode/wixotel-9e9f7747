@@ -36,9 +36,12 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [ready, setReady] = useState(true); // will defer for Safari if needed
   const TIMELINE_DAYS = 12;
 
-  // Detect Safari (memoized)
+  // Detect iOS Safari / iOS WebKit (treat as Safari)
   const isSafari = useMemo(() => {
-    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isiOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+    const isWebKit = /AppleWebKit/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+    return isiOS && isWebKit;
   }, []);
 
   // Defer heavy render on Safari briefly to avoid stack issues
@@ -356,15 +359,17 @@ const CalendarManager = ({ hotelId }: Props) => {
         />
       )}
 
-      <CalendarMonthView
-        currentMonth={currentMonth}
-        selectedDate={selectedDate}
-        onCurrentMonthChange={setCurrentMonth}
-        onSelectedDateChange={setSelectedDate}
-        modifiers={modifiers}
-        modifiersStyles={modifiersStyles}
-        isSafari={isSafari}
-      />
+      {(!isSafari || ready) && (
+        <CalendarMonthView
+          currentMonth={currentMonth}
+          selectedDate={selectedDate}
+          onCurrentMonthChange={setCurrentMonth}
+          onSelectedDateChange={setSelectedDate}
+          modifiers={modifiers}
+          modifiersStyles={modifiersStyles}
+          isSafari={isSafari}
+        />
+      )}
 
       <CalendarBookingsList
         selectedDate={selectedDate}
