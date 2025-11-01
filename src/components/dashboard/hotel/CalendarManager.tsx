@@ -1,16 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   format,
   startOfMonth,
   endOfMonth,
-  addMonths,
-  subMonths,
   addDays,
   startOfDay,
   differenceInDays,
@@ -18,8 +13,11 @@ import {
 } from "date-fns";
 import BookingModal from "./BookingModal";
 import BookingDetailsModal from "./BookingDetailsModal";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarHeader } from "./calendar/CalendarHeader";
+import { CalendarLegend } from "./calendar/CalendarLegend";
+import { CalendarTimeline } from "./calendar/CalendarTimeline";
+import { CalendarMonthView } from "./calendar/CalendarMonthView";
+import { CalendarBookingsList } from "./calendar/CalendarBookingsList";
 
 interface Props {
   hotelId: string;
@@ -340,333 +338,41 @@ const CalendarManager = ({ hotelId }: Props) => {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Reservation Calendar</h2>
-          <p className="text-muted-foreground text-sm">Manage your hotel bookings</p>
-        </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          New Reservation
-        </Button>
-      </div>
+      <CalendarHeader onNewReservation={() => setIsModalOpen(true)} />
 
-      {/* Color Legend */}
-      <Card className="p-4">
-        <div className="flex flex-wrap gap-6 items-center justify-center">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#7C3BED" }}></div>
-            <span className="text-sm font-medium">Reserved/Pending</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#16A249" }}></div>
-            <span className="text-sm font-medium">Checked In</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#C06969" }}></div>
-            <span className="text-sm font-medium">Checked Out</span>
-          </div>
-        </div>
-      </Card>
+      <CalendarLegend />
 
       {/* Desktop Timeline View - Hidden on Safari */}
       {!isSafari && ready && (
-        <div className="hidden lg:block">
-          <Card className="p-4 overflow-hidden">
-            <div className="flex items-center justify-between mb-4 gap-4">
-              <h3 className="font-semibold text-lg">Timeline View</h3>
-              <div className="flex gap-2 flex-wrap items-center">
-                <div className="flex gap-2">
-                  <Select
-                    value={format(timelineStartDate, "M")}
-                    onValueChange={(value) => {
-                      if (value) {
-                        const newDate = startOfDay(new Date(timelineStartDate));
-                        newDate.setMonth(parseInt(value) - 1);
-                        setTimelineStartDate(newDate);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-[100]">
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <SelectItem key={i} value={String(i + 1)}>
-                          {format(new Date(2024, i, 1), "MMMM")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={format(timelineStartDate, "yyyy")}
-                    onValueChange={(value) => {
-                      if (value) {
-                        const newDate = startOfDay(new Date(timelineStartDate));
-                        newDate.setFullYear(parseInt(value));
-                        setTimelineStartDate(newDate);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-[100]">
-                      {Array.from({ length: 11 }, (_, i) => {
-                        const year = new Date().getFullYear() - 5 + i;
-                        return (
-                          <SelectItem key={year} value={String(year)}>
-                            {year}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setTimelineStartDate(startOfDay(addDays(timelineStartDate, -TIMELINE_DAYS)))}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setTimelineStartDate(startOfDay(new Date()))}>
-                    Today
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setTimelineStartDate(startOfDay(addDays(timelineStartDate, TIMELINE_DAYS)))}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto relative rounded-lg border">
-              <div className="min-w-[1400px] bg-background">
-                {/* Header */}
-                <div className="grid relative" style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}>
-                  <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
-                    Room
-                  </div>
-                  {generateTimelineDates.map((date) => {
-                    const isToday = isSameDay(date, new Date());
-                    return (
-                      <div
-                        key={date.toISOString()}
-                        className={`p-3 border-b border-r text-center ${isToday ? "bg-primary/20" : "bg-muted/30"}`}
-                      >
-                        <div className={`text-xs ${isToday ? "text-primary" : "font-semibold"}`}>
-                          {format(date, "EEE")}
-                        </div>
-                        <div className={`text-sm ${isToday ? "text-primary" : ""}`}>{format(date, "dd")}</div>
-                        <div className={`text-xs ${isToday ? "text-primary" : "text-muted-foreground"}`}>
-                          {format(date, "MMM")}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Room Rows */}
-                {rooms.map((room) => {
-                  const renderedDateIndices = new Set<number>();
-
-                  return (
-                    <div
-                      key={room.id}
-                      className="grid relative"
-                      style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}
-                    >
-                      <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                        <div className="text-sm font-bold flex items-center gap-2">
-                          {room.main_photo_url && (
-                            <img
-                              src={room.main_photo_url}
-                              alt={room.name}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
-                            />
-                          )}
-                          <span>
-                            {room.room_number} {room.name}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium mt-1">Room</div>
-                      </div>
-
-                      {generateTimelineDates.map((date, dateIndex) => {
-                        // Skip if this date was already rendered as part of a span
-                        if (renderedDateIndices.has(dateIndex)) {
-                          return null;
-                        }
-
-                        const startBooking = getStartCellBookingForRoom(room.id, date);
-
-                        if (startBooking) {
-                          const position = getBookingPosition(startBooking, date);
-
-                          // Mark the spanned dates as rendered
-                          for (let i = 0; i < position.span; i++) {
-                            renderedDateIndices.add(dateIndex + i);
-                          }
-
-                          // compute grid columns
-                          const gridStart = 2 + dateIndex;
-                          const gridEnd = 2 + dateIndex + position.span;
-
-                          return (
-                            <div
-                              key={date.toISOString()}
-                              className="border-b border-r min-h-[80px] bg-background p-2 relative"
-                              style={{ gridColumnStart: gridStart, gridColumnEnd: gridEnd }}
-                            >
-                              <div
-                                className="absolute text-xs cursor-pointer hover:opacity-90 transition-all flex flex-col justify-center px-3 py-2 shadow-sm rounded-lg group"
-                                style={{
-                                  backgroundColor: getStatusColor(startBooking.status) + "20",
-                                  border: "2px solid " + getStatusColor(startBooking.status),
-                                  color: getStatusColor(startBooking.status),
-                                  left: "8px",
-                                  right: "8px",
-                                  top: "8px",
-                                  bottom: "8px",
-                                }}
-                                onClick={() => setSelectedBooking(startBooking)}
-                                title={startBooking.full_name || startBooking.guests?.name}
-                              >
-                                <div className="font-semibold truncate">
-                                  {startBooking.full_name || startBooking.guests?.name}
-                                </div>
-                                <div className="text-[10px] opacity-90 truncate">
-                                  {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
-                                  {format(new Date(startBooking.check_out), "MMM dd")}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        } else {
-                          renderedDateIndices.add(dateIndex);
-                          return (
-                            <div
-                              key={date.toISOString()}
-                              className="border-b border-r min-h-[80px] bg-background hover:bg-accent/30 transition-colors"
-                            />
-                          );
-                        }
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Card>
-        </div>
+        <CalendarTimeline
+          rooms={rooms}
+          timelineStartDate={timelineStartDate}
+          onTimelineStartDateChange={setTimelineStartDate}
+          TIMELINE_DAYS={TIMELINE_DAYS}
+          getStartCellBookingForRoom={getStartCellBookingForRoom}
+          getBookingPosition={getBookingPosition}
+          getStatusColor={getStatusColor}
+          onBookingClick={setSelectedBooking}
+        />
       )}
 
-      {/* Mobile Calendar View */}
-      <div className="lg:hidden space-y-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg">{format(currentMonth, "MMMM yyyy")}</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <Calendar
-            key={isSafari ? "safari" : "default"}
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => {
-              if (date) {
-                setSelectedDate(date);
-              }
-            }}
-            {...(!isSafari
-              ? ({
-                  month: currentMonth,
-                  onMonthChange: setCurrentMonth,
-                  modifiers: modifiers as any,
-                  modifiersStyles: modifiersStyles as any,
-                } as any)
-              : ({ month: currentMonth } as any))}
-            className="w-full"
-            classNames={{
-              caption: "hidden",
-              nav: "hidden",
-              months: "flex w-full",
-              month: "w-full",
-              table: "w-full border-collapse",
-              head_row: "flex w-full",
-              head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
-              row: "flex w-full mt-2",
-              cell: "flex-1 text-center text-sm p-1 relative",
-              day: "h-10 w-full p-0 font-normal aria-selected:opacity-100",
-              day_selected:
-                "!bg-primary !text-primary-foreground hover:!bg-primary/90 !border-primary !border-4 !font-bold !shadow-lg",
-            }}
-          />
-        </Card>
+      <CalendarMonthView
+        currentMonth={currentMonth}
+        selectedDate={selectedDate}
+        onCurrentMonthChange={setCurrentMonth}
+        onSelectedDateChange={setSelectedDate}
+        modifiers={modifiers}
+        modifiersStyles={modifiersStyles}
+        isSafari={isSafari}
+      />
 
-        <div className="flex items-center justify-center py-3 bg-muted/50 rounded-lg">
-          <span className="text-sm font-medium">
-            Reserved Rooms ({selectedDateBookings.length}) | Free Rooms ({rooms.length - selectedDateBookings.length})
-          </span>
-        </div>
-
-        <Card className="p-4">
-          <h3 className="font-semibold text-lg mb-4">Bookings for {format(selectedDate, "MMM dd, yyyy")}</h3>
-          <div className="space-y-3 max-h-[500px] overflow-y-auto">
-            {selectedDateBookings.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">No bookings for this date</p>
-            ) : (
-              selectedDateBookings.map((booking) => {
-                const room = rooms.find((r) => r.id === booking.room_id);
-                return (
-                  <Card
-                    key={booking.id}
-                    className="p-4 cursor-pointer hover:bg-accent transition-colors"
-                    onClick={() => setSelectedBooking(booking)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        {room?.main_photo_url && (
-                          <img
-                            src={room.main_photo_url}
-                            alt={room.name}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Room {booking.rooms?.room_number || booking.rooms?.name}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge style={{ backgroundColor: getStatusColor(booking.status) }} className="text-white">
-                        {booking.status}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {format(new Date(booking.check_in), "MMM dd")} -{" "}
-                      {format(new Date(booking.check_out), "MMM dd, yyyy")}
-                    </div>
-                    <div className="text-sm font-medium mt-2">€{booking.total_amount}</div>
-                  </Card>
-                );
-              })
-            )}
-          </div>
-        </Card>
-      </div>
+      <CalendarBookingsList
+        selectedDate={selectedDate}
+        bookings={selectedDateBookings}
+        rooms={rooms}
+        onBookingClick={setSelectedBooking}
+        getStatusColor={getStatusColor}
+      />
 
       <BookingModal
         isOpen={isModalOpen}
