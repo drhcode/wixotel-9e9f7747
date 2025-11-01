@@ -434,7 +434,7 @@ const HotelPublicView = () => {
                     <div className="flex items-center justify-between pt-4 border-t">
                       <div>
                         <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                          ${room.price}
+                          €{room.price}
                         </div>
                         <div className="text-xs text-muted-foreground">per night</div>
                       </div>
@@ -873,7 +873,7 @@ const HotelPublicView = () => {
                         )}
                         <div className="pt-4 border-t">
                           <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                            ${selectedRoom.price}
+                            €{selectedRoom.price}
                           </div>
                           <div className="text-sm text-muted-foreground">per night</div>
                         </div>
