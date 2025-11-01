@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,6 +27,7 @@ interface Props {
 
 const CalendarManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
+  const lastBookingsJson = useRef<string>("");
   const [rooms, setRooms] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -34,95 +35,156 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
+  const [ready, setReady] = useState(true); // will defer for Safari if needed
   const TIMELINE_DAYS = 12;
 
-  // Detect Safari
+  // Detect Safari (memoized)
   const isSafari = useMemo(() => {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   }, []);
 
-  useEffect(() => {
-    fetchRooms();
-  }, [hotelId]);
-
+  // Defer heavy render on Safari briefly to avoid stack issues
   useEffect(() => {
     if (isSafari) {
-      fetchBookingsForDate(selectedDate);
+      setReady(false);
+      const t = setTimeout(() => setReady(true), 120);
+      return () => clearTimeout(t);
+    } else {
+      setReady(true);
     }
-  }, [hotelId, selectedDate]);
+  }, [isSafari]);
 
+  // Fetch rooms when hotelId changes
   useEffect(() => {
-    if (!isSafari) {
-      fetchBookings();
-    }
-  }, [hotelId, currentMonth, timelineStartDate]);
+    if (!hotelId) return;
+    fetchRooms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotelId]);
+
+  // Safari-only: fetch bookings for the single selected date
+  useEffect(() => {
+    if (!hotelId) return;
+    if (!isSafari) return;
+
+    let ignore = false;
+    const run = async () => {
+      await fetchBookingsForDate(selectedDate, { ignoreRef: () => ignore });
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+    // only depend on hotelId and selectedDate for Safari
+  }, [hotelId, selectedDate, isSafari]);
+
+  // Non-Safari: fetch bookings for month + timeline
+  useEffect(() => {
+    if (!hotelId) return;
+    if (isSafari) return;
+
+    let ignore = false;
+    const run = async () => {
+      await fetchBookings({ ignoreRef: () => ignore });
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+    // month & timeline changes should trigger for non-safari
+  }, [hotelId, currentMonth, timelineStartDate, isSafari]);
 
   const fetchRooms = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("hotel_id", hotelId)
-      .order("created_at", { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("hotel_id", hotelId)
+        .order("created_at", { ascending: true });
 
-    if (error) {
+      if (error) {
+        toast.error("Failed to load rooms");
+        setIsLoading(false);
+        return;
+      }
+      setRooms(data || []);
+    } catch (err) {
+      console.error("fetchRooms error:", err);
       toast.error("Failed to load rooms");
+    } finally {
       setIsLoading(false);
-      return;
     }
-    setRooms(data || []);
   };
 
-  const fetchBookingsForDate = async (date: Date) => {
-    setIsLoading(true);
-    const dateStr = format(startOfDay(date), "yyyy-MM-dd");
-
-    // Fetch bookings that overlap with the selected date
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("*, rooms(name, room_number), guests(name)")
-      .eq("hotel_id", hotelId)
-      .lte("check_in", dateStr)
-      .gt("check_out", dateStr);
-
-    if (error) {
-      toast.error("Failed to load bookings");
-      setIsLoading(false);
-      return;
+  // Helper to set bookings only if changed
+  const setBookingsIfChanged = (newData: any[] | null) => {
+    const json = JSON.stringify(newData || []);
+    if (json !== lastBookingsJson.current) {
+      lastBookingsJson.current = json;
+      setBookings(newData || []);
     }
-    if (JSON.stringify(bookings) !== JSON.stringify(data)) {
-      setBookings(data || []);
-    }
-    setIsLoading(false);
   };
 
-  const fetchBookings = async () => {
+  const fetchBookingsForDate = async (date: Date, opts?: { ignoreRef?: () => boolean }) => {
     setIsLoading(true);
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    const timelineEnd = addDays(timelineStartDate, TIMELINE_DAYS - 1);
+    try {
+      const dateStr = format(startOfDay(date), "yyyy-MM-dd");
 
-    // Fetch bookings that intersect the current month OR the timeline window
-    // The last OR cond checks intersection with the timeline window inclusive
-    const orQuery =
-      `and(check_in.gte.${format(start, "yyyy-MM-dd")},check_in.lte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_out.gte.${format(start, "yyyy-MM-dd")},check_out.lte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_in.lte.${format(start, "yyyy-MM-dd")},check_out.gte.${format(end, "yyyy-MM-dd")}),` +
-      `and(check_in.lte.${format(timelineEnd, "yyyy-MM-dd")},check_out.gte.${format(timelineStartDate, "yyyy-MM-dd")})`;
+      // Fetch bookings that overlap with the selected date
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*, rooms(name, room_number), guests(name)")
+        .eq("hotel_id", hotelId)
+        .lte("check_in", dateStr)
+        .gt("check_out", dateStr);
 
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("*, rooms(name, room_number), guests(name)")
-      .eq("hotel_id", hotelId)
-      .or(orQuery);
+      if (opts?.ignoreRef?.()) return;
 
-    if (error) {
+      if (error) {
+        toast.error("Failed to load bookings");
+        return;
+      }
+      setBookingsIfChanged(data || []);
+    } catch (err) {
+      console.error("fetchBookingsForDate error:", err);
       toast.error("Failed to load bookings");
+    } finally {
       setIsLoading(false);
-      return;
     }
-    setBookings(data || []);
-    setIsLoading(false);
+  };
+
+  const fetchBookings = async (opts?: { ignoreRef?: () => boolean }) => {
+    setIsLoading(true);
+    try {
+      const start = startOfMonth(currentMonth);
+      const end = endOfMonth(currentMonth);
+      const timelineEnd = addDays(timelineStartDate, TIMELINE_DAYS - 1);
+
+      const orQuery =
+        `and(check_in.gte.${format(start, "yyyy-MM-dd")},check_in.lte.${format(end, "yyyy-MM-dd")}),` +
+        `and(check_out.gte.${format(start, "yyyy-MM-dd")},check_out.lte.${format(end, "yyyy-MM-dd")}),` +
+        `and(check_in.lte.${format(start, "yyyy-MM-dd")},check_out.gte.${format(end, "yyyy-MM-dd")}),` +
+        `and(check_in.lte.${format(timelineEnd, "yyyy-MM-dd")},check_out.gte.${format(timelineStartDate, "yyyy-MM-dd")})`;
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*, rooms(name, room_number), guests(name)")
+        .eq("hotel_id", hotelId)
+        .or(orQuery);
+
+      if (opts?.ignoreRef?.()) return;
+
+      if (error) {
+        toast.error("Failed to load bookings");
+        return;
+      }
+      setBookingsIfChanged(data || []);
+    } catch (err) {
+      console.error("fetchBookings error:", err);
+      toast.error("Failed to load bookings");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getBookingsForDate = (date: Date) => {
@@ -194,16 +256,14 @@ const CalendarManager = ({ hotelId }: Props) => {
     return null;
   };
 
-  const generateTimelineDates = () => {
+  const generateTimelineDates = useMemo(() => {
     const dates: Date[] = [];
     const normalizedStart = startOfDay(timelineStartDate);
     for (let i = 0; i < TIMELINE_DAYS; i++) {
       dates.push(startOfDay(addDays(normalizedStart, i)));
     }
     return dates;
-  };
-
-  const timelineDates = generateTimelineDates();
+  }, [timelineStartDate]);
 
   const getBookingPosition = (booking: any, date: Date) => {
     const checkIn = startOfDay(new Date(booking.check_in));
@@ -310,7 +370,7 @@ const CalendarManager = ({ hotelId }: Props) => {
       </Card>
 
       {/* Desktop Timeline View - Hidden on Safari */}
-      {!isSafari && (
+      {!isSafari && ready && (
         <div className="hidden lg:block">
           <Card className="p-4 overflow-hidden">
             <div className="flex items-center justify-between mb-4 gap-4">
@@ -392,7 +452,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                   <div className="p-4 border-b border-r font-bold text-lg bg-muted sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                     Room
                   </div>
-                  {timelineDates.map((date) => {
+                  {generateTimelineDates.map((date) => {
                     const isToday = isSameDay(date, new Date());
                     return (
                       <div
@@ -437,7 +497,7 @@ const CalendarManager = ({ hotelId }: Props) => {
                         <div className="text-xs text-muted-foreground font-medium mt-1">Room</div>
                       </div>
 
-                      {timelineDates.map((date, dateIndex) => {
+                      {generateTimelineDates.map((date, dateIndex) => {
                         // Skip if this date was already rendered as part of a span
                         if (renderedDateIndices.has(dateIndex)) {
                           return null;
