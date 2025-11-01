@@ -51,18 +51,20 @@ const Dashboard = () => {
           return;
         }
 
-        // Get user role
+        // Get user role (fallback to 'hotel_admin' if none)
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (roleError) throw roleError;
+        if (roleError && (roleError as any).code !== 'PGRST116') throw roleError;
+
+        const role = roleData?.role ?? 'hotel_admin';
 
         if (mounted) {
-          setUserRole(roleData.role);
-          sessionStorage.setItem('user_role', roleData.role);
+          setUserRole(role);
+          sessionStorage.setItem('user_role', role);
         }
       } catch (error) {
         console.error("Error checking user role:", error);
