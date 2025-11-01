@@ -543,8 +543,8 @@ const HotelPublicView = () => {
                     <CardContent className="p-0">
                       <iframe
                         src={hotel.google_maps_url.includes('embed') 
-                          ? hotel.google_maps_url 
-                          : `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d${hotel.google_maps_url}`
+                          ? `${hotel.google_maps_url}${hotel.google_maps_url.includes('?') ? '&' : '?'}zoom=17`
+                          : `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d${hotel.google_maps_url}&z=17`
                         }
                         width="100%"
                         height="300"
