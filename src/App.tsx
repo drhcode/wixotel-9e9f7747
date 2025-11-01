@@ -19,7 +19,7 @@ const Router = isMobileSafari ? HashRouter : BrowserRouter;
 const App = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={200} skipDelayDuration={300}>
         <Toaster />
         <Sonner />
         <Router>
