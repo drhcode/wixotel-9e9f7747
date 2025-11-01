@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Hotel, LogOut, AlertCircle, Menu } from "lucide-react";
+import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -193,7 +194,7 @@ const HotelAdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex bg-background">
-        <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} hotelId={hotel.id} />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col w-full">
@@ -221,10 +222,13 @@ const HotelAdminDashboard = () => {
                     <p className="text-xs text-muted-foreground hidden sm:block">Hotel Dashboard</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Logout</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <NotificationDropdown hotelId={hotel.id} />
+                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
               </div>
             </div>
 

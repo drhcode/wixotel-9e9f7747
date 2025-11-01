@@ -114,6 +114,30 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     if (error) {
       toast.error("Failed to update status");
     } else {
+      // Create notification
+      let notificationTitle = '';
+      let notificationMessage = '';
+      let notificationType = '';
+      
+      if (newStatus === 'checked_in') {
+        notificationType = 'check_in';
+        notificationTitle = 'Guest Checked In';
+        notificationMessage = `${booking.full_name} has checked in`;
+      } else if (newStatus === 'checked_out') {
+        notificationType = 'check_out';
+        notificationTitle = 'Guest Checked Out';
+        notificationMessage = `${booking.full_name} has checked out`;
+      }
+      
+      if (notificationType) {
+        await supabase.from('notifications').insert({
+          hotel_id: booking.hotel_id,
+          type: notificationType,
+          title: notificationTitle,
+          message: notificationMessage,
+        });
+      }
+      
       toast.success("Status updated");
       onUpdate();
       onClose();

@@ -44,6 +44,37 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   useEffect(() => {
     fetchLeads();
     fetchRooms();
+    
+    // Subscribe to new leads
+    const channel = supabase
+      .channel('new-leads')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'leads',
+          filter: `hotel_id=eq.${hotelId}`,
+        },
+        async (payload) => {
+          const newLead = payload.new as Lead;
+          
+          // Create notification for new lead
+          await supabase.from('notifications').insert({
+            hotel_id: hotelId,
+            type: 'new_lead',
+            title: 'New Lead',
+            message: `New booking inquiry from ${newLead.full_name}`,
+          });
+          
+          fetchLeads();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [hotelId]);
 
   const fetchRooms = async () => {
@@ -140,6 +171,22 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       // Update lead status to converted
       await updateLeadStatus(lead.id, "converted");
       
+      // Create notifications
+      await supabase.from('notifications').insert([
+        {
+          hotel_id: hotelId,
+          type: 'booking_created',
+          title: 'New Reservation',
+          message: `New reservation created for ${lead.full_name}`,
+        },
+        {
+          hotel_id: hotelId,
+          type: 'lead_converted',
+          title: 'Lead Converted',
+          message: `Booking request from ${lead.full_name} accepted and converted to reservation`,
+        }
+      ]);
+      
       toast.success("Booking request accepted! Reservation created successfully.");
       setSelectedLead(null);
     } catch (error: any) {
@@ -151,7 +198,19 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   };
 
   const rejectBookingRequest = async (leadId: string) => {
+    const lead = leads.find(l => l.id === leadId);
     await updateLeadStatus(leadId, "lost");
+    
+    // Create notification
+    if (lead) {
+      await supabase.from('notifications').insert({
+        hotel_id: hotelId,
+        type: 'lead_rejected',
+        title: 'Booking Request Rejected',
+        message: `Booking request from ${lead.full_name} has been rejected`,
+      });
+    }
+    
     toast.success("Booking request rejected");
   };
 

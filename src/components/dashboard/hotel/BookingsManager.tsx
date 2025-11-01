@@ -161,6 +161,15 @@ const BookingsManager = ({ hotelId }: Props) => {
       if (error) throw error;
       if (data.success) {
         toast.success(data.message);
+        
+        // Create notification for imported bookings
+        await supabase.from('notifications').insert({
+          hotel_id: hotelId,
+          type: 'bookings_imported',
+          title: 'Bookings Imported',
+          message: `Successfully imported ${normalizedRows.length} booking${normalizedRows.length !== 1 ? 's' : ''}`,
+        });
+        
         fetchBookings();
       } else {
         toast.error(data.message);
@@ -216,12 +225,23 @@ const BookingsManager = ({ hotelId }: Props) => {
     if (!deletingBooking) return;
 
     try {
+      // Get booking details before deleting
+      const bookingToDelete = bookings.find(b => b.id === deletingBooking);
+      
       const { error } = await supabase
         .from('bookings')
         .delete()
         .eq('id', deletingBooking);
 
       if (error) throw error;
+
+      // Create notification
+      await supabase.from('notifications').insert({
+        hotel_id: hotelId,
+        type: 'booking_deleted',
+        title: 'Booking Deleted',
+        message: `Booking for ${bookingToDelete?.full_name} has been deleted`,
+      });
 
       toast.success("Booking deleted successfully");
       setDeletingBooking(null);

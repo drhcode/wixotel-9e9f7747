@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus } from "lucide-react";
 import {
   Sidebar,
@@ -11,10 +12,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HotelSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  hotelId?: string;
 }
 
 const menuItems = [
@@ -27,8 +31,54 @@ const menuItems = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export function HotelSidebar({ activeTab, onTabChange }: HotelSidebarProps) {
+export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const [leadsCount, setLeadsCount] = useState(0);
+
+  useEffect(() => {
+    if (hotelId) {
+      fetchLeadsCount();
+      
+      // Subscribe to leads changes
+      const channel = supabase
+        .channel('leads-count')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'leads',
+            filter: `hotel_id=eq.${hotelId}`,
+          },
+          () => {
+            fetchLeadsCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [hotelId]);
+
+  const fetchLeadsCount = async () => {
+    if (!hotelId) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from("leads")
+        .select("*", { count: "exact", head: true })
+        .eq("hotel_id", hotelId)
+        .neq("status", "lost")
+        .neq("status", "converted");
+
+      if (error) throw error;
+      setLeadsCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching leads count:", error);
+    }
+  };
 
   const handleMenuClick = (tabId: string) => {
     onTabChange(tabId);
@@ -65,6 +115,14 @@ export function HotelSidebar({ activeTab, onTabChange }: HotelSidebarProps) {
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.label}</span>
+                    {item.id === "leads" && leadsCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {leadsCount}
+                      </Badge>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
