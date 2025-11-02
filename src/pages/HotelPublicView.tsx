@@ -298,44 +298,57 @@ const HotelPublicView = () => {
 
       // Send emails via Edge Function (hotel + guest)
       try {
+        const { createLeadConfirmationEmail, createHotelNotificationEmail } = await import('@/lib/emailTemplates');
+        
+        const hotelForEmail = {
+          name: hotel.name,
+          email: hotel.email,
+          phone: hotel.phone,
+          address: hotel.address,
+          city: null,
+          country: null,
+        };
+
+        // Send notification to hotel
         if (hotel.email) {
+          const hotelHtmlContent = createHotelNotificationEmail({
+            guestName: validated.fullName,
+            guestEmail: validated.email,
+            guestPhone: validated.phone,
+            checkIn: format(validated.checkIn, 'PPP'),
+            checkOut: format(validated.checkOut, 'PPP'),
+            guests: validated.guests,
+            message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
+            hotel: hotelForEmail,
+          });
+
           await supabase.functions.invoke('send-email', {
             body: {
               hotel_id: hotel.id,
               recipient_email: hotel.email,
               subject: `New Booking Inquiry - ${validated.fullName}`,
               email_type: 'new_lead',
-              html_content: `
-                <h2>New Booking Inquiry</h2>
-                <ul>
-                  <li><strong>Name:</strong> ${validated.fullName}</li>
-                  <li><strong>Email:</strong> ${validated.email}</li>
-                  <li><strong>Phone:</strong> ${validated.phone}</li>
-                  <li><strong>Room:</strong> ${selectedRoom.name}</li>
-                  <li><strong>Check-in:</strong> ${format(validated.checkIn, 'yyyy-MM-dd')}</li>
-                  <li><strong>Check-out:</strong> ${format(validated.checkOut, 'yyyy-MM-dd')}</li>
-                  <li><strong>Guests:</strong> ${validated.guests}</li>
-                </ul>
-              `,
+              html_content: hotelHtmlContent,
             },
           });
         }
+
+        // Send confirmation to guest
+        const guestHtmlContent = createLeadConfirmationEmail({
+          guestName: validated.fullName,
+          checkIn: format(validated.checkIn, 'PPP'),
+          checkOut: format(validated.checkOut, 'PPP'),
+          guests: validated.guests,
+          hotel: hotelForEmail,
+        });
+
         await supabase.functions.invoke('send-email', {
           body: {
             hotel_id: hotel.id,
             recipient_email: validated.email,
             subject: `Booking Request Received - ${hotel.name}`,
             email_type: 'lead_confirmation',
-            html_content: `
-              <h2>Booking Request Received</h2>
-              <p>Dear ${validated.fullName},</p>
-              <p>We received your request for ${selectedRoom.name}. We'll get back to you shortly.</p>
-              <ul>
-                <li><strong>Check-in:</strong> ${format(validated.checkIn, 'yyyy-MM-dd')}</li>
-                <li><strong>Check-out:</strong> ${format(validated.checkOut, 'yyyy-MM-dd')}</li>
-                <li><strong>Guests:</strong> ${validated.guests}</li>
-              </ul>
-            `,
+            html_content: guestHtmlContent,
           },
         });
       } catch (emailErr) {

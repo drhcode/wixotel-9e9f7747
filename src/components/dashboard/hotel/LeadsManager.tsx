@@ -189,25 +189,32 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       // Send approval email to guest via Edge Function
       try {
-        await supabase.functions.invoke('send-email', {
-          body: {
-            hotel_id: hotelId,
-            recipient_email: lead.email,
-            subject: 'Booking Request Approved',
-            email_type: 'lead_approved',
-            html_content: `
-              <h2>Booking Request Approved ✓</h2>
-              <p>Dear ${lead.full_name},</p>
-              <p>Your booking request has been approved.</p>
-              <ul>
-                <li><strong>Check-in:</strong> ${lead.check_in}</li>
-                <li><strong>Check-out:</strong> ${lead.check_out}</li>
-                <li><strong>Guests:</strong> ${lead.guests}</li>
-              </ul>
-              <p>We look forward to welcoming you!</p>
-            `,
-          },
-        });
+        const { data: hotelData } = await supabase
+          .from('hotels')
+          .select('name, email, phone, address, city, country')
+          .eq('id', hotelId)
+          .single();
+
+        if (hotelData) {
+          const { createLeadApprovedEmail } = await import('@/lib/emailTemplates');
+          const htmlContent = createLeadApprovedEmail({
+            guestName: lead.full_name,
+            checkIn: format(new Date(lead.check_in), 'PPP'),
+            checkOut: format(new Date(lead.check_out), 'PPP'),
+            guests: lead.guests,
+            hotel: hotelData,
+          });
+
+          await supabase.functions.invoke('send-email', {
+            body: {
+              hotel_id: hotelId,
+              recipient_email: lead.email,
+              subject: `Booking Request Approved - ${hotelData.name}`,
+              email_type: 'lead_approved',
+              html_content: htmlContent,
+            },
+          });
+        }
       } catch (emailError) {
         console.error("Error sending approval email:", emailError);
       }
@@ -247,24 +254,31 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     if (lead) {
       // Send rejection email to guest via Edge Function
       try {
-        await supabase.functions.invoke('send-email', {
-          body: {
-            hotel_id: hotelId,
-            recipient_email: lead.email,
-            subject: 'Booking Request Update',
-            email_type: 'lead_rejected',
-            html_content: `
-              <h2>Booking Request Update</h2>
-              <p>Dear ${lead.full_name},</p>
-              <p>Unfortunately, we are unable to accommodate your booking request for the selected dates.</p>
-              <ul>
-                <li><strong>Check-in:</strong> ${lead.check_in}</li>
-                <li><strong>Check-out:</strong> ${lead.check_out}</li>
-              </ul>
-              <p>Please try different dates or contact us for alternatives.</p>
-            `,
-          },
-        });
+        const { data: hotelData } = await supabase
+          .from('hotels')
+          .select('name, email, phone, address, city, country')
+          .eq('id', hotelId)
+          .single();
+
+        if (hotelData) {
+          const { createLeadRejectedEmail } = await import('@/lib/emailTemplates');
+          const htmlContent = createLeadRejectedEmail({
+            guestName: lead.full_name,
+            checkIn: format(new Date(lead.check_in), 'PPP'),
+            checkOut: format(new Date(lead.check_out), 'PPP'),
+            hotel: hotelData,
+          });
+
+          await supabase.functions.invoke('send-email', {
+            body: {
+              hotel_id: hotelId,
+              recipient_email: lead.email,
+              subject: `Booking Request Update - ${hotelData.name}`,
+              email_type: 'lead_rejected',
+              html_content: htmlContent,
+            },
+          });
+        }
       } catch (emailError) {
         console.error("Error sending rejection email:", emailError);
       }

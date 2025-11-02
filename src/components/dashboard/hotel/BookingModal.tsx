@@ -242,26 +242,34 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       const finalEmail = guestEmail || existingGuest?.email;
       if (finalEmail) {
         try {
-          await supabase.functions.invoke('send-email', {
-            body: {
-              hotel_id: hotelId,
-              recipient_email: finalEmail,
-              subject: 'Booking Confirmation',
-              email_type: 'booking_confirmation',
-              html_content: `
-                <h2>Booking Confirmation ✓</h2>
-                <p>Dear ${guestName || existingGuest?.name},</p>
-                <p>Your reservation has been confirmed.</p>
-                <ul>
-                  <li><strong>Room:</strong> ${room?.name || 'Room'}</li>
-                  <li><strong>Check-in:</strong> ${format(ci, 'yyyy-MM-dd')}</li>
-                  <li><strong>Check-out:</strong> ${format(co, 'yyyy-MM-dd')}</li>
-                  <li><strong>Total Amount:</strong> €${totalPrice}</li>
-                </ul>
-                <p>We look forward to welcoming you!</p>
-              `,
-            },
-          });
+          // Fetch hotel data for email template
+          const { data: hotelData } = await supabase
+            .from('hotels')
+            .select('name, email, phone, address, city, country')
+            .eq('id', hotelId)
+            .single();
+
+          if (hotelData) {
+            const { createBookingConfirmationEmail } = await import('@/lib/emailTemplates');
+            const htmlContent = createBookingConfirmationEmail({
+              guestName: guestName || existingGuest?.name || 'Guest',
+              roomName: room?.name || 'Room',
+              checkIn: format(ci, 'PPP'),
+              checkOut: format(co, 'PPP'),
+              totalAmount: totalPrice,
+              hotel: hotelData,
+            });
+
+            await supabase.functions.invoke('send-email', {
+              body: {
+                hotel_id: hotelId,
+                recipient_email: finalEmail,
+                subject: `Booking Confirmation - ${hotelData.name}`,
+                email_type: 'booking_confirmation',
+                html_content: htmlContent,
+              },
+            });
+          }
         } catch (emailErr) {
           console.error('Error invoking send-email:', emailErr);
         }
