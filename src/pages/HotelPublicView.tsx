@@ -1192,7 +1192,7 @@ const HotelPublicView = () => {
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {bookingRequest.checkIn ? (
-                                    format(bookingRequest.checkIn, "PPP")
+                                    format(bookingRequest.checkIn, "MMM dd, yyyy")
                                   ) : (
                                     <span>Pick a date</span>
                                   )}
@@ -1230,7 +1230,7 @@ const HotelPublicView = () => {
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {bookingRequest.checkOut ? (
-                                    format(bookingRequest.checkOut, "PPP")
+                                    format(bookingRequest.checkOut, "MMM dd, yyyy")
                                   ) : (
                                     <span>Pick a date</span>
                                   )}

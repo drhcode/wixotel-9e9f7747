@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { Country, City } from "country-state-city";
+import { getCountries, getCitiesForCountry } from "@/lib/countries";
 import { z } from "zod";
 import { mapDatabaseError } from "@/lib/errorUtils";
 
@@ -50,7 +50,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestCity, setGuestCity] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
   const [guestCount, setGuestCount] = useState(1);
-  const [availableCities, setAvailableCities] = useState<any[]>([]);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,12 +70,10 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   // Update cities when country changes
   useEffect(() => {
     if (guestCountry) {
-      const cities = City.getCitiesOfCountry(guestCountry);
-      // Filter out cities with empty names to avoid Select errors
-      const validCities = (cities || []).filter(c => c.name && c.name.trim() !== "");
-      setAvailableCities(validCities);
+      const cities = getCitiesForCountry(guestCountry);
+      setAvailableCities(cities);
       // Reset city if current selection is not in new country
-      if (guestCity && !validCities?.some(c => c.name === guestCity)) {
+      if (guestCity && !cities.includes(guestCity)) {
         setGuestCity("");
       }
     } else {
@@ -284,9 +282,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               <Label>Check-in</Label>
               <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start text-sm">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(checkIn, 'PPP')}
+                    {format(checkIn, 'MMM dd, yyyy')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -315,9 +313,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               <Label>Check-out</Label>
               <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start text-sm">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(checkOut, 'PPP')}
+                    {format(checkOut, 'MMM dd, yyyy')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -440,10 +438,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
-                      {Country.getAllCountries()
-                        .filter((country) => country?.isoCode && country.isoCode.trim() !== "" && country?.name && country.name.trim() !== "")
-                        .map((country) => (
-                        <SelectItem key={country.isoCode} value={country.isoCode}>
+                      {getCountries().map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
                           {country.flag} {country.name}
                         </SelectItem>
                       ))}
@@ -468,8 +464,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
                       {availableCities.map((city) => (
-                        <SelectItem key={city.name} value={city.name}>
-                          {city.name}
+                        <SelectItem key={city} value={city}>
+                          {city}
                         </SelectItem>
                       ))}
                     </SelectContent>

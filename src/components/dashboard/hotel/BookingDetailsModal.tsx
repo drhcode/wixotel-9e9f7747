@@ -314,9 +314,9 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   <Label>Check-in</Label>
                   <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkIn && "text-muted-foreground")}>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-sm", !checkIn && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {checkIn ? format(checkIn, "PPP") : "Pick date"}
+                        {checkIn ? format(checkIn, "MMM dd, yyyy") : "Pick date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -345,9 +345,9 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   <Label>Check-out</Label>
                   <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkOut && "text-muted-foreground")}>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-sm", !checkOut && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {checkOut ? format(checkOut, "PPP") : "Pick date"}
+                        {checkOut ? format(checkOut, "MMM dd, yyyy") : "Pick date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -401,7 +401,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-in is only available on the reservation date ({format(new Date(booking.check_in), 'PPP')})
+                Check-in is only available on the reservation date ({format(new Date(booking.check_in), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}
@@ -410,7 +410,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'PPP')})
+                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}
