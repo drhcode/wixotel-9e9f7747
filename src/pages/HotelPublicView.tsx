@@ -402,10 +402,11 @@ const HotelPublicView = () => {
             >
               {hotel?.logo_url ? (
                 <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
-              ) : (
-                <Hotel className="h-8 w-8 text-primary" />
-              )}
-              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
+              ) : null}
+              <div className="flex flex-col items-start">
+                <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
+                <span className="text-[10px] text-muted-foreground -mt-1">by wixotel</span>
+              </div>
             </button>
 
             {/* Desktop Navigation */}
