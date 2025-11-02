@@ -402,14 +402,14 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       {/* Lead Details Dialog */}
       <Dialog open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           {selectedLead && (
             <>
               <DialogHeader>
                 <DialogTitle>Lead Details</DialogTitle>
               </DialogHeader>
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base flex items-center gap-2">
