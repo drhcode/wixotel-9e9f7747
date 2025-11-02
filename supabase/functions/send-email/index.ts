@@ -40,15 +40,17 @@ serve(async (req) => {
     if (smtpError || !smtpSettings) {
       console.error('SMTP settings not configured:', smtpError);
       
-      // Log failed attempt
-      await supabase.from('email_logs').insert({
-        hotel_id,
-        recipient_email,
-        subject,
-        email_type,
-        status: 'failed',
-        error_message: 'SMTP settings not configured'
-      });
+      // Log failed attempt (skip for test emails to avoid FK issues)
+      if (email_type !== 'test') {
+        await supabase.from('email_logs').insert({
+          hotel_id,
+          recipient_email,
+          subject,
+          email_type,
+          status: 'failed',
+          error_message: 'SMTP settings not configured'
+        });
+      }
 
       return new Response(
         JSON.stringify({ error: 'SMTP settings not configured' }),
@@ -86,14 +88,16 @@ serve(async (req) => {
 
     console.log('Email sent successfully');
 
-    // Log successful send
-    await supabase.from('email_logs').insert({
-      hotel_id,
-      recipient_email,
-      subject,
-      email_type,
-      status: 'sent'
-    });
+    // Log successful send (skip for test emails)
+    if (email_type !== 'test') {
+      await supabase.from('email_logs').insert({
+        hotel_id,
+        recipient_email,
+        subject,
+        email_type,
+        status: 'sent'
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true }),
