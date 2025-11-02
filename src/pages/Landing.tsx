@@ -23,6 +23,8 @@ interface PublicHotel {
   about_us_image: string | null;
   latitude: number | null;
   longitude: number | null;
+  avgRating?: number;
+  reviewCount?: number;
 }
 
 const Landing = () => {
@@ -96,9 +98,40 @@ const Landing = () => {
       .eq('show_on_landing', true);
     
     if (data) {
-      setHotels(data);
-      setFilteredHotels(data); // Initialize filtered hotels
+      // Fetch review stats for each hotel
+      const hotelsWithReviews = await Promise.all(
+        data.map(async (hotel) => {
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('hotel_id', hotel.id)
+            .eq('status', 'approved');
+          
+          if (reviews && reviews.length > 0) {
+            const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+            return {
+              ...hotel,
+              avgRating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
+              reviewCount: reviews.length,
+            };
+          }
+          
+          return hotel;
+        })
+      );
+      
+      setHotels(hotelsWithReviews);
+      setFilteredHotels(hotelsWithReviews); // Initialize filtered hotels
     }
+  };
+
+  const getRatingLabel = (rating: number): string => {
+    if (rating >= 4.8) return "Exceptional";
+    if (rating >= 4.5) return "Wonderful";
+    if (rating >= 4.0) return "Amazing";
+    if (rating >= 3.5) return "Great";
+    if (rating >= 3.0) return "Good";
+    return "Comfortable";
   };
 
   const reverseGeocode = async (lat: number, lng: number) => {
@@ -495,6 +528,35 @@ const Landing = () => {
                     </div>
                     <CardHeader>
                       <CardTitle className="group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
+                      
+                      {hotel.avgRating && hotel.reviewCount && (
+                        <div className="flex items-center gap-2 py-2">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < Math.floor(hotel.avgRating!)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : i < hotel.avgRating!
+                                    ? "fill-yellow-400/50 text-yellow-400"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-semibold text-primary">
+                            {hotel.avgRating.toFixed(1)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            • {getRatingLabel(hotel.avgRating)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            ({hotel.reviewCount} {hotel.reviewCount === 1 ? 'review' : 'reviews'})
+                          </span>
+                        </div>
+                      )}
+                      
                       <CardDescription className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span>{hotel.city && hotel.country ? `${hotel.city}, ${hotel.country}` : hotel.address}</span>
