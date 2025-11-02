@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart } from "lucide-react";
+import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, startOfMonth } from "date-fns";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const isMobileSafari =
@@ -35,11 +35,13 @@ const HotelOverview = ({ hotelId }: Props) => {
     totalGuests: 0,
     totalRevenue: 0
   });
+  const [monthlyCommission, setMonthlyCommission] = useState(0);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [dateRange, setDateRange] = useState<string>("30");
 
   useEffect(() => {
     fetchStats();
+    fetchCommission();
     fetchAnalytics();
   }, [hotelId, dateRange]);
 
@@ -81,6 +83,26 @@ const HotelOverview = ({ hotelId }: Props) => {
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchCommission = async () => {
+    try {
+      // Get current month start date
+      const monthStart = startOfMonth(new Date());
+
+      // Fetch completed earnings for this month
+      const { data: earningsData } = await supabase
+        .from('earnings')
+        .select('commission_amount')
+        .eq('hotel_id', hotelId)
+        .eq('status', 'completed')
+        .gte('created_at', monthStart.toISOString());
+
+      const total = earningsData?.reduce((sum, earning) => sum + Number(earning.commission_amount), 0) || 0;
+      setMonthlyCommission(total);
+    } catch (error) {
+      console.error("Error fetching commission:", error);
     }
   };
 
@@ -201,6 +223,32 @@ const HotelOverview = ({ hotelId }: Props) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Platform Commission Widget */}
+      <Card className="border-warning/50 bg-warning/5">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-warning" />
+              Platform Commission (This Month)
+            </CardTitle>
+            <CardDescription className="text-xs">
+              8% service fee from completed bookings
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-baseline gap-2">
+            <div className="text-3xl font-bold text-warning">€{monthlyCommission.toFixed(2)}</div>
+            <Badge variant="outline" className="border-warning/50 text-warning">
+              {format(new Date(), 'MMMM yyyy')}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Commission applied only on successfully checked-out guests
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Visitor Analytics Section - Always Visible */}
       <div className="space-y-4">

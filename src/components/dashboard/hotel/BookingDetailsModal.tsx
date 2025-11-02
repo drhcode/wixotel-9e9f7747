@@ -127,6 +127,12 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
         notificationType = 'check_out';
         notificationTitle = 'Guest Checked Out';
         notificationMessage = `${booking.full_name} has checked out`;
+        
+        // Update earnings status to completed when guest checks out
+        await supabase
+          .from('earnings')
+          .update({ status: 'completed' })
+          .eq('booking_id', booking.id);
       }
       
       if (notificationType) {

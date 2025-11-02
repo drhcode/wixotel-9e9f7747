@@ -285,11 +285,7 @@ const HotelPublicView = () => {
       const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       const totalAmount = selectedRoom.price * nights;
 
-      // Calculate commission (8%)
-      const commissionRate = 8;
-      const commissionAmount = (totalAmount * commissionRate) / 100;
-
-      const { data: leadData, error } = await supabase.from("leads").insert({
+      const { error } = await supabase.from("leads").insert({
         hotel_id: hotel.id,
         room_id: selectedRoom.id,
         full_name: validated.fullName,
@@ -300,21 +296,11 @@ const HotelPublicView = () => {
         guests: validated.guests,
         status: "new",
         message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
-      }).select().single();
+      });
 
       if (error) throw error;
 
-      // Store earnings record
-      if (leadData) {
-        await supabase.from("earnings").insert({
-          hotel_id: hotel.id,
-          lead_id: leadData.id,
-          total_amount: totalAmount,
-          commission_rate: commissionRate,
-          commission_amount: commissionAmount,
-          status: 'pending',
-        });
-      }
+      // Note: Earnings will be created when hotel accepts the booking request
 
       // Send emails via Edge Function (hotel + guest)
       try {
@@ -420,7 +406,7 @@ const HotelPublicView = () => {
       }
 
       // Submit lead
-      const { data: leadData, error } = await supabase.from("leads").insert({
+      const { error } = await supabase.from("leads").insert({
         hotel_id: hotel.id,
         full_name: validatedData.fullName,
         email: validatedData.email,
@@ -429,26 +415,9 @@ const HotelPublicView = () => {
         check_out: validatedData.checkOut,
         guests: validatedData.guests,
         message: validatedData.message || null,
-      }).select().single();
+      });
 
       if (error) throw error;
-
-      // Calculate commission (8%) - note: total_amount will be 0 for general inquiries without room
-      if (leadData) {
-        const totalAmount = 0; // General inquiry, no specific amount yet
-        const commissionRate = 8;
-        const commissionAmount = (totalAmount * commissionRate) / 100;
-
-        // Store earnings record
-        await supabase.from("earnings").insert({
-          hotel_id: hotel.id,
-          lead_id: leadData.id,
-          total_amount: totalAmount,
-          commission_rate: commissionRate,
-          commission_amount: commissionAmount,
-          status: 'pending',
-        });
-      }
 
       // Send emails via Edge Function (hotel + guest)
       try {

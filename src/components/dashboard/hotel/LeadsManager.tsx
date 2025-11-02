@@ -184,7 +184,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       if (guestError) throw guestError;
 
       // Then create booking from lead with calculated total
-      const { error: bookingError } = await supabase.from("bookings").insert({
+      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
         room_id: lead.room_id,
         guest_id: guestData.id,
@@ -198,9 +198,23 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         status: "pending",
         payment_status: "pending",
         notes: lead.message || "Created from booking request",
-      });
+      }).select().single();
 
       if (bookingError) throw bookingError;
+
+      // Create earnings record for platform commission (8%)
+      const commissionRate = 8;
+      const commissionAmount = (totalAmount * commissionRate) / 100;
+
+      await supabase.from("earnings").insert({
+        hotel_id: hotelId,
+        lead_id: lead.id,
+        booking_id: bookingData.id,
+        total_amount: totalAmount,
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount,
+        status: 'pending', // Will be updated to 'completed' when guest checks out
+      });
 
       // Send approval email to guest via Edge Function
       try {
