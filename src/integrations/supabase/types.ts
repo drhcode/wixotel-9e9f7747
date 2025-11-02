@@ -929,6 +929,27 @@ export type Database = {
         }
         Returns: undefined
       }
+      send_lead_approved_email: {
+        Args: {
+          p_check_in: string
+          p_check_out: string
+          p_guest_email: string
+          p_guest_name: string
+          p_guests: number
+          p_hotel_id: string
+        }
+        Returns: undefined
+      }
+      send_lead_rejected_email: {
+        Args: {
+          p_check_in: string
+          p_check_out: string
+          p_guest_email: string
+          p_guest_name: string
+          p_hotel_id: string
+        }
+        Returns: undefined
+      }
       verify_booking_for_review: {
         Args: { p_email: string; p_hotel_id: string }
         Returns: string

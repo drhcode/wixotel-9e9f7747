@@ -187,6 +187,20 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       if (bookingError) throw bookingError;
 
+      // Send approval email to guest
+      const { error: emailError } = await supabase.rpc('send_lead_approved_email', {
+        p_hotel_id: hotelId,
+        p_guest_email: lead.email,
+        p_guest_name: lead.full_name,
+        p_check_in: lead.check_in,
+        p_check_out: lead.check_out,
+        p_guests: lead.guests
+      });
+
+      if (emailError) {
+        console.error("Error sending approval email:", emailError);
+      }
+
       // Update lead status to converted
       await updateLeadStatus(lead.id, "converted");
       
@@ -206,7 +220,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         }
       ]);
       
-      toast.success("Booking request accepted! Reservation created successfully.");
+      toast.success("Booking request accepted! Reservation created and guest notified.");
       setSelectedLead(null);
     } catch (error: any) {
       console.error("Error accepting booking request:", error);
@@ -218,10 +232,22 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
   const rejectBookingRequest = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
-    await updateLeadStatus(leadId, "lost");
     
-    // Create notification
     if (lead) {
+      // Send rejection email to guest
+      const { error: emailError } = await supabase.rpc('send_lead_rejected_email', {
+        p_hotel_id: hotelId,
+        p_guest_email: lead.email,
+        p_guest_name: lead.full_name,
+        p_check_in: lead.check_in,
+        p_check_out: lead.check_out
+      });
+
+      if (emailError) {
+        console.error("Error sending rejection email:", emailError);
+      }
+
+      // Create notification
       await supabase.from('notifications').insert({
         hotel_id: hotelId,
         type: 'lead_rejected',
@@ -230,7 +256,9 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       });
     }
     
-    toast.success("Booking request rejected");
+    await updateLeadStatus(leadId, "lost");
+    toast.success("Booking request rejected and guest notified");
+    setSelectedLead(null);
   };
 
   const deleteLead = async (leadId: string) => {
