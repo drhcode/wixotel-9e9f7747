@@ -340,14 +340,6 @@ const Landing = () => {
                 The ultimate platform for modern hospitality. Seamlessly manage rooms, bookings, guests, and revenue with intelligent automation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link to="/auth">
-                  <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow hover:scale-105">
-                    Start Free Trial
-                    <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </Button>
-                </Link>
                 <Button 
                   size="lg" 
                   variant="outline" 
