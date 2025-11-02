@@ -378,71 +378,6 @@ const Landing = () => {
       {/* Demo Modal */}
       <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
 
-      {/* Why Book Through Wixotel Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-              WHY WIXOTEL
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Why Book Through Wixotel?</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience seamless booking with unmatched benefits
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">Best Price Guarantee</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  We guarantee the lowest rates. Find a better price and we'll match it plus give you 10% off.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">Instant Confirmation</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  Get immediate booking confirmation and access to your reservation details 24/7.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">Free Cancellation</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  Flexible cancellation policies on most rooms. Plans change? No worries, we've got you covered.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">Verified Reviews</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  Read authentic reviews from real guests to make informed booking decisions.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* Hotels Section */}
       {hotels.length > 0 && (
         <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background to-accent/30">
@@ -580,6 +515,71 @@ const Landing = () => {
           </div>
         </section>
       )}
+
+      {/* Why Book Through Wixotel Section */}
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
+              WHY WIXOTEL
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Why Book Through Wixotel?</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Experience seamless booking with unmatched benefits
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Best Price Guarantee</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  We guarantee the lowest rates. Find a better price and we'll match it plus give you 10% off.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Instant Confirmation</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Get immediate booking confirmation and access to your reservation details 24/7.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Free Cancellation</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Flexible cancellation policies on most rooms. Plans change? No worries, we've got you covered.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Verified Reviews</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Read authentic reviews from real guests to make informed booking decisions.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
 
       {/* Features Section */}
       <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/50 to-background">
