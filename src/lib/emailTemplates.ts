@@ -158,9 +158,12 @@ export const createBookingConfirmationEmail = (params: {
 
 export const createLeadApprovedEmail = (params: {
   guestName: string;
+  roomName: string;
   checkIn: string;
   checkOut: string;
   guests: number;
+  nights: number;
+  totalAmount: number;
   hotel: Hotel;
 }) => {
   const content = `
@@ -179,6 +182,10 @@ export const createLeadApprovedEmail = (params: {
       <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">Booking Details</h3>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
+          <td style="padding: 10px 0; color: #475569; font-weight: 600; font-size: 15px;">🏨 Room:</td>
+          <td style="padding: 10px 0; color: #1e293b; text-align: right; font-size: 15px;">${params.roomName}</td>
+        </tr>
+        <tr>
           <td style="padding: 10px 0; color: #475569; font-weight: 600; font-size: 15px;">📅 Check-in:</td>
           <td style="padding: 10px 0; color: #1e293b; text-align: right; font-size: 15px;">${params.checkIn}</td>
         </tr>
@@ -187,8 +194,16 @@ export const createLeadApprovedEmail = (params: {
           <td style="padding: 10px 0; color: #1e293b; text-align: right; font-size: 15px;">${params.checkOut}</td>
         </tr>
         <tr>
+          <td style="padding: 10px 0; color: #475569; font-weight: 600; font-size: 15px;">🌙 Nights:</td>
+          <td style="padding: 10px 0; color: #1e293b; text-align: right; font-size: 15px;">${params.nights}</td>
+        </tr>
+        <tr>
           <td style="padding: 10px 0; color: #475569; font-weight: 600; font-size: 15px;">👥 Guests:</td>
           <td style="padding: 10px 0; color: #1e293b; text-align: right; font-size: 15px;">${params.guests}</td>
+        </tr>
+        <tr style="border-top: 2px solid #3b82f6;">
+          <td style="padding: 15px 0; color: #1e40af; font-weight: 700; font-size: 16px;">💰 Total Amount:</td>
+          <td style="padding: 15px 0; color: #1e40af; text-align: right; font-weight: 700; font-size: 18px;">€${params.totalAmount.toFixed(2)}</td>
         </tr>
       </table>
     </div>

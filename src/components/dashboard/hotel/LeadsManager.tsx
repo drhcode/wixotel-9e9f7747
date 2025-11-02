@@ -154,6 +154,21 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     try {
       setAcceptingLead(true);
 
+      // Get room data to calculate total cost
+      const { data: roomData, error: roomError } = await supabase
+        .from("rooms")
+        .select("price, name")
+        .eq("id", lead.room_id)
+        .single();
+
+      if (roomError) throw roomError;
+
+      // Calculate number of nights and total cost
+      const checkInDate = new Date(lead.check_in);
+      const checkOutDate = new Date(lead.check_out);
+      const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+      const totalAmount = nights * Number(roomData.price);
+
       // First, create a guest entry
       const { data: guestData, error: guestError } = await supabase
         .from("guests")
@@ -168,7 +183,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       if (guestError) throw guestError;
 
-      // Then create booking from lead
+      // Then create booking from lead with calculated total
       const { error: bookingError } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
         room_id: lead.room_id,
@@ -179,7 +194,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         check_in: lead.check_in,
         check_out: lead.check_out,
         guest_count: lead.guests,
-        total_amount: 0,
+        total_amount: totalAmount,
         status: "pending",
         payment_status: "pending",
         notes: lead.message || "Created from booking request",
@@ -199,9 +214,12 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
           const { createLeadApprovedEmail } = await import('@/lib/emailTemplates');
           const htmlContent = createLeadApprovedEmail({
             guestName: lead.full_name,
+            roomName: roomData.name,
             checkIn: format(new Date(lead.check_in), 'PPP'),
             checkOut: format(new Date(lead.check_out), 'PPP'),
             guests: lead.guests,
+            nights: nights,
+            totalAmount: totalAmount,
             hotel: hotelData,
           });
 
