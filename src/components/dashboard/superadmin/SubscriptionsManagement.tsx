@@ -16,21 +16,29 @@ interface Subscription {
   id: string;
   hotel_id: string;
   plan: string;
+  plan_id: string;
   status: string;
   start_date: string;
   end_date: string;
   hotels: { name: string };
 }
 
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+}
+
 const SubscriptionsManagement = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
   const [formData, setFormData] = useState({
     hotel_id: "",
-    plan: "basic" as "basic" | "pro" | "premium",
+    plan_id: "",
     status: "pending" as "pending" | "failed" | "refunded" | "completed",
     start_date: new Date().toISOString().split('T')[0],
     end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -39,6 +47,7 @@ const SubscriptionsManagement = () => {
   useEffect(() => {
     fetchSubscriptions();
     fetchHotels();
+    fetchPlans();
   }, []);
 
   const fetchHotels = async () => {
@@ -47,6 +56,20 @@ const SubscriptionsManagement = () => {
       .select('id, name')
       .order('name');
     setHotels(data || []);
+  };
+
+  const fetchPlans = async () => {
+    const { data } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    setPlans(data || []);
+    
+    // Set default plan if available
+    if (data && data.length > 0 && !formData.plan_id) {
+      setFormData(prev => ({ ...prev, plan_id: data[0].id }));
+    }
   };
 
   const fetchSubscriptions = async () => {
@@ -64,7 +87,13 @@ const SubscriptionsManagement = () => {
       if (editingSubscription) {
         const { error } = await supabase
           .from('subscriptions')
-          .update(formData)
+          .update({
+            hotel_id: formData.hotel_id,
+            plan_id: formData.plan_id,
+            status: formData.status,
+            start_date: formData.start_date,
+            end_date: formData.end_date
+          } as any)
           .eq('id', editingSubscription.id);
 
         if (error) throw error;
@@ -72,7 +101,13 @@ const SubscriptionsManagement = () => {
       } else {
         const { error } = await supabase
           .from('subscriptions')
-          .insert(formData);
+          .insert({
+            hotel_id: formData.hotel_id,
+            plan_id: formData.plan_id,
+            status: formData.status,
+            start_date: formData.start_date,
+            end_date: formData.end_date
+          } as any);
 
         if (error) throw error;
         toast.success("Subscription created successfully");
@@ -106,7 +141,7 @@ const SubscriptionsManagement = () => {
     setEditingSubscription(subscription);
     setFormData({
       hotel_id: subscription.hotel_id,
-      plan: subscription.plan as "basic" | "pro" | "premium",
+      plan_id: subscription.plan_id,
       status: subscription.status as "pending" | "failed" | "refunded" | "completed",
       start_date: subscription.start_date,
       end_date: subscription.end_date
@@ -116,9 +151,10 @@ const SubscriptionsManagement = () => {
 
   const resetForm = () => {
     setEditingSubscription(null);
+    const defaultPlanId = plans.length > 0 ? plans[0].id : "";
     setFormData({
       hotel_id: "",
-      plan: "basic" as "basic" | "pro" | "premium",
+      plan_id: defaultPlanId,
       status: "pending" as "pending" | "failed" | "refunded" | "completed",
       start_date: new Date().toISOString().split('T')[0],
       end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -161,15 +197,17 @@ const SubscriptionsManagement = () => {
               </div>
 
               <div>
-                <Label htmlFor="plan">Plan</Label>
-                <Select value={formData.plan} onValueChange={(value: "basic" | "pro" | "premium") => setFormData({ ...formData, plan: value })}>
+                <Label htmlFor="plan">Plan *</Label>
+                <Select value={formData.plan_id} onValueChange={(value) => setFormData({ ...formData, plan_id: value })}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select a plan" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic - €29/month</SelectItem>
-                    <SelectItem value="pro">Pro - €79/month</SelectItem>
-                    <SelectItem value="premium">Premium - €149/month</SelectItem>
+                    {plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} - €{plan.price}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

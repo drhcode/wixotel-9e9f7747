@@ -91,6 +91,13 @@ const Auth = () => {
       if (signupError) throw signupError;
 
       if (authData.user) {
+        // Get default plan_id (basic plan)
+        const { data: basicPlan } = await supabase
+          .from('subscription_plans')
+          .select('id')
+          .eq('name', 'Basic')
+          .single();
+
         // Create hotel for the new user (pending approval)
         const { error: hotelError } = await supabase
           .from('hotels')
@@ -99,7 +106,13 @@ const Auth = () => {
             name: signupData.hotelName,
             address: signupData.hotelAddress,
             phone: signupData.phone,
-            status: 'pending'
+            status: 'pending',
+            plan_id: basicPlan?.id || (await supabase
+              .from('subscription_plans')
+              .select('id')
+              .order('price', { ascending: true })
+              .limit(1)
+              .single()).data?.id
           });
 
         if (hotelError) throw hotelError;

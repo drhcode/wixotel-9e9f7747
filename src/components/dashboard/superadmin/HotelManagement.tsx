@@ -23,6 +23,12 @@ const hotelSchema = z.object({
   password: z.string().min(8).max(100).regex(/[A-Z]/).regex(/[0-9]/).optional(),
 });
 
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+}
+
 interface Hotel {
   id: string;
   name: string;
@@ -31,16 +37,19 @@ interface Hotel {
   phone: string;
   status: string;
   subscription_plan: string;
+  plan_id: string;
   description: string;
   owner_id: string;
   show_on_landing: boolean;
   city: string | null;
   country: string | null;
+  subscription_plans?: { name: string; price: number };
 }
 
 const HotelManagement = () => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<Hotel[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
@@ -53,11 +62,12 @@ const HotelManagement = () => {
     description: "",
     password: "",
     status: "pending" as "pending" | "active" | "suspended",
-    subscription_plan: "basic" as "basic" | "pro" | "premium"
+    plan_id: ""
   });
 
   useEffect(() => {
     fetchHotels();
+    fetchPlans();
   }, []);
 
   useEffect(() => {
@@ -72,9 +82,23 @@ const HotelManagement = () => {
   const fetchHotels = async () => {
     const { data } = await supabase
       .from('hotels')
-      .select('*')
+      .select('*, subscription_plans(name, price)')
       .order('created_at', { ascending: false });
     setHotels(data || []);
+  };
+
+  const fetchPlans = async () => {
+    const { data } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    setPlans(data || []);
+    
+    // Set default plan if available
+    if (data && data.length > 0 && !formData.plan_id) {
+      setFormData(prev => ({ ...prev, plan_id: data[0].id }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,7 +122,7 @@ const HotelManagement = () => {
             phone: validation.data.phone,
             description: validation.data.description || null,
             status: formData.status,
-            subscription_plan: formData.subscription_plan
+            plan_id: formData.plan_id
           }).eq('id', editingHotel.id);
         if (error) throw error;
         toast.success("Hotel updated");
@@ -126,7 +150,7 @@ const HotelManagement = () => {
             phone: formData.phone,
             description: formData.description,
             status: formData.status,
-            subscription_plan: formData.subscription_plan,
+            plan_id: formData.plan_id,
             owner_id: authData.user.id
           });
 
@@ -168,13 +192,14 @@ const HotelManagement = () => {
       description: hotel.description,
       password: "",
       status: hotel.status as "pending" | "active" | "suspended",
-      subscription_plan: hotel.subscription_plan as "basic" | "pro" | "premium"
+      plan_id: hotel.plan_id
     });
     setIsModalOpen(true);
   };
 
   const resetForm = () => {
     setEditingHotel(null);
+    const defaultPlanId = plans.length > 0 ? plans[0].id : "";
     setFormData({
       name: "",
       address: "",
@@ -183,7 +208,7 @@ const HotelManagement = () => {
       description: "",
       password: "",
       status: "pending" as "pending" | "active" | "suspended",
-      subscription_plan: "basic" as "basic" | "pro" | "premium"
+      plan_id: defaultPlanId
     });
   };
 
@@ -301,14 +326,16 @@ const HotelManagement = () => {
 
                 <div>
                   <Label htmlFor="plan">Subscription Plan</Label>
-                  <Select value={formData.subscription_plan} onValueChange={(value: "basic" | "pro" | "premium") => setFormData({ ...formData, subscription_plan: value })}>
+                  <Select value={formData.plan_id} onValueChange={(value) => setFormData({ ...formData, plan_id: value })}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select a plan" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="basic">Basic</SelectItem>
-                      <SelectItem value="pro">Pro</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
+                      {plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name} - €{plan.price}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -371,7 +398,9 @@ const HotelManagement = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{hotel.subscription_plan}</Badge>
+                    <Badge variant="outline">
+                      {hotel.subscription_plans?.name || hotel.subscription_plan}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

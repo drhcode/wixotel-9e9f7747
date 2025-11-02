@@ -211,6 +211,7 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          plan_id: string
           show_on_landing: boolean
           slug: string | null
           status: Database["public"]["Enums"]["hotel_status"]
@@ -242,6 +243,7 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          plan_id: string
           show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
@@ -273,6 +275,7 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          plan_id?: string
           show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
@@ -281,7 +284,15 @@ export type Database = {
             | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hotels_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -649,6 +660,7 @@ export type Database = {
           hotel_id: string
           id: string
           plan: Database["public"]["Enums"]["subscription_plan"]
+          plan_id: string
           start_date: string
           status: Database["public"]["Enums"]["payment_status"]
           stripe_subscription_id: string | null
@@ -660,6 +672,7 @@ export type Database = {
           hotel_id: string
           id?: string
           plan: Database["public"]["Enums"]["subscription_plan"]
+          plan_id: string
           start_date?: string
           status?: Database["public"]["Enums"]["payment_status"]
           stripe_subscription_id?: string | null
@@ -671,6 +684,7 @@ export type Database = {
           hotel_id?: string
           id?: string
           plan?: Database["public"]["Enums"]["subscription_plan"]
+          plan_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["payment_status"]
           stripe_subscription_id?: string | null
@@ -682,6 +696,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
