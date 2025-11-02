@@ -140,13 +140,11 @@ const Landing = () => {
       const data = await response.json();
       if (data.address) {
         const country = data.address.country;
-        const city = data.address.city || data.address.town || data.address.village;
         
         if (country) {
           setSelectedCountry(country);
-        }
-        if (city) {
-          setTimeout(() => setSelectedCity(city), 100);
+          // Don't set city to avoid exact match issues - just filter by country and sort by distance
+          setTimeout(() => setSelectedCity("all"), 100);
         }
       }
     } catch (error) {
@@ -195,6 +193,18 @@ const Landing = () => {
     // Filter by city
     if (selectedCity !== "all") {
       filtered = filtered.filter(h => h.city?.trim() === selectedCity.trim());
+    }
+
+    // Sort by distance if user location is available
+    if (userLocation) {
+      filtered = filtered
+        .map(hotel => ({
+          ...hotel,
+          distance: hotel.latitude && hotel.longitude
+            ? calculateDistance(userLocation.lat, userLocation.lng, Number(hotel.latitude), Number(hotel.longitude))
+            : Infinity
+        }))
+        .sort((a, b) => a.distance - b.distance);
     }
 
     setFilteredHotels(filtered);
