@@ -285,7 +285,7 @@ const HotelPublicView = () => {
       const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       const totalAmount = selectedRoom.price * nights;
 
-      const { error } = await supabase.from("leads").insert({
+      const leadData = {
         hotel_id: hotel.id,
         room_id: selectedRoom.id,
         full_name: validated.fullName,
@@ -296,9 +296,16 @@ const HotelPublicView = () => {
         guests: validated.guests,
         status: "new",
         message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
-      });
+      };
+      
+      console.log("Submitting lead with data:", leadData);
+      
+      const { error } = await supabase.from("leads").insert(leadData);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error inserting lead:", error);
+        throw error;
+      }
 
       // Note: Earnings will be created when hotel accepts the booking request
 
@@ -371,7 +378,8 @@ const HotelPublicView = () => {
         toast.error(firstError.message);
       } else {
         console.error("Error submitting booking request:", error);
-        toast.error("Failed to submit booking request. Please try again.");
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        toast.error(`Failed to submit booking request: ${error.message || "Please try again."}`);
       }
     } finally {
       setSubmittingLead(false);
