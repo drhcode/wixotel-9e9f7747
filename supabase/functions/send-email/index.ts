@@ -114,6 +114,8 @@ serve(async (req) => {
       errorMessage = 'Could not connect to SMTP server. Please check host and port settings.';
     } else if (error.message.includes('Invalid port')) {
       errorMessage = 'Invalid port number. Use 587 for STARTTLS or 465 for TLS/SSL.';
+    } else if (error.message.includes('Sender address rejected') || error.message.includes('not owned by user')) {
+      errorMessage = 'Sender address rejected: The "From Email" must match your authenticated email username. Either use the same email address for both, or configure email aliases in your email provider settings.';
     }
 
     return new Response(

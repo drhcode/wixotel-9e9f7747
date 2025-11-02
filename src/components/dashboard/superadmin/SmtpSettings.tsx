@@ -196,22 +196,31 @@ const SmtpSettings = () => {
         <CardDescription>
           Configure SMTP settings to enable automated email notifications
         </CardDescription>
-        <div className="mt-2 p-3 bg-muted rounded-md text-sm">
-          <p className="font-medium mb-1">Important for Gmail users:</p>
-          <p className="text-muted-foreground">
-            You must use an App Password instead of your regular password. 
-            <a 
-              href="https://support.google.com/accounts/answer/185833" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline ml-1"
-            >
-              Learn how to create one →
-            </a>
-          </p>
-          <p className="text-muted-foreground mt-2">
-            <strong>Settings for Gmail:</strong> Host: smtp.gmail.com, Port: 587
-          </p>
+        <div className="mt-2 p-3 bg-muted rounded-md text-sm space-y-2">
+          <div>
+            <p className="font-medium mb-1">Important for Gmail users:</p>
+            <p className="text-muted-foreground">
+              You must use an App Password instead of your regular password. 
+              <a 
+                href="https://support.google.com/accounts/answer/185833" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline ml-1"
+              >
+                Learn how to create one →
+              </a>
+            </p>
+            <p className="text-muted-foreground mt-2">
+              <strong>Settings for Gmail:</strong> Host: smtp.gmail.com, Port: 587
+            </p>
+          </div>
+          <div className="border-t pt-2">
+            <p className="font-medium mb-1">⚠️ From Email must match Username:</p>
+            <p className="text-muted-foreground">
+              Most SMTP providers reject emails if the "From Email" doesn't match the authenticated "Username". 
+              Use the same email for both fields unless you've configured email aliases in your provider.
+            </p>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -270,6 +279,9 @@ const SmtpSettings = () => {
               value={settings.from_email}
               onChange={(e) => setSettings({ ...settings, from_email: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              ⚠️ Must match your Username email or be configured as an alias in your email provider
+            </p>
           </div>
 
           <div className="space-y-2">
