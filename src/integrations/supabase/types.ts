@@ -93,6 +93,67 @@ export type Database = {
           },
         ]
       }
+      earnings: {
+        Row: {
+          booking_id: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          hotel_id: string
+          id: string
+          lead_id: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          commission_amount: number
+          commission_rate?: number
+          created_at?: string
+          hotel_id: string
+          id?: string
+          lead_id?: string | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          lead_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earnings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earnings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earnings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_logs: {
         Row: {
           created_at: string
