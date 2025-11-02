@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, Send } from "lucide-react";
 
 interface SmtpSettings {
   id?: string;
@@ -22,6 +22,8 @@ interface SmtpSettings {
 const SmtpSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
   const [settings, setSettings] = useState<SmtpSettings>({
     host: '',
     port: 587,
@@ -101,6 +103,75 @@ const SmtpSettings = () => {
       toast.error('Failed to save SMTP settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!testEmail) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+
+    if (!settings.host || !settings.username || !settings.password || !settings.from_email) {
+      toast.error('Please fill in all SMTP settings before testing');
+      return;
+    }
+
+    setTesting(true);
+    try {
+      // First, temporarily save settings if needed
+      if (!settings.id) {
+        const { data, error } = await supabase
+          .from('smtp_settings')
+          .insert({
+            host: settings.host,
+            port: settings.port,
+            username: settings.username,
+            password: settings.password,
+            from_email: settings.from_email,
+            from_name: settings.from_name,
+            is_active: false // Temporarily inactive for testing
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) setSettings(data);
+      }
+
+      // Send test email
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          hotel_id: '00000000-0000-0000-0000-000000000000', // Dummy hotel ID for test
+          recipient_email: testEmail,
+          subject: 'SMTP Test Email',
+          html_content: `
+            <h2>SMTP Configuration Test</h2>
+            <p>This is a test email to verify your SMTP settings are working correctly.</p>
+            <p><strong>Configuration Details:</strong></p>
+            <ul>
+              <li>Host: ${settings.host}</li>
+              <li>Port: ${settings.port}</li>
+              <li>From: ${settings.from_name} &lt;${settings.from_email}&gt;</li>
+            </ul>
+            <p>If you received this email, your SMTP configuration is working properly!</p>
+          `,
+          email_type: 'test'
+        }
+      });
+
+      if (error) {
+        console.error('Test email error:', error);
+        toast.error('Failed to send test email. Please check your SMTP settings.');
+      } else {
+        toast.success(`Test email sent successfully to ${testEmail}!`);
+        setTestEmail('');
+      }
+    } catch (error: any) {
+      console.error('Error testing SMTP connection:', error);
+      toast.error('Failed to test SMTP connection');
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -196,6 +267,36 @@ const SmtpSettings = () => {
             onCheckedChange={(checked) => setSettings({ ...settings, is_active: checked })}
           />
           <Label htmlFor="is_active">Enable email notifications</Label>
+        </div>
+
+        <div className="border-t pt-4 space-y-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Test Connection</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Send a test email to verify your SMTP configuration is working correctly
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Enter test email address"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleTestConnection} 
+                disabled={testing}
+                variant="outline"
+              >
+                {testing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
+                Test Connection
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end">
