@@ -238,21 +238,32 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         message: `New reservation created for ${guestName || existingGuest?.name}`,
       });
       
-      // Send booking confirmation email to guest if email is provided
+      // Send booking confirmation email to guest if email is provided via Edge Function
       const finalEmail = guestEmail || existingGuest?.email;
       if (finalEmail) {
-        const { error: emailError } = await supabase.rpc('send_booking_confirmation_email', {
-          p_hotel_id: hotelId,
-          p_guest_email: finalEmail,
-          p_guest_name: guestName || existingGuest?.name,
-          p_check_in: format(ci, 'yyyy-MM-dd'),
-          p_check_out: format(co, 'yyyy-MM-dd'),
-          p_room_name: room?.name || 'Room',
-          p_total_amount: totalPrice
-        });
-
-        if (emailError) {
-          console.error("Error sending confirmation email:", emailError);
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              hotel_id: hotelId,
+              recipient_email: finalEmail,
+              subject: 'Booking Confirmation',
+              email_type: 'booking_confirmation',
+              html_content: `
+                <h2>Booking Confirmation ✓</h2>
+                <p>Dear ${guestName || existingGuest?.name},</p>
+                <p>Your reservation has been confirmed.</p>
+                <ul>
+                  <li><strong>Room:</strong> ${room?.name || 'Room'}</li>
+                  <li><strong>Check-in:</strong> ${format(ci, 'yyyy-MM-dd')}</li>
+                  <li><strong>Check-out:</strong> ${format(co, 'yyyy-MM-dd')}</li>
+                  <li><strong>Total Amount:</strong> €${totalPrice}</li>
+                </ul>
+                <p>We look forward to welcoming you!</p>
+              `,
+            },
+          });
+        } catch (emailErr) {
+          console.error('Error invoking send-email:', emailErr);
         }
       }
       

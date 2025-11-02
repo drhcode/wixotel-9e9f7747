@@ -195,7 +195,7 @@ const Landing = () => {
       filtered = filtered.filter(h => h.city?.trim() === selectedCity.trim());
     }
 
-    // Sort by distance if user location is available
+    // Sort by distance if user location is available, otherwise by highest review
     if (userLocation) {
       filtered = filtered
         .map(hotel => ({
@@ -204,7 +204,17 @@ const Landing = () => {
             ? calculateDistance(userLocation.lat, userLocation.lng, Number(hotel.latitude), Number(hotel.longitude))
             : Infinity
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a: any, b: any) => a.distance - b.distance);
+    } else {
+      filtered = filtered.sort((a, b) => {
+        const aRating = a.avgRating ?? 0;
+        const bRating = b.avgRating ?? 0;
+        if (bRating !== aRating) return bRating - aRating;
+        const aCount = a.reviewCount ?? 0;
+        const bCount = b.reviewCount ?? 0;
+        if (bCount !== aCount) return bCount - aCount;
+        return a.name.localeCompare(b.name);
+      });
     }
 
     setFilteredHotels(filtered);

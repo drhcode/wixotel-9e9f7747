@@ -187,17 +187,28 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       if (bookingError) throw bookingError;
 
-      // Send approval email to guest
-      const { error: emailError } = await supabase.rpc('send_lead_approved_email', {
-        p_hotel_id: hotelId,
-        p_guest_email: lead.email,
-        p_guest_name: lead.full_name,
-        p_check_in: lead.check_in,
-        p_check_out: lead.check_out,
-        p_guests: lead.guests
-      });
-
-      if (emailError) {
+      // Send approval email to guest via Edge Function
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            hotel_id: hotelId,
+            recipient_email: lead.email,
+            subject: 'Booking Request Approved',
+            email_type: 'lead_approved',
+            html_content: `
+              <h2>Booking Request Approved ✓</h2>
+              <p>Dear ${lead.full_name},</p>
+              <p>Your booking request has been approved.</p>
+              <ul>
+                <li><strong>Check-in:</strong> ${lead.check_in}</li>
+                <li><strong>Check-out:</strong> ${lead.check_out}</li>
+                <li><strong>Guests:</strong> ${lead.guests}</li>
+              </ul>
+              <p>We look forward to welcoming you!</p>
+            `,
+          },
+        });
+      } catch (emailError) {
         console.error("Error sending approval email:", emailError);
       }
 
@@ -234,16 +245,27 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     const lead = leads.find(l => l.id === leadId);
     
     if (lead) {
-      // Send rejection email to guest
-      const { error: emailError } = await supabase.rpc('send_lead_rejected_email', {
-        p_hotel_id: hotelId,
-        p_guest_email: lead.email,
-        p_guest_name: lead.full_name,
-        p_check_in: lead.check_in,
-        p_check_out: lead.check_out
-      });
-
-      if (emailError) {
+      // Send rejection email to guest via Edge Function
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            hotel_id: hotelId,
+            recipient_email: lead.email,
+            subject: 'Booking Request Update',
+            email_type: 'lead_rejected',
+            html_content: `
+              <h2>Booking Request Update</h2>
+              <p>Dear ${lead.full_name},</p>
+              <p>Unfortunately, we are unable to accommodate your booking request for the selected dates.</p>
+              <ul>
+                <li><strong>Check-in:</strong> ${lead.check_in}</li>
+                <li><strong>Check-out:</strong> ${lead.check_out}</li>
+              </ul>
+              <p>Please try different dates or contact us for alternatives.</p>
+            `,
+          },
+        });
+      } catch (emailError) {
         console.error("Error sending rejection email:", emailError);
       }
 

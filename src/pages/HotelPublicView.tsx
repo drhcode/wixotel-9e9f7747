@@ -128,6 +128,8 @@ const HotelPublicView = () => {
     phone: "",
     guests: 1,
   });
+  const [bookingCheckInOpen, setBookingCheckInOpen] = useState(false);
+  const [bookingCheckOutOpen, setBookingCheckOutOpen] = useState(false);
 
   const leadSchema = z.object({
     fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -294,6 +296,52 @@ const HotelPublicView = () => {
 
       if (error) throw error;
 
+      // Send emails via Edge Function (hotel + guest)
+      try {
+        if (hotel.email) {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              hotel_id: hotel.id,
+              recipient_email: hotel.email,
+              subject: `New Booking Inquiry - ${validated.fullName}`,
+              email_type: 'new_lead',
+              html_content: `
+                <h2>New Booking Inquiry</h2>
+                <ul>
+                  <li><strong>Name:</strong> ${validated.fullName}</li>
+                  <li><strong>Email:</strong> ${validated.email}</li>
+                  <li><strong>Phone:</strong> ${validated.phone}</li>
+                  <li><strong>Room:</strong> ${selectedRoom.name}</li>
+                  <li><strong>Check-in:</strong> ${format(validated.checkIn, 'yyyy-MM-dd')}</li>
+                  <li><strong>Check-out:</strong> ${format(validated.checkOut, 'yyyy-MM-dd')}</li>
+                  <li><strong>Guests:</strong> ${validated.guests}</li>
+                </ul>
+              `,
+            },
+          });
+        }
+        await supabase.functions.invoke('send-email', {
+          body: {
+            hotel_id: hotel.id,
+            recipient_email: validated.email,
+            subject: `Booking Request Received - ${hotel.name}`,
+            email_type: 'lead_confirmation',
+            html_content: `
+              <h2>Booking Request Received</h2>
+              <p>Dear ${validated.fullName},</p>
+              <p>We received your request for ${selectedRoom.name}. We'll get back to you shortly.</p>
+              <ul>
+                <li><strong>Check-in:</strong> ${format(validated.checkIn, 'yyyy-MM-dd')}</li>
+                <li><strong>Check-out:</strong> ${format(validated.checkOut, 'yyyy-MM-dd')}</li>
+                <li><strong>Guests:</strong> ${validated.guests}</li>
+              </ul>
+            `,
+          },
+        });
+      } catch (emailErr) {
+        console.error('Error sending lead emails:', emailErr);
+      }
+
       toast.success("Booking request sent successfully! We'll contact you soon.");
       setBookingRequest({ checkIn: undefined, checkOut: undefined, fullName: "", email: "", phone: "", guests: 1 });
       setBookingRequestMode(false);
@@ -351,6 +399,46 @@ const HotelPublicView = () => {
       });
 
       if (error) throw error;
+
+      // Send emails via Edge Function (hotel + guest)
+      try {
+        if (hotel.email) {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              hotel_id: hotel.id,
+              recipient_email: hotel.email,
+              subject: `New Inquiry - ${validatedData.fullName}`,
+              email_type: 'new_lead',
+              html_content: `
+                <h2>New Booking Inquiry</h2>
+                <ul>
+                  <li><strong>Name:</strong> ${validatedData.fullName}</li>
+                  <li><strong>Email:</strong> ${validatedData.email}</li>
+                  <li><strong>Phone:</strong> ${leadForm.phonePrefix}${validatedData.phone}</li>
+                  <li><strong>Check-in:</strong> ${validatedData.checkIn}</li>
+                  <li><strong>Check-out:</strong> ${validatedData.checkOut}</li>
+                  <li><strong>Guests:</strong> ${validatedData.guests}</li>
+                </ul>
+              `,
+            },
+          });
+        }
+        await supabase.functions.invoke('send-email', {
+          body: {
+            hotel_id: hotel.id,
+            recipient_email: validatedData.email,
+            subject: `Inquiry Received - ${hotel.name}`,
+            email_type: 'lead_confirmation',
+            html_content: `
+              <h2>Booking Request Received</h2>
+              <p>Dear ${validatedData.fullName},</p>
+              <p>Thank you for contacting ${hotel.name}. We have received your request.</p>
+            `,
+          },
+        });
+      } catch (emailErr) {
+        console.error('Error sending contact emails:', emailErr);
+      }
 
       toast.success("Thank you! Your inquiry has been submitted successfully.");
 
@@ -1182,7 +1270,7 @@ const HotelPublicView = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckIn">Check-in Date *</Label>
-                            <Popover>
+                            <Popover open={bookingCheckInOpen} onOpenChange={setBookingCheckInOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="outline"
@@ -1210,17 +1298,18 @@ const HotelPublicView = () => {
                                     } else {
                                       setIsRoomAvailable(true);
                                     }
+                                    setBookingCheckInOpen(false);
                                   }}
                                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                   initialFocus
-                                  className="pointer-events-auto"
+                                  className="p-3 pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckOut">Check-out Date *</Label>
-                            <Popover>
+                            <Popover open={bookingCheckOutOpen} onOpenChange={setBookingCheckOutOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="outline"
@@ -1248,13 +1337,14 @@ const HotelPublicView = () => {
                                     } else {
                                       setIsRoomAvailable(true);
                                     }
+                                    setBookingCheckOutOpen(false);
                                   }}
                                   disabled={(date) => {
                                     const minDate = bookingRequest.checkIn || new Date();
                                     return date <= minDate;
                                   }}
                                   initialFocus
-                                  className="pointer-events-auto"
+                                  className="p-3 pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
