@@ -35,6 +35,8 @@ import {
   ChevronRight,
   Facebook,
   Instagram,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -42,6 +44,7 @@ import { format } from "date-fns";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { cn } from "@/lib/utils";
+import { ReviewModal } from "@/components/hotel/ReviewModal";
 
 interface Hotel {
   id: string;
@@ -75,6 +78,16 @@ interface Room {
   images: string[] | null;
 }
 
+interface Review {
+  id: string;
+  title: string;
+  rating: number;
+  review_text: string;
+  photo_url: string | null;
+  guest_email: string;
+  created_at: string;
+}
+
 const HotelPublicView = () => {
   const { hotelSlug } = useParams();
   const navigate = useNavigate();
@@ -85,6 +98,8 @@ const HotelPublicView = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [submittingLead, setSubmittingLead] = useState(false);
   const [userCountry, setUserCountry] = useState<string>("US");
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   // Track page analytics
   useAnalyticsTracking(hotel?.id, `/hotel/${hotelSlug}`);
@@ -137,6 +152,12 @@ const HotelPublicView = () => {
     detectUserCountry();
   }, [hotelSlug]);
 
+  useEffect(() => {
+    if (hotel?.id) {
+      fetchReviews();
+    }
+  }, [hotel?.id]);
+
   const detectUserCountry = async () => {
     try {
       const response = await fetch("https://ipapi.co/json/");
@@ -185,6 +206,25 @@ const HotelPublicView = () => {
       toast.error("Failed to load hotel information");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    if (!hotel?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("hotel_id", hotel.id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setReviews(data || []);
+    } catch (error: any) {
+      console.error("Error fetching reviews:", error);
     }
   };
 
@@ -383,6 +423,12 @@ const HotelPublicView = () => {
                 About Us
               </button>
               <button
+                onClick={() => scrollToSection("reviews")}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
+                Reviews
+              </button>
+              <button
                 onClick={() => scrollToSection("contact")}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
@@ -396,31 +442,37 @@ const HotelPublicView = () => {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <nav className="md:hidden py-4 border-t animate-fade-in">
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={() => scrollToSection("rooms")}
-                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                >
-                  Rooms
-                </button>
-                <button
-                  onClick={() => scrollToSection("about")}
-                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                >
-                  About Us
-                </button>
-                <button
-                  onClick={() => scrollToSection("contact")}
-                  className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                >
-                  Contact Us
-                </button>
-              </div>
-            </nav>
-          )}
+            {/* Mobile Navigation */}
+            {mobileMenuOpen && (
+              <nav className="md:hidden py-4 border-t animate-fade-in">
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => scrollToSection("rooms")}
+                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    Rooms
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("about")}
+                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    About Us
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("reviews")}
+                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    Reviews
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("contact")}
+                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    Contact Us
+                  </button>
+                </div>
+              </nav>
+            )}
         </div>
       </header>
 
@@ -898,6 +950,83 @@ const HotelPublicView = () => {
         </div>
       </section>
 
+      {/* Reviews Section */}
+      <section id="reviews" className="py-16 px-4 bg-gradient-to-b from-accent/30 to-background scroll-mt-16">
+        <div className="container mx-auto">
+          <div className="text-center mb-12 space-y-4 animate-fade-in">
+            <h2 className="text-4xl font-bold tracking-tight">Guest Reviews</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              See what our guests have to say about their experience
+            </p>
+            <Button
+              onClick={() => setReviewModalOpen(true)}
+              className="bg-gradient-primary hover:opacity-90 shadow-elegant"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Write a Review
+            </Button>
+          </div>
+
+          {reviews.length === 0 ? (
+            <Card className="border-border/50 max-w-2xl mx-auto">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No reviews yet. Be the first to share your experience!
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+              {reviews.map((review, index) => (
+                <Card
+                  key={review.id}
+                  className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <CardHeader>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1 mb-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < review.rating
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <CardTitle className="text-lg">{review.title}</CardTitle>
+                      <CardDescription className="text-xs">
+                        {new Date(review.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                      {review.review_text}
+                    </p>
+                    {review.photo_url && (
+                      <img
+                        src={review.photo_url}
+                        alt="Review"
+                        className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
+                      />
+                    )}
+                    <div className="text-xs text-muted-foreground pt-2 border-t">
+                      {review.guest_email.substring(0, 2) + "***@" + review.guest_email.split("@")[1]}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-8 px-4 border-t bg-accent/20">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
@@ -1247,6 +1376,21 @@ const HotelPublicView = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Review Modal */}
+      {hotel && (
+        <ReviewModal
+          open={reviewModalOpen}
+          onOpenChange={(open) => {
+            setReviewModalOpen(open);
+            if (!open) {
+              fetchReviews(); // Refresh reviews after submission
+            }
+          }}
+          hotelId={hotel.id}
+          hotelName={hotel.name}
+        />
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ const menuItems = [
   { id: "reservations", label: "Reservations", icon: BookOpen },
   { id: "guests", label: "Guests", icon: Users },
   { id: "support", label: "Support", icon: MessageSquare },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "smtp", label: "Email Settings", icon: Mail },
 ];
 

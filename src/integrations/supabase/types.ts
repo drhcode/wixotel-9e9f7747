@@ -516,6 +516,63 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          guest_email: string
+          hotel_id: string
+          id: string
+          photo_url: string | null
+          rating: number
+          review_text: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          guest_email: string
+          hotel_id: string
+          id?: string
+          photo_url?: string | null
+          rating: number
+          review_text: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          guest_email?: string
+          hotel_id?: string
+          id?: string
+          photo_url?: string | null
+          rating?: number
+          review_text?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           amenities: string[] | null

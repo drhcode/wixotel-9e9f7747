@@ -17,6 +17,7 @@ import AllGuests from "./superadmin/AllGuests";
 import SubscriptionPlansManagement from "./superadmin/SubscriptionPlansManagement";
 import SmtpSettings from "./superadmin/SmtpSettings";
 import { SupportTickets } from "./superadmin/SupportTickets";
+import ReviewsManagement from "./superadmin/ReviewsManagement";
 
 interface Hotel {
   id: string;
@@ -296,6 +297,8 @@ const SuperAdminDashboard = () => {
         return <AllGuests />;
       case "support":
         return <SupportTickets />;
+      case "reviews":
+        return <ReviewsManagement />;
       case "smtp":
         return <SmtpSettings />;
       default:
@@ -333,7 +336,7 @@ const SuperAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "hotels", "plans", "subscriptions", "reservations", "guests", "support", "smtp"].map((tab) => (
+                {["overview", "hotels", "plans", "subscriptions", "reservations", "guests", "support", "reviews", "smtp"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
