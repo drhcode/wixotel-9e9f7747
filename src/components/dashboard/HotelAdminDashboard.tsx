@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hotel, LogOut, AlertCircle, Menu, ExternalLink } from "lucide-react";
+import { LogOut, AlertCircle, Menu, ExternalLink } from "lucide-react";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -99,11 +99,20 @@ const HotelAdminDashboard = () => {
         <header className="border-b bg-card">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Hotel className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  HotelManager
-                </span>
+              <div className="flex items-center gap-3">
+                {hotel.logo_url && (
+                  <img 
+                    src={hotel.logo_url} 
+                    alt={hotel.name}
+                    className="h-10 w-10 object-contain rounded-lg"
+                  />
+                )}
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    {hotel.name}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
+                </div>
               </div>
               <Button variant="ghost" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -149,11 +158,20 @@ const HotelAdminDashboard = () => {
         <header className="border-b bg-card">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Hotel className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  HotelManager
-                </span>
+              <div className="flex items-center gap-3">
+                {hotel.logo_url && (
+                  <img 
+                    src={hotel.logo_url} 
+                    alt={hotel.name}
+                    className="h-10 w-10 object-contain rounded-lg"
+                  />
+                )}
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    {hotel.name}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
+                </div>
               </div>
               <Button variant="ghost" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -216,20 +234,18 @@ const HotelAdminDashboard = () => {
                   <SidebarTrigger>
                     <Menu className="h-5 w-5" />
                   </SidebarTrigger>
-                  {hotel.logo_url ? (
+                  {hotel.logo_url && (
                     <img 
                       src={hotel.logo_url} 
-                      alt={`${hotel.name} logo`}
+                      alt={hotel.name}
                       className="h-10 w-10 object-contain rounded-lg"
                     />
-                  ) : (
-                    <Hotel className="h-7 w-7 text-primary" />
                   )}
-                  <div>
-                    <span className="text-xl lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
                       {hotel.name}
                     </span>
-                    <p className="text-xs text-muted-foreground hidden sm:block">Hotel Dashboard</p>
+                    <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
