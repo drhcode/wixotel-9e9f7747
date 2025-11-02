@@ -19,6 +19,7 @@ export default {
     extend: {
       fontFamily: {
         'playfair': ['Playfair Display', 'serif'],
+        'batangas': ['Bungee', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",

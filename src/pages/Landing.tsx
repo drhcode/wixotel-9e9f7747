@@ -286,8 +286,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Hotel className="h-8 w-8 text-primary" />
-              <span className="text-3xl font-playfair font-bold bg-gradient-primary bg-clip-text text-transparent">Wixotel</span>
+              <span className="text-3xl font-batangas font-bold text-foreground">WIXOTEL</span>
             </div>
             <div className="flex items-center gap-3">
               <a 
@@ -689,7 +688,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-playfair font-bold text-foreground">Wixotel</span>
+              <span className="text-2xl font-batangas font-bold text-foreground">WIXOTEL</span>
             </div>
             <p className="text-sm text-muted-foreground">
               © 2025 WIXOTEL. All rights reserved.
