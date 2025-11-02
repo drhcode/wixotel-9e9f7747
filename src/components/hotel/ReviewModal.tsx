@@ -39,24 +39,20 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
       const emailSchema = z.string().email("Invalid email address");
       emailSchema.parse(email);
 
-      // Check if user has a booking at this hotel
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("id, full_name, check_in, check_out")
-        .eq("hotel_id", hotelId)
-        .eq("guest_email", email.toLowerCase().trim())
-        .in("status", ["reserved", "checked_in", "checked_out"])
-        .order("check_out", { ascending: false })
-        .limit(1);
+      // Check if user has a booking at this hotel (server-side, bypassing RLS)
+      const { data, error } = await supabase.rpc('verify_booking_for_review', {
+        p_hotel_id: hotelId,
+        p_email: email.toLowerCase().trim(),
+      });
 
       if (error) throw error;
 
-      if (!data || data.length === 0) {
+      if (!data) {
         toast.error("No booking found with this email address at this hotel.");
         return;
       }
 
-      setBookingId(data[0].id);
+      setBookingId(data as string);
       setStep("review");
       toast.success("Email verified! You can now write your review.");
     } catch (error: any) {
@@ -126,18 +122,21 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
 
       const validated = reviewSchema.parse(reviewData);
 
-      const { error } = await supabase.from("reviews").insert({
-        hotel_id: hotelId,
-        guest_email: email.toLowerCase().trim(),
-        booking_id: bookingId,
-        title: validated.title,
-        rating: validated.rating,
-        review_text: validated.review,
-        photo_url: reviewData.photoUrl || null,
-        status: "pending",
+      const { data, error } = await supabase.rpc('create_review_with_validation', {
+        p_hotel_id: hotelId,
+        p_email: email.toLowerCase().trim(),
+        p_title: validated.title,
+        p_rating: validated.rating,
+        p_review: validated.review,
+        p_photo_url: reviewData.photoUrl || null,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'no_booking_for_email') {
+          throw new Error("No valid booking found for this email at this hotel.");
+        }
+        throw error;
+      }
 
       toast.success("Thank you! Your review has been submitted and is pending approval.");
       handleClose();

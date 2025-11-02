@@ -881,6 +881,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_review_with_validation: {
+        Args: {
+          p_email: string
+          p_hotel_id: string
+          p_photo_url: string
+          p_rating: number
+          p_review: string
+          p_title: string
+        }
+        Returns: string
+      }
       get_available_rooms: {
         Args: {
           p_booking_id?: string
@@ -914,6 +925,10 @@ export type Database = {
           p_subject: string
         }
         Returns: undefined
+      }
+      verify_booking_for_review: {
+        Args: { p_email: string; p_hotel_id: string }
+        Returns: string
       }
     }
     Enums: {
