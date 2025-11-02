@@ -22,6 +22,7 @@ interface Lead {
   status: string;
   created_at: string;
   room_id: string | null;
+  is_read?: boolean;
 }
 
 interface Room {
@@ -107,6 +108,24 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       toast.error("Failed to load leads");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markLeadAsRead = async (leadId: string) => {
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ is_read: true })
+        .eq("id", leadId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setLeads(leads.map(lead => 
+        lead.id === leadId ? { ...lead, is_read: true } : lead
+      ));
+    } catch (error: any) {
+      console.error("Error marking lead as read:", error);
     }
   };
 
@@ -286,8 +305,24 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                 </TableHeader>
                 <TableBody>
                   {leads.map((lead) => (
-                    <TableRow key={lead.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setSelectedLead(lead)}>
-                      <TableCell className="font-medium">{lead.full_name}</TableCell>
+                    <TableRow 
+                      key={lead.id} 
+                      className="cursor-pointer hover:bg-accent/50" 
+                      onClick={() => {
+                        setSelectedLead(lead);
+                        if (!lead.is_read) {
+                          markLeadAsRead(lead.id);
+                        }
+                      }}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {!lead.is_read && (
+                            <span className="h-2 w-2 bg-blue-500 rounded-full" title="Unread" />
+                          )}
+                          {lead.full_name}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="space-y-1 text-sm">
                           <div className="flex items-center gap-1">

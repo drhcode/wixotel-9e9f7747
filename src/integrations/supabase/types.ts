@@ -304,6 +304,7 @@ export type Database = {
           guests: number
           hotel_id: string
           id: string
+          is_read: boolean
           message: string | null
           phone: string
           room_id: string | null
@@ -319,6 +320,7 @@ export type Database = {
           guests?: number
           hotel_id: string
           id?: string
+          is_read?: boolean
           message?: string | null
           phone: string
           room_id?: string | null
@@ -334,6 +336,7 @@ export type Database = {
           guests?: number
           hotel_id?: string
           id?: string
+          is_read?: boolean
           message?: string | null
           phone?: string
           room_id?: string | null

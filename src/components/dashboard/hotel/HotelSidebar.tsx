@@ -72,6 +72,7 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
         .from("leads")
         .select("*", { count: "exact", head: true })
         .eq("hotel_id", hotelId)
+        .eq("is_read", false)
         .neq("status", "lost")
         .neq("status", "converted");
 
