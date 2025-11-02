@@ -403,9 +403,9 @@ const HotelPublicView = () => {
               {hotel?.logo_url ? (
                 <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
               ) : null}
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start leading-none">
                 <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
-                <span className="text-[10px] text-muted-foreground -mt-1">by wixotel</span>
+                <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
               </div>
             </button>
 
