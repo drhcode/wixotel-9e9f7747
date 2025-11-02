@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation } from "lucide-react";
+import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
@@ -250,7 +250,7 @@ const Landing = () => {
     <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 z-50 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Hotel className="h-8 w-8 text-primary" />
@@ -279,7 +279,7 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
+      <section className="relative pt-32 pb-24 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 pointer-events-none"></div>
         <div className="container mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -346,16 +346,81 @@ const Landing = () => {
       {/* Demo Modal */}
       <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
 
+      {/* Why Book Through Wixotel Section */}
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
+              WHY WIXOTEL
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Why Book Through Wixotel?</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Experience seamless booking with unmatched benefits
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Best Price Guarantee</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  We guarantee the lowest rates. Find a better price and we'll match it plus give you 10% off.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Instant Confirmation</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Get immediate booking confirmation and access to your reservation details 24/7.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Free Cancellation</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Flexible cancellation policies on most rooms. Plans change? No worries, we've got you covered.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Verified Reviews</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Read authentic reviews from real guests to make informed booking decisions.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Hotels Section */}
       {hotels.length > 0 && (
-        <section className="py-24 px-6 bg-gradient-to-b from-background to-accent/30">
+        <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background to-accent/30">
           <div className="container mx-auto">
             <div className="text-center mb-16 space-y-4">
               <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
                 DISCOVER HOTELS
               </div>
-              <h2 className="text-5xl font-bold tracking-tight">Find Your Perfect Stay</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Find Your Perfect Stay</h2>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Explore our collection of premium hotels powered by Wixotel
               </p>
             </div>
@@ -397,7 +462,7 @@ const Landing = () => {
             </div>
 
             {/* Hotels Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredHotels.map((hotel) => (
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
                   <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
@@ -456,18 +521,18 @@ const Landing = () => {
       )}
 
       {/* Features Section */}
-      <section className="py-24 px-6 bg-gradient-to-b from-background via-accent/50 to-background">
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/50 to-background">
         <div className="container mx-auto">
           <div className="text-center mb-20 space-y-4 animate-fade-in">
             <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
               POWERFUL FEATURES
             </div>
-            <h2 className="text-5xl font-bold tracking-tight">Everything You Need to Succeed</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Everything You Need to Succeed</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Enterprise-grade tools designed to transform your hotel operations and accelerate growth
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {features.map((feature, index) => (
               <Card 
                 key={feature.title} 
@@ -488,15 +553,15 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-4 md:px-6">
         <div className="container mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold">Simple, Transparent Pricing</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Choose the plan that best fits your hotel's needs
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             {plans.map((plan) => (
               <Card 
                 key={plan.name} 
@@ -541,12 +606,12 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-hero">
+      <section className="py-20 px-4 md:px-6 bg-gradient-hero">
         <div className="container mx-auto text-center text-white">
-          <h2 className="text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Ready to Transform Your Hotel Management?
           </h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
             Join hundreds of hotels already using WIXOTEL to streamline operations and boost revenue
           </p>
           <Link to="/auth">
@@ -558,7 +623,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t">
+      <footer className="py-12 px-4 md:px-6 border-t">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
