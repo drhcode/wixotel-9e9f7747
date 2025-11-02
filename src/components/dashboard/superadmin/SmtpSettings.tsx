@@ -162,7 +162,10 @@ const SmtpSettings = () => {
 
       if (error) {
         console.error('Test email error:', error);
-        toast.error('Failed to send test email. Please check your SMTP settings.');
+        const errorMsg = typeof error === 'object' && error.error 
+          ? error.error 
+          : 'Failed to send test email. Please check your SMTP settings.';
+        toast.error(errorMsg, { duration: 6000 });
       } else {
         toast.success(`Test email sent successfully to ${testEmail}!`);
         setTestEmail('');
@@ -193,6 +196,23 @@ const SmtpSettings = () => {
         <CardDescription>
           Configure SMTP settings to enable automated email notifications
         </CardDescription>
+        <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+          <p className="font-medium mb-1">Important for Gmail users:</p>
+          <p className="text-muted-foreground">
+            You must use an App Password instead of your regular password. 
+            <a 
+              href="https://support.google.com/accounts/answer/185833" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline ml-1"
+            >
+              Learn how to create one →
+            </a>
+          </p>
+          <p className="text-muted-foreground mt-2">
+            <strong>Settings for Gmail:</strong> Host: smtp.gmail.com, Port: 587
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -228,7 +248,7 @@ const SmtpSettings = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Password (App Password for Gmail)</Label>
             <Input
               id="password"
               type="password"
@@ -236,6 +256,9 @@ const SmtpSettings = () => {
               value={settings.password}
               onChange={(e) => setSettings({ ...settings, password: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              For Gmail: Use an App Password, not your account password
+            </p>
           </div>
 
           <div className="space-y-2">

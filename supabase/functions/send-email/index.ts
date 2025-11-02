@@ -56,12 +56,17 @@ serve(async (req) => {
       );
     }
 
-    // Initialize SMTP client
+    // Initialize SMTP client with proper TLS configuration
+    const useTLS = smtpSettings.port === 465;
+    const useSTARTTLS = smtpSettings.port === 587;
+    
+    console.log(`Configuring SMTP: ${smtpSettings.host}:${smtpSettings.port} (TLS: ${useTLS}, STARTTLS: ${useSTARTTLS})`);
+    
     const client = new SMTPClient({
       connection: {
         hostname: smtpSettings.host,
         port: smtpSettings.port,
-        tls: smtpSettings.port === 465,
+        tls: useTLS,
         auth: {
           username: smtpSettings.username,
           password: smtpSettings.password,
@@ -96,9 +101,19 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error sending email:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = error.message;
+    if (error.message.includes('authentication failed')) {
+      errorMessage = 'SMTP authentication failed. Please check your username and password. Gmail users must use App Passwords (see https://support.google.com/accounts/answer/185833)';
+    } else if (error.message.includes('ECONNREFUSED')) {
+      errorMessage = 'Could not connect to SMTP server. Please check host and port settings.';
+    } else if (error.message.includes('Invalid port')) {
+      errorMessage = 'Invalid port number. Use 587 for STARTTLS or 465 for TLS/SSL.';
+    }
 
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
