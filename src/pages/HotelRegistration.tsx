@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,16 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, MapPin, Phone, Mail, Image, Info, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { getCountries, getCitiesForCountry } from "@/lib/countries";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2, "Min 2 characters").max(100),
   address: z.string().trim().min(5, "Min 5 characters").max(500),
-  city: z.string().trim().min(2, "Min 2 characters").max(100),
-  country: z.string().trim().min(2, "Min 2 characters").max(100),
-  phone: z.string().regex(/^[+\d\s()-]{7,20}$/, "Invalid phone"),
+  city: z.string().min(1, "City is required"),
+  country: z.string().min(1, "Country is required"),
+  phone: z.string().min(7, "Invalid phone number"),
   email: z.string().trim().email("Invalid email").max(255),
   description: z.string().trim().max(1000).optional(),
   about_us: z.string().trim().max(2000).optional(),
@@ -69,8 +73,39 @@ const HotelRegistration = () => {
     confirmPassword: "",
   });
 
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [defaultCountry, setDefaultCountry] = useState<any>("US");
+
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
+
+  // Auto-detect country from IP
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(response => response.json())
+      .then(data => {
+        if (data.country_code) {
+          setDefaultCountry(data.country_code);
+          setHotelData(prev => ({ ...prev, country: data.country_code }));
+        }
+      })
+      .catch(() => {
+        // Silently fail, keep default
+      });
+  }, []);
+
+  // Update cities when country changes
+  useEffect(() => {
+    if (hotelData.country) {
+      const cities = getCitiesForCountry(hotelData.country);
+      setAvailableCities(cities);
+      if (hotelData.city && !cities.includes(hotelData.city)) {
+        setHotelData(prev => ({ ...prev, city: "" }));
+      }
+    } else {
+      setAvailableCities([]);
+    }
+  }, [hotelData.country]);
 
   const addRoom = () => {
     setRooms([...rooms, { name: "", price: 0, capacity: 2 }]);
@@ -169,6 +204,10 @@ const HotelRegistration = () => {
         .eq('name', 'Basic')
         .single();
 
+      // Get full country name from code
+      const selectedCountry = getCountries().find(c => c.code === hotelValidation.data.country);
+      const countryName = selectedCountry?.name || hotelValidation.data.country;
+
       // Create hotel
       const { data: hotel, error: hotelError } = await supabase
         .from('hotels')
@@ -177,7 +216,7 @@ const HotelRegistration = () => {
           name: hotelValidation.data.name,
           address: hotelValidation.data.address,
           city: hotelValidation.data.city,
-          country: hotelValidation.data.country,
+          country: countryName,
           phone: hotelValidation.data.phone,
           email: hotelValidation.data.email,
           description: hotelValidation.data.description || null,
@@ -277,35 +316,52 @@ const HotelRegistration = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone *</Label>
-                    <Input
-                      id="phone"
-                      placeholder="+1 234 567 890"
+                    <PhoneInput
+                      international
+                      defaultCountry={defaultCountry}
                       value={hotelData.phone}
-                      onChange={(e) => setHotelData({ ...hotelData, phone: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City *</Label>
-                    <Input
-                      id="city"
-                      placeholder="New York"
-                      value={hotelData.city}
-                      onChange={(e) => setHotelData({ ...hotelData, city: e.target.value })}
-                      required
+                      onChange={(value) => setHotelData({ ...hotelData, phone: value || "" })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="country">Country *</Label>
-                    <Input
-                      id="country"
-                      placeholder="United States"
+                    <Select
                       value={hotelData.country}
-                      onChange={(e) => setHotelData({ ...hotelData, country: e.target.value })}
-                      required
-                    />
+                      onValueChange={(value) => setHotelData({ ...hotelData, country: value })}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {getCountries().map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            {country.flag} {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Select
+                      value={hotelData.city}
+                      onValueChange={(value) => setHotelData({ ...hotelData, city: value })}
+                      disabled={!hotelData.country || availableCities.length === 0}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder={!hotelData.country ? "Select country first" : "Select city"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {availableCities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
