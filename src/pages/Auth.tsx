@@ -58,15 +58,51 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: validation.data.email,
         password: validation.data.password
       });
 
       if (error) throw error;
 
-      toast.success("Welcome back!");
-      navigate("/dashboard");
+      if (data.user) {
+        // Check if user's hotel is approved
+        const { data: hotel, error: hotelError } = await supabase
+          .from('hotels')
+          .select('status')
+          .eq('owner_id', data.user.id)
+          .single();
+
+        if (hotelError || !hotel) {
+          // Check if user is super admin
+          const { data: role } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .single();
+
+          if (role?.role === 'super_admin') {
+            toast.success("Welcome back!");
+            navigate("/dashboard");
+            return;
+          }
+
+          // No hotel found and not admin
+          await supabase.auth.signOut();
+          toast.error("Your hotel registration was not found.");
+          return;
+        }
+
+        if (hotel.status !== 'active') {
+          // Hotel not approved yet
+          await supabase.auth.signOut();
+          toast.error("Your hotel is still pending approval. You'll be notified once approved.");
+          return;
+        }
+
+        toast.success("Welcome back!");
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast.error(mapAuthError(error));
     } finally {

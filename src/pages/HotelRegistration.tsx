@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, MapPin, Phone, Mail, Image, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, MapPin, Phone, Mail, Image, Info, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -26,6 +26,15 @@ const roomSchema = z.object({
   name: z.string().trim().min(1, "Room name required").max(100),
   price: z.number().min(0, "Price must be positive"),
   capacity: z.number().min(1, "Capacity must be at least 1").max(20),
+});
+
+const accountSchema = z.object({
+  email: z.string().trim().email("Invalid email").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 interface Room {
@@ -54,7 +63,13 @@ const HotelRegistration = () => {
     { name: "", price: 0, capacity: 2 }
   ]);
 
-  const totalSteps = 3;
+  const [accountData, setAccountData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
   const addRoom = () => {
@@ -92,6 +107,14 @@ const HotelRegistration = () => {
       }
     }
 
+    if (step === 3) {
+      const validation = accountSchema.safeParse(accountData);
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+    }
+
     setStep(step + 1);
   };
 
@@ -120,14 +143,24 @@ const HotelRegistration = () => {
         }
       }
 
-      // Get the user (they should be signed up first)
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        toast.error("Please create an account first");
-        navigate("/auth");
+      const accountValidation = accountSchema.safeParse(accountData);
+      if (!accountValidation.success) {
+        toast.error(accountValidation.error.errors[0].message);
+        setLoading(false);
         return;
       }
+
+      // Create user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: accountValidation.data.email,
+        password: accountValidation.data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("Failed to create account");
 
       // Get basic plan
       const { data: basicPlan } = await supabase
@@ -140,7 +173,7 @@ const HotelRegistration = () => {
       const { data: hotel, error: hotelError } = await supabase
         .from('hotels')
         .insert({
-          owner_id: user.id,
+          owner_id: authData.user.id,
           name: hotelValidation.data.name,
           address: hotelValidation.data.address,
           city: hotelValidation.data.city,
@@ -172,8 +205,10 @@ const HotelRegistration = () => {
 
       if (roomsError) throw roomsError;
 
-      toast.success("Hotel registration submitted! Awaiting admin review.");
-      navigate("/dashboard");
+      // Sign out user (they can't login until approved)
+      await supabase.auth.signOut();
+
+      navigate("/registration-success");
     } catch (error: any) {
       console.error("Registration error:", error);
       toast.error(error.message || "Failed to register hotel");
@@ -388,8 +423,62 @@ const HotelRegistration = () => {
               </div>
             )}
 
-            {/* Step 3: Review & Submit */}
+            {/* Step 3: Create Account */}
             {step === 3 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-2 text-lg font-semibold mb-4">
+                  <UserPlus className="h-5 w-5 text-primary" />
+                  Create Account
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="account-email">Email *</Label>
+                    <Input
+                      id="account-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={accountData.email}
+                      onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter password (min 6 characters)"
+                      value={accountData.password}
+                      onChange={(e) => setAccountData({ ...accountData, password: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password *</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirm password"
+                      value={accountData.confirmPassword}
+                      onChange={(e) => setAccountData({ ...accountData, confirmPassword: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    ℹ️ You will only be able to log in once your hotel is approved by our admin team.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Review & Submit */}
+            {step === 4 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-2 text-lg font-semibold mb-4">
                   <Info className="h-5 w-5 text-primary" />

@@ -10,6 +10,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const HotelPublicView = lazy(() => import("./pages/HotelPublicView"));
 const HotelRegistration = lazy(() => import("./pages/HotelRegistration"));
+const RegistrationSuccess = lazy(() => import("./pages/RegistrationSuccess"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 
@@ -31,8 +32,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />
-              <Route path="/register-hotel" element={<HotelRegistration />} />
-              <Route path="*" element={<NotFound />} />
+          <Route path="/register-hotel" element={<HotelRegistration />} />
+          <Route path="/registration-success" element={<RegistrationSuccess />} />
+          <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </Router>
