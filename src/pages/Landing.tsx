@@ -351,6 +351,15 @@ const Landing = () => {
                 The ultimate platform for modern hospitality. Seamlessly manage rooms, bookings, guests, and revenue with intelligent automation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link to="/register-hotel">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow hover:scale-105"
+                  >
+                    <Hotel className="mr-2 h-5 w-5" />
+                    Register Your Hotel
+                  </Button>
+                </Link>
                 <Button 
                   size="lg" 
                   variant="outline" 

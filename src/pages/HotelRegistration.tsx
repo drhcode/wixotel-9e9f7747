@@ -1,0 +1,485 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, MapPin, Phone, Mail, Image, Info } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const hotelSchema = z.object({
+  name: z.string().trim().min(2, "Min 2 characters").max(100),
+  address: z.string().trim().min(5, "Min 5 characters").max(500),
+  city: z.string().trim().min(2, "Min 2 characters").max(100),
+  country: z.string().trim().min(2, "Min 2 characters").max(100),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/, "Invalid phone"),
+  email: z.string().trim().email("Invalid email").max(255),
+  description: z.string().trim().max(1000).optional(),
+  about_us: z.string().trim().max(2000).optional(),
+});
+
+const roomSchema = z.object({
+  name: z.string().trim().min(1, "Room name required").max(100),
+  price: z.number().min(0, "Price must be positive"),
+  capacity: z.number().min(1, "Capacity must be at least 1").max(20),
+});
+
+interface Room {
+  name: string;
+  price: number;
+  capacity: number;
+}
+
+const HotelRegistration = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const [hotelData, setHotelData] = useState({
+    name: "",
+    address: "",
+    city: "",
+    country: "",
+    phone: "",
+    email: "",
+    description: "",
+    about_us: "",
+  });
+
+  const [rooms, setRooms] = useState<Room[]>([
+    { name: "", price: 0, capacity: 2 }
+  ]);
+
+  const totalSteps = 3;
+  const progress = (step / totalSteps) * 100;
+
+  const addRoom = () => {
+    setRooms([...rooms, { name: "", price: 0, capacity: 2 }]);
+  };
+
+  const removeRoom = (index: number) => {
+    if (rooms.length > 1) {
+      setRooms(rooms.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateRoom = (index: number, field: keyof Room, value: string | number) => {
+    const newRooms = [...rooms];
+    newRooms[index] = { ...newRooms[index], [field]: value };
+    setRooms(newRooms);
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      const validation = hotelSchema.safeParse(hotelData);
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+    }
+
+    if (step === 2) {
+      for (let i = 0; i < rooms.length; i++) {
+        const validation = roomSchema.safeParse(rooms[i]);
+        if (!validation.success) {
+          toast.error(`Room ${i + 1}: ${validation.error.errors[0].message}`);
+          return;
+        }
+      }
+    }
+
+    setStep(step + 1);
+  };
+
+  const handleBack = () => {
+    setStep(step - 1);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    try {
+      // Validate all data
+      const hotelValidation = hotelSchema.safeParse(hotelData);
+      if (!hotelValidation.success) {
+        toast.error(hotelValidation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
+      for (let room of rooms) {
+        const roomValidation = roomSchema.safeParse(room);
+        if (!roomValidation.success) {
+          toast.error(`Room error: ${roomValidation.error.errors[0].message}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Get the user (they should be signed up first)
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast.error("Please create an account first");
+        navigate("/auth");
+        return;
+      }
+
+      // Get basic plan
+      const { data: basicPlan } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .eq('name', 'Basic')
+        .single();
+
+      // Create hotel
+      const { data: hotel, error: hotelError } = await supabase
+        .from('hotels')
+        .insert({
+          owner_id: user.id,
+          name: hotelValidation.data.name,
+          address: hotelValidation.data.address,
+          city: hotelValidation.data.city,
+          country: hotelValidation.data.country,
+          phone: hotelValidation.data.phone,
+          email: hotelValidation.data.email,
+          description: hotelValidation.data.description || null,
+          about_us: hotelValidation.data.about_us || null,
+          status: 'pending',
+          plan_id: basicPlan?.id,
+        })
+        .select()
+        .single();
+
+      if (hotelError) throw hotelError;
+
+      // Create rooms
+      const roomsData = rooms.map(room => ({
+        hotel_id: hotel.id,
+        name: room.name,
+        price: room.price,
+        capacity: room.capacity,
+        is_available: true,
+      }));
+
+      const { error: roomsError } = await supabase
+        .from('rooms')
+        .insert(roomsData);
+
+      if (roomsError) throw roomsError;
+
+      toast.success("Hotel registration submitted! Awaiting admin review.");
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Failed to register hotel");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10 flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
+      <div className="w-full max-w-3xl relative z-10 animate-fade-in">
+        <Link to="/" className="inline-flex items-center gap-2 mb-8 text-sm text-muted-foreground hover:text-primary transition-colors group">
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to home
+        </Link>
+
+        <Card className="shadow-2xl border-border/50 backdrop-blur-sm bg-card/95">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-primary"></div>
+          
+          <CardHeader className="space-y-3 pb-6 pt-8">
+            <CardTitle className="text-3xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
+              Register Your Hotel
+            </CardTitle>
+            <CardDescription className="text-center text-base">
+              Step {step} of {totalSteps}
+            </CardDescription>
+            <Progress value={progress} className="h-2" />
+          </CardHeader>
+
+          <CardContent className="pb-8">
+            {/* Step 1: Hotel Information */}
+            {step === 1 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-2 text-lg font-semibold mb-4">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Hotel Information
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Hotel Name *</Label>
+                    <Input
+                      id="name"
+                      placeholder="Grand Hotel"
+                      value={hotelData.name}
+                      onChange={(e) => setHotelData({ ...hotelData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="info@hotel.com"
+                      value={hotelData.email}
+                      onChange={(e) => setHotelData({ ...hotelData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input
+                      id="phone"
+                      placeholder="+1 234 567 890"
+                      value={hotelData.phone}
+                      onChange={(e) => setHotelData({ ...hotelData, phone: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      placeholder="New York"
+                      value={hotelData.city}
+                      onChange={(e) => setHotelData({ ...hotelData, city: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country *</Label>
+                    <Input
+                      id="country"
+                      placeholder="United States"
+                      value={hotelData.country}
+                      onChange={(e) => setHotelData({ ...hotelData, country: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address *</Label>
+                  <Input
+                    id="address"
+                    placeholder="123 Main Street, Suite 100"
+                    value={hotelData.address}
+                    onChange={(e) => setHotelData({ ...hotelData, address: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Short Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Brief description of your hotel..."
+                    value={hotelData.description}
+                    onChange={(e) => setHotelData({ ...hotelData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="about_us">About Us</Label>
+                  <Textarea
+                    id="about_us"
+                    placeholder="Tell us more about your hotel..."
+                    value={hotelData.about_us}
+                    onChange={(e) => setHotelData({ ...hotelData, about_us: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Rooms */}
+            {step === 2 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-lg font-semibold">
+                    <Building2 className="h-5 w-5 text-primary" />
+                    Room Information
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addRoom}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Room
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {rooms.map((room, index) => (
+                    <Card key={index} className="p-4 bg-accent/20">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-semibold">Room {index + 1}</h4>
+                        {rooms.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeRoom(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>Room Name *</Label>
+                          <Input
+                            placeholder="Deluxe Suite"
+                            value={room.name}
+                            onChange={(e) => updateRoom(index, 'name', e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Price per Night (€) *</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="100"
+                            value={room.price || ""}
+                            onChange={(e) => updateRoom(index, 'price', parseFloat(e.target.value) || 0)}
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Guest Capacity *</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="20"
+                            placeholder="2"
+                            value={room.capacity || ""}
+                            onChange={(e) => updateRoom(index, 'capacity', parseInt(e.target.value) || 1)}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Review & Submit */}
+            {step === 3 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-2 text-lg font-semibold mb-4">
+                  <Info className="h-5 w-5 text-primary" />
+                  Review & Submit
+                </div>
+
+                <Card className="p-6 bg-accent/20">
+                  <h3 className="font-semibold text-lg mb-4">Hotel Details</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Name:</span>
+                      <p className="font-medium">{hotelData.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{hotelData.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Phone:</span>
+                      <p className="font-medium">{hotelData.phone}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Location:</span>
+                      <p className="font-medium">{hotelData.city}, {hotelData.country}</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6 bg-accent/20">
+                  <h3 className="font-semibold text-lg mb-4">Rooms ({rooms.length})</h3>
+                  <div className="space-y-3">
+                    {rooms.map((room, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-background rounded-lg">
+                        <div>
+                          <p className="font-medium">{room.name}</p>
+                          <p className="text-sm text-muted-foreground">Capacity: {room.capacity} guests</p>
+                        </div>
+                        <p className="font-bold text-primary">€{room.price}/night</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    🎉 Your hotel will be reviewed by our admin team within 24-48 hours. You'll receive an email once your hotel is approved and live on the platform!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-6 border-t">
+              {step > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={loading}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              )}
+
+              {step < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
+                >
+                  {loading ? "Submitting..." : "Submit for Review"}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default HotelRegistration;
