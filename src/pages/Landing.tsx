@@ -508,7 +508,7 @@ const Landing = () => {
                             • {getRatingLabel(hotel.avgRating)}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            ({hotel.reviewCount} {hotel.reviewCount === 1 ? 'review' : 'reviews'})
+                            ({hotel.reviewCount})
                           </span>
                         </div>
                       )}
