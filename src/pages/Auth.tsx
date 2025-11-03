@@ -9,7 +9,6 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { mapAuthError } from "@/lib/errorUtils";
-import wixotelLogo from "@/assets/wixotel-logo.png";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
@@ -89,11 +88,9 @@ const Auth = () => {
         </Link>
         
         <div className="flex items-center justify-center mb-10">
-          <img 
-            src={wixotelLogo} 
-            alt="Wixotel" 
-            className="h-16 w-auto object-contain drop-shadow-2xl"
-          />
+          <span className="text-5xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent drop-shadow-2xl">
+            WIXOTEL
+          </span>
         </div>
 
         <Card className="shadow-2xl border-border/50 backdrop-blur-sm bg-card/95 overflow-hidden">
