@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface Hotel {
   id: string;
@@ -20,6 +19,7 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const [tokenError, setTokenError] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -28,6 +28,7 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
     const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
     if (!mapboxToken) {
       console.error('Mapbox token not found');
+      setTokenError(true);
       return;
     }
 
@@ -117,10 +118,24 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
     }
   }, [hotels]);
 
+  if (tokenError) {
+    return (
+      <div className="relative w-full h-[600px] rounded-xl overflow-hidden shadow-elegant bg-accent/20 flex items-center justify-center">
+        <div className="text-center p-8">
+          <h3 className="text-xl font-semibold mb-2">Map Configuration Needed</h3>
+          <p className="text-muted-foreground">
+            Mapbox token not configured. Please add VITE_MAPBOX_PUBLIC_TOKEN to your environment variables.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden shadow-elegant">
       <div ref={mapContainer} className="absolute inset-0" />
       <style>{`
+        @import url('https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css');
         .mapboxgl-popup-content {
           border-radius: 8px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
