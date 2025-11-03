@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
+// mapbox-gl is loaded dynamically to avoid module import issues
 
 interface Hotel {
   id: string;
@@ -17,45 +17,52 @@ interface HotelsMapProps {
 
 const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
+  const map = useRef<any>(null);
+  const mapboxRef = useRef<any>(null);
+  const markers = useRef<any[]>([]);
   const [tokenError, setTokenError] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Get Mapbox token from environment
-    const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
-    if (!mapboxToken) {
-      console.error('Mapbox token not found');
-      setTokenError(true);
-      return;
-    }
+    const init = async () => {
+      // Get Mapbox token from environment
+      const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+      if (!mapboxToken) {
+        console.error('Mapbox token not found');
+        setTokenError(true);
+        return;
+      }
 
-    mapboxgl.accessToken = mapboxToken;
+      const mod = await import('mapbox-gl');
+      mapboxRef.current = mod.default;
+      mapboxRef.current.accessToken = mapboxToken;
 
-    // Initialize map
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [20, 45], // Center on Europe
-      zoom: 4,
-    });
+      // Initialize map
+      map.current = new mapboxRef.current.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [20, 45], // Center on Europe
+        zoom: 4,
+      });
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxRef.current.NavigationControl({
+          visualizePitch: true,
+        }),
+        'top-right'
+      );
 
-    // Enable scroll zoom
-    map.current.scrollZoom.enable();
+      // Enable scroll zoom
+      map.current.scrollZoom.enable();
+    };
+
+    init();
 
     // Cleanup
     return () => {
-      markers.current.forEach(marker => marker.remove());
+      markers.current.forEach((marker: any) => marker.remove());
       markers.current = [];
       map.current?.remove();
     };
@@ -63,10 +70,10 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
 
   // Update markers when hotels change
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapboxRef.current) return;
 
     // Clear existing markers
-    markers.current.forEach(marker => marker.remove());
+    markers.current.forEach((marker: any) => marker.remove());
     markers.current = [];
 
     // Filter hotels with valid coordinates
@@ -85,7 +92,7 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
       el.style.cursor = 'pointer';
 
       // Create popup
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+      const popup = new mapboxRef.current.Popup({ offset: 25 }).setHTML(`
         <div style="padding: 8px;">
           <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">${hotel.name}</h3>
           <p style="margin: 0; font-size: 14px; color: #666;">
@@ -97,7 +104,7 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
         </div>
       `);
 
-      const marker = new mapboxgl.Marker(el)
+      const marker = new mapboxRef.current.Marker(el)
         .setLngLat([Number(hotel.longitude), Number(hotel.latitude)])
         .setPopup(popup)
         .addTo(map.current!);
@@ -107,7 +114,7 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
 
     // Fit map to show all markers if there are any
     if (hotelsWithCoords.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
+      const bounds = new mapboxRef.current.LngLatBounds();
       hotelsWithCoords.forEach(hotel => {
         bounds.extend([Number(hotel.longitude), Number(hotel.latitude)]);
       });
