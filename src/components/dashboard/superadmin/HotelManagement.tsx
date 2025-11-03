@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Search, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, EyeOff, FileText, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -53,6 +54,9 @@ const HotelManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
+  const [viewingHotel, setViewingHotel] = useState<Hotel | null>(null);
+  const [hotelRooms, setHotelRooms] = useState<any[]>([]);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -226,6 +230,52 @@ const HotelManagement = () => {
     }
   };
 
+  const handleViewDetails = async (hotel: Hotel) => {
+    setViewingHotel(hotel);
+    
+    // Fetch hotel rooms
+    const { data: rooms } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('hotel_id', hotel.id)
+      .order('created_at', { ascending: true });
+    
+    setHotelRooms(rooms || []);
+    setIsViewModalOpen(true);
+  };
+
+  const handleApprove = async (hotelId: string) => {
+    const { error } = await supabase
+      .from('hotels')
+      .update({ status: 'active' })
+      .eq('id', hotelId);
+
+    if (error) {
+      toast.error("Failed to approve hotel");
+    } else {
+      toast.success("Hotel approved successfully!");
+      setIsViewModalOpen(false);
+      fetchHotels();
+    }
+  };
+
+  const handleReject = async (hotelId: string) => {
+    if (!confirm("Are you sure you want to reject this hotel registration?")) return;
+
+    const { error } = await supabase
+      .from('hotels')
+      .update({ status: 'suspended' })
+      .eq('id', hotelId);
+
+    if (error) {
+      toast.error("Failed to reject hotel");
+    } else {
+      toast.success("Hotel registration rejected");
+      setIsViewModalOpen(false);
+      fetchHotels();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -373,11 +423,11 @@ const HotelManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Address</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Landing Page</TableHead>
+                <TableHead>Landing</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -387,13 +437,18 @@ const HotelManagement = () => {
                   <TableCell className="font-medium">{hotel.name}</TableCell>
                   <TableCell>
                     <div className="text-sm">
+                      {hotel.city && <div>{hotel.city}</div>}
+                      {hotel.country && <div className="text-muted-foreground">{hotel.country}</div>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
                       <div>{hotel.email}</div>
                       <div className="text-muted-foreground">{hotel.phone}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">{hotel.address}</TableCell>
                   <TableCell>
-                    <Badge variant={hotel.status === 'active' ? 'default' : 'secondary'}>
+                    <Badge variant={hotel.status === 'active' ? 'default' : hotel.status === 'pending' ? 'secondary' : 'destructive'}>
                       {hotel.status}
                     </Badge>
                   </TableCell>
@@ -403,24 +458,20 @@ const HotelManagement = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={hotel.show_on_landing}
-                        onCheckedChange={() => toggleShowOnLanding(hotel.id, hotel.show_on_landing)}
-                      />
-                      {hotel.show_on_landing ? (
-                        <Eye className="h-4 w-4 text-primary" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
+                    <Switch
+                      checked={hotel.show_on_landing}
+                      onCheckedChange={() => toggleShowOnLanding(hotel.id, hotel.show_on_landing)}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(hotel)}>
+                      <Button size="sm" variant="ghost" onClick={() => handleViewDetails(hotel)} title="View Details">
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleEdit(hotel)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleDelete(hotel.id)}>
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(hotel.id)} title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -431,6 +482,114 @@ const HotelManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* View Details Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-popover">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Hotel Registration Details</DialogTitle>
+          </DialogHeader>
+          
+          {viewingHotel && (
+            <div className="space-y-6">
+              {/* Status Badge */}
+              <div className="flex items-center justify-between">
+                <Badge 
+                  variant={viewingHotel.status === 'active' ? 'default' : viewingHotel.status === 'pending' ? 'secondary' : 'destructive'}
+                  className="text-lg px-4 py-2"
+                >
+                  {viewingHotel.status}
+                </Badge>
+                
+                {viewingHotel.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleApprove(viewingHotel.id)} className="bg-green-600 hover:bg-green-700">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approve
+                    </Button>
+                    <Button onClick={() => handleReject(viewingHotel.id)} variant="destructive">
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Hotel Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Hotel Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Hotel Name</Label>
+                    <p className="font-medium">{viewingHotel.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Email</Label>
+                    <p className="font-medium">{viewingHotel.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Phone</Label>
+                    <p className="font-medium">{viewingHotel.phone}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">City</Label>
+                    <p className="font-medium">{viewingHotel.city || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Country</Label>
+                    <p className="font-medium">{viewingHotel.country || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Subscription Plan</Label>
+                    <p className="font-medium">{viewingHotel.subscription_plans?.name || viewingHotel.subscription_plan}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-muted-foreground">Address</Label>
+                    <p className="font-medium">{viewingHotel.address}</p>
+                  </div>
+                  {viewingHotel.description && (
+                    <div className="col-span-2">
+                      <Label className="text-muted-foreground">Description</Label>
+                      <p className="font-medium">{viewingHotel.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Rooms */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Rooms ({hotelRooms.length})</h3>
+                {hotelRooms.length > 0 ? (
+                  <div className="space-y-3">
+                    {hotelRooms.map((room, index) => (
+                      <Card key={room.id} className="bg-accent/20">
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <p className="font-semibold text-lg">{room.name}</p>
+                              <div className="flex gap-4 text-sm text-muted-foreground">
+                                <span>Capacity: {room.capacity} guests</span>
+                                {room.room_number && <span>Room #{room.room_number}</span>}
+                              </div>
+                            </div>
+                            <p className="text-2xl font-bold text-primary">€{room.price}<span className="text-sm font-normal">/night</span></p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No rooms registered yet</p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
