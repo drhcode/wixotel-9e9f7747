@@ -37,6 +37,7 @@ import {
   Instagram,
   Star,
   MessageSquare,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -45,6 +46,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { cn } from "@/lib/utils";
 import { ReviewModal } from "@/components/hotel/ReviewModal";
+import { BookingLookup } from "@/components/BookingLookup";
 
 interface Hotel {
   id: string;
@@ -100,6 +102,7 @@ const HotelPublicView = () => {
   const [userCountry, setUserCountry] = useState<string>("US");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [bookingLookupOpen, setBookingLookupOpen] = useState(false);
 
   // Track page analytics
   useAnalyticsTracking(hotel?.id, `/hotel/${hotelSlug}`);
@@ -525,7 +528,7 @@ const HotelPublicView = () => {
             </button>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-6">
               <button
                 onClick={() => scrollToSection("rooms")}
                 className="text-sm font-medium hover:text-primary transition-colors"
@@ -550,6 +553,15 @@ const HotelPublicView = () => {
               >
                 Contact Us
               </button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBookingLookupOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Find Booking
+              </Button>
             </nav>
 
             {/* Mobile Menu Toggle */}
@@ -586,6 +598,18 @@ const HotelPublicView = () => {
                   >
                     Contact Us
                   </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setBookingLookupOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 mx-4"
+                  >
+                    <Search className="h-4 w-4" />
+                    Find Booking
+                  </Button>
                 </div>
               </nav>
             )}
@@ -1497,17 +1521,20 @@ const HotelPublicView = () => {
 
       {/* Review Modal */}
       {hotel && (
-        <ReviewModal
-          open={reviewModalOpen}
-          onOpenChange={(open) => {
-            setReviewModalOpen(open);
-            if (!open) {
-              fetchReviews(); // Refresh reviews after submission
-            }
-          }}
-          hotelId={hotel.id}
-          hotelName={hotel.name}
-        />
+        <>
+          <ReviewModal
+            open={reviewModalOpen}
+            onOpenChange={(open) => {
+              setReviewModalOpen(open);
+              if (!open) {
+                fetchReviews(); // Refresh reviews after submission
+              }
+            }}
+            hotelId={hotel.id}
+            hotelName={hotel.name}
+          />
+          <BookingLookup open={bookingLookupOpen} onOpenChange={setBookingLookupOpen} />
+        </>
       )}
     </div>
   );
