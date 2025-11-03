@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           check_in: string
           check_out: string
+          confirmation_number: string | null
           created_at: string
           full_name: string
           guest_count: number
@@ -36,6 +37,7 @@ export type Database = {
         Insert: {
           check_in: string
           check_out: string
+          confirmation_number?: string | null
           created_at?: string
           full_name: string
           guest_count?: number
@@ -54,6 +56,7 @@ export type Database = {
         Update: {
           check_in?: string
           check_out?: string
+          confirmation_number?: string | null
           created_at?: string
           full_name?: string
           guest_count?: number
@@ -947,7 +950,7 @@ export type Database = {
       }
       create_review_with_validation: {
         Args: {
-          p_email: string
+          p_confirmation_number: string
           p_hotel_id: string
           p_photo_url: string
           p_rating: number
@@ -980,18 +983,32 @@ export type Database = {
         }
         Returns: boolean
       }
-      send_booking_confirmation_email: {
-        Args: {
-          p_check_in: string
-          p_check_out: string
-          p_guest_email: string
-          p_guest_name: string
-          p_hotel_id: string
-          p_room_name: string
-          p_total_amount: number
-        }
-        Returns: undefined
-      }
+      send_booking_confirmation_email:
+        | {
+            Args: {
+              p_check_in: string
+              p_check_out: string
+              p_confirmation_number: string
+              p_guest_email: string
+              p_guest_name: string
+              p_hotel_id: string
+              p_room_name: string
+              p_total_amount: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_check_in: string
+              p_check_out: string
+              p_guest_email: string
+              p_guest_name: string
+              p_hotel_id: string
+              p_room_name: string
+              p_total_amount: number
+            }
+            Returns: undefined
+          }
       send_email_notification: {
         Args: {
           p_email_type: string
@@ -1024,7 +1041,7 @@ export type Database = {
         Returns: undefined
       }
       verify_booking_for_review: {
-        Args: { p_email: string; p_hotel_id: string }
+        Args: { p_confirmation_number: string; p_hotel_id: string }
         Returns: string
       }
     }

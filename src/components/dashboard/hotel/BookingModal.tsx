@@ -214,6 +214,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       const ci = normalize(checkIn);
       const co = normalize(checkOut);
       
+      // Generate unique confirmation number
+      const confirmationNumber = `wixo${Date.now()}${Math.random().toString(36).substring(2, 9)}`.toUpperCase();
+      
       const { error } = await supabase.from('bookings').insert({
         hotel_id: hotelId,
         room_id: selectedRoom,
@@ -226,7 +229,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         total_amount: totalPrice,
         guest_count: guestCount,
         notes,
-        status: 'reserved'
+        status: 'reserved',
+        confirmation_number: confirmationNumber
       });
       if (error) throw error;
       
@@ -257,6 +261,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               checkIn: format(ci, 'PPP'),
               checkOut: format(co, 'PPP'),
               totalAmount: totalPrice,
+              confirmationNumber: confirmationNumber,
               hotel: hotelData,
             });
 

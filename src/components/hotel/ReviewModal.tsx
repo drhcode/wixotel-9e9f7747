@@ -17,9 +17,9 @@ interface ReviewModalProps {
 }
 
 export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewModalProps) {
-  const [step, setStep] = useState<"email" | "review">("email");
-  const [email, setEmail] = useState("");
-  const [validatingEmail, setValidatingEmail] = useState(false);
+  const [step, setStep] = useState<"confirmation" | "review">("confirmation");
+  const [confirmationNumber, setConfirmationNumber] = useState("");
+  const [validatingConfirmation, setValidatingConfirmation] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -31,39 +31,37 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
     photoUrl: "",
   });
 
-  const validateEmail = async () => {
+  const validateConfirmation = async () => {
     try {
-      setValidatingEmail(true);
+      setValidatingConfirmation(true);
 
-      // Validate email format
-      const emailSchema = z.string().email("Invalid email address");
-      emailSchema.parse(email);
+      // Validate confirmation number format
+      if (!confirmationNumber || confirmationNumber.trim().length < 10) {
+        toast.error("Please enter a valid confirmation number");
+        return;
+      }
 
-      // Check if user has a booking at this hotel (server-side, bypassing RLS)
+      // Check if booking exists with this confirmation number
       const { data, error } = await supabase.rpc('verify_booking_for_review', {
         p_hotel_id: hotelId,
-        p_email: email.toLowerCase().trim(),
+        p_confirmation_number: confirmationNumber.trim().toUpperCase(),
       });
 
       if (error) throw error;
 
       if (!data) {
-        toast.error("No booking found with this email address at this hotel.");
+        toast.error("No booking found with this confirmation number.");
         return;
       }
 
       setBookingId(data as string);
       setStep("review");
-      toast.success("Email verified! You can now write your review.");
+      toast.success("Confirmation verified! You can now write your review.");
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error("Please enter a valid email address");
-      } else {
-        console.error("Error validating email:", error);
-        toast.error("Failed to verify email. Please try again.");
-      }
+      console.error("Error validating confirmation:", error);
+      toast.error("Failed to verify confirmation number. Please try again.");
     } finally {
-      setValidatingEmail(false);
+      setValidatingConfirmation(false);
     }
   };
 
@@ -124,7 +122,7 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
 
       const { data, error } = await supabase.rpc('create_review_with_validation', {
         p_hotel_id: hotelId,
-        p_email: email.toLowerCase().trim(),
+        p_confirmation_number: confirmationNumber.trim().toUpperCase(),
         p_title: validated.title,
         p_rating: validated.rating,
         p_review: validated.review,
@@ -132,8 +130,8 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
       });
 
       if (error) {
-        if (error.message === 'no_booking_for_email') {
-          throw new Error("No valid booking found for this email at this hotel.");
+        if (error.message === 'no_booking_for_confirmation') {
+          throw new Error("No valid booking found with this confirmation number.");
         }
         throw error;
       }
@@ -154,8 +152,8 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
   };
 
   const handleClose = () => {
-    setStep("email");
-    setEmail("");
+    setStep("confirmation");
+    setConfirmationNumber("");
     setBookingId(null);
     setReviewData({ title: "", rating: 0, review: "", photoUrl: "" });
     onOpenChange(false);
@@ -168,34 +166,38 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
           <DialogTitle className="text-2xl">Write a Review for {hotelName}</DialogTitle>
         </DialogHeader>
 
-        {step === "email" ? (
+        {step === "confirmation" ? (
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              To ensure authentic reviews, please enter the email address you used when booking.
+              To ensure authentic reviews, please enter your booking confirmation number.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="confirmation">Confirmation Number</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && validateEmail()}
+                id="confirmation"
+                type="text"
+                placeholder="WIXOXXXXXXXXX"
+                value={confirmationNumber}
+                onChange={(e) => setConfirmationNumber(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && validateConfirmation()}
+                className="font-mono"
               />
+              <p className="text-xs text-muted-foreground">
+                You can find this in your booking confirmation email
+              </p>
             </div>
             <Button
-              onClick={validateEmail}
-              disabled={validatingEmail || !email}
+              onClick={validateConfirmation}
+              disabled={validatingConfirmation || !confirmationNumber}
               className="w-full"
             >
-              {validatingEmail ? (
+              {validatingConfirmation ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Verifying...
                 </>
               ) : (
-                "Verify Email"
+                "Verify Confirmation"
               )}
             </Button>
           </div>

@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star } from "lucide-react";
+import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star, Search } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
+import { BookingLookup } from "@/components/BookingLookup";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +31,7 @@ interface PublicHotel {
 const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const [bookingLookupOpen, setBookingLookupOpen] = useState(false);
   const [hotels, setHotels] = useState<PublicHotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<PublicHotel[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
@@ -309,6 +311,14 @@ const Landing = () => {
               <span className="text-3xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setBookingLookupOpen(true)}
+                className="hidden sm:flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Find Booking
+              </Button>
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105">
                   Login to Panel
@@ -697,6 +707,9 @@ const Landing = () => {
           </div>
         </div>
       </footer>
+      
+      <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
+      <BookingLookup open={bookingLookupOpen} onOpenChange={setBookingLookupOpen} />
     </div>
   );
 };
