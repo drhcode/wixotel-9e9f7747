@@ -13,49 +13,69 @@ interface Hotel {
 
 interface HotelsMapProps {
   hotels: Hotel[];
+  userLocation?: { lat: number; lng: number } | null;
 }
 
-const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
+const HotelsMap: React.FC<HotelsMapProps> = ({ hotels, userLocation }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const mapboxRef = useRef<any>(null);
   const markers = useRef<any[]>([]);
   const [tokenError, setTokenError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
     const init = async () => {
-      // Get Mapbox token from environment
-      const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
-      if (!mapboxToken) {
-        console.error('Mapbox token not found');
+      try {
+        // Get Mapbox token from environment
+        const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+        if (!mapboxToken) {
+          console.error('Mapbox token not found');
+          setTokenError(true);
+          setIsLoading(false);
+          return;
+        }
+
+        const mod = await import('mapbox-gl');
+        mapboxRef.current = mod.default;
+        mapboxRef.current.accessToken = mapboxToken;
+
+        // Determine initial center and zoom
+        const initialCenter = userLocation 
+          ? [userLocation.lng, userLocation.lat]
+          : [20, 45]; // Default to Europe
+        const initialZoom = userLocation ? 10 : 4;
+
+        // Initialize map
+        map.current = new mapboxRef.current.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: initialCenter,
+          zoom: initialZoom,
+        });
+
+        // Add navigation controls
+        map.current.addControl(
+          new mapboxRef.current.NavigationControl({
+            visualizePitch: true,
+          }),
+          'top-right'
+        );
+
+        // Enable scroll zoom
+        map.current.scrollZoom.enable();
+
+        // Wait for map to load
+        map.current.on('load', () => {
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.error('Map initialization error:', error);
         setTokenError(true);
-        return;
+        setIsLoading(false);
       }
-
-      const mod = await import('mapbox-gl');
-      mapboxRef.current = mod.default;
-      mapboxRef.current.accessToken = mapboxToken;
-
-      // Initialize map
-      map.current = new mapboxRef.current.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [20, 45], // Center on Europe
-        zoom: 4,
-      });
-
-      // Add navigation controls
-      map.current.addControl(
-        new mapboxRef.current.NavigationControl({
-          visualizePitch: true,
-        }),
-        'top-right'
-      );
-
-      // Enable scroll zoom
-      map.current.scrollZoom.enable();
     };
 
     init();
@@ -67,6 +87,17 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
       map.current?.remove();
     };
   }, []);
+
+  // Center map on user location when it becomes available
+  useEffect(() => {
+    if (!map.current || !userLocation) return;
+    
+    map.current.flyTo({
+      center: [userLocation.lng, userLocation.lat],
+      zoom: 10,
+      duration: 2000
+    });
+  }, [userLocation]);
 
   // Update markers when hotels change
   useEffect(() => {
@@ -140,6 +171,14 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels }) => {
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden shadow-elegant">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-accent/20 z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      )}
       <div ref={mapContainer} className="absolute inset-0" />
       <style>{`
         @import url('https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css');

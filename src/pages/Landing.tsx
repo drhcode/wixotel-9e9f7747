@@ -64,6 +64,8 @@ const Landing = () => {
 
   useEffect(() => {
     fetchHotels();
+    // Auto-detect user location on page load
+    getUserLocation();
   }, []);
 
   useEffect(() => {
@@ -701,7 +703,7 @@ const Landing = () => {
               Explore our network of premium hotels across the globe
             </p>
           </div>
-          <HotelsMap hotels={filteredHotels} />
+          <HotelsMap hotels={filteredHotels} userLocation={userLocation} />
         </div>
       </section>
 
