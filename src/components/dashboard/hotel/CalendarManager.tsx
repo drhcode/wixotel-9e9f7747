@@ -371,13 +371,15 @@ const CalendarManager = ({ hotelId }: Props) => {
         />
       )}
 
-      <CalendarBookingsList
-        selectedDate={selectedDate}
-        bookings={selectedDateBookings}
-        rooms={rooms}
-        onBookingClick={setSelectedBooking}
-        getStatusColor={getStatusColor}
-      />
+      <div className="md:hidden">
+        <CalendarBookingsList
+          selectedDate={selectedDate}
+          bookings={selectedDateBookings}
+          rooms={rooms}
+          onBookingClick={setSelectedBooking}
+          getStatusColor={getStatusColor}
+        />
+      </div>
 
       <BookingModal
         isOpen={isModalOpen}
