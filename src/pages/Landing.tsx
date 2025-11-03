@@ -453,8 +453,8 @@ const Landing = () => {
             {/* Hotels Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredHotels.map((hotel) => (
-                <Link key={hotel.id} to={`/hotel/${hotel.slug}`}>
-                  <Card className="group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
+                  <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-video relative overflow-hidden bg-accent">
                       {hotel.about_us_image ? (
                         <img 
@@ -482,8 +482,8 @@ const Landing = () => {
                         </div>
                       )}
                     </div>
-                    <CardHeader>
-                      <CardTitle className="group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
+                    <CardHeader className="flex-1">
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
                       
                       {hotel.avgRating && hotel.reviewCount && (
                         <div className="flex items-center gap-2 py-2">
