@@ -313,15 +313,17 @@ const Landing = () => {
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setBookingLookupOpen(true)}
-                className="hidden sm:flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 <Search className="h-4 w-4" />
-                Find Booking
+                <span className="hidden sm:inline">Find Booking</span>
               </Button>
               <Link to="/auth">
-                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105">
-                  Login to Panel
+                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
+                  <span className="hidden sm:inline">Login to Panel</span>
+                  <span className="sm:hidden">Login</span>
                 </Button>
               </Link>
             </div>
