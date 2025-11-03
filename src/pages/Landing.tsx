@@ -9,6 +9,7 @@ import { BookingLookup } from "@/components/BookingLookup";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import HotelsMap from "@/components/HotelsMap";
 
 
 interface PublicHotel {
@@ -688,20 +689,19 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 md:px-6 bg-gradient-hero">
-        <div className="container mx-auto text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Transform Your Hotel Management?
-          </h2>
-          <p className="text-lg md:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join hundreds of hotels already using WIXOTEL to streamline operations and boost revenue
-          </p>
-          <Link to="/auth">
-            <Button size="lg" variant="secondary" className="shadow-lg hover:scale-105 transition-transform">
-              Get Started Now
-            </Button>
-          </Link>
+      {/* Hotels Map Section */}
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-accent/30 to-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
+              DISCOVER LOCATIONS
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Find Hotels Near You</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Explore our network of premium hotels across the globe
+            </p>
+          </div>
+          <HotelsMap hotels={filteredHotels} />
         </div>
       </section>
 
