@@ -37,6 +37,8 @@ interface Hotel {
   facebook_url: string | null;
   instagram_url: string | null;
   google_business_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const ProfileSettings = () => {
@@ -63,6 +65,8 @@ const ProfileSettings = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   
   const [loading, setLoading] = useState(false);
+  const [hotelLatitude, setHotelLatitude] = useState<string>("");
+  const [hotelLongitude, setHotelLongitude] = useState<string>("");
 
   useEffect(() => {
     fetchHotelData();
@@ -94,6 +98,8 @@ const ProfileSettings = () => {
       setInstagramUrl(hotelData.instagram_url || "");
       setGoogleBusinessUrl(hotelData.google_business_url || "");
       setLogoUrl(hotelData.logo_url || "");
+      setHotelLatitude(hotelData.latitude !== null && hotelData.latitude !== undefined ? String(hotelData.latitude) : "");
+      setHotelLongitude(hotelData.longitude !== null && hotelData.longitude !== undefined ? String(hotelData.longitude) : "");
     }
   };
 
@@ -218,7 +224,9 @@ const ProfileSettings = () => {
         facebook_url: facebookUrl || null,
         instagram_url: instagramUrl || null,
         google_business_url: googleBusinessUrl || null,
-        logo_url: logoUrl || null
+        logo_url: logoUrl || null,
+        latitude: hotelLatitude ? parseFloat(hotelLatitude) : null,
+        longitude: hotelLongitude ? parseFloat(hotelLongitude) : null,
       })
       .eq('id', hotel.id);
 
@@ -372,6 +380,28 @@ const ProfileSettings = () => {
                 onChange={(e) => setHotelCity(e.target.value)}
                 placeholder="Enter city"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hotel-latitude">Latitude</Label>
+              <Input
+                id="hotel-latitude"
+                value={hotelLatitude}
+                onChange={(e) => setHotelLatitude(e.target.value)}
+                placeholder="e.g. 40.4168"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hotel-longitude">Longitude</Label>
+              <Input
+                id="hotel-longitude"
+                value={hotelLongitude}
+                onChange={(e) => setHotelLongitude(e.target.value)}
+                placeholder="e.g. -3.7038"
+              />
+              <p className="text-xs text-muted-foreground">Optional: set exact coordinates for precise map pin</p>
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import { URLPattern as URLPatternPolyfill } from "urlpattern-polyfill";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Force URLPattern polyfill on buggy Mobile Safari implementations
 try {
