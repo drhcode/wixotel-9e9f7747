@@ -11,21 +11,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { getCountries, getCitiesForCountry } from "@/lib/countries";
 import { z } from "zod";
 import { mapDatabaseError } from "@/lib/errorUtils";
 
-// const guestSchema = z.object({
-//   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-//   phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
-//   email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal("")),
-//   country: z.string().min(1, "Country is required"),
-//   city: z.string().min(1, "City is required"),
-//   guestCount: z.number().min(1, "At least 1 guest required"),
-//   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-//   totalPrice: z.number().positive("Total price must be positive"),
-// });
-
+// ✅ Simplified schema – only Full Name and totalPrice are required
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
   phone: z.string().optional().or(z.literal("")),
@@ -55,11 +44,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
-  const [guestCountry, setGuestCountry] = useState("");
-  const [guestCity, setGuestCity] = useState("");
-  const [guestAddress, setGuestAddress] = useState("");
   const [guestCount, setGuestCount] = useState(1);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,26 +55,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   useEffect(() => {
     if (isOpen) {
       fetchGuests();
-      if (checkIn && checkOut) {
-        fetchAvailableRooms();
-      }
+      if (checkIn && checkOut) fetchAvailableRooms();
     }
   }, [isOpen, checkIn, checkOut]);
-
-  // Update cities when country changes
-  useEffect(() => {
-    if (guestCountry) {
-      const cities = getCitiesForCountry(guestCountry);
-      setAvailableCities(cities);
-      // Reset city if current selection is not in new country
-      if (guestCity && !cities.includes(guestCity)) {
-        setGuestCity("");
-      }
-    } else {
-      setAvailableCities([]);
-      setGuestCity("");
-    }
-  }, [guestCountry]);
 
   const fetchGuests = async () => {
     const { data } = await supabase
@@ -106,7 +74,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       fetchGuests();
       return;
     }
-
     const { data } = await supabase
       .from("guests")
       .select("*")
@@ -117,7 +84,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   };
 
   const fetchAvailableRooms = async () => {
-    // Normalize to start of day to avoid any TZ/time component issues
     const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const ci = normalize(checkIn);
     const co = normalize(checkOut);
@@ -130,14 +96,13 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
     if (!error) {
       setAvailableRooms(data || []);
-      // If current selected room is no longer available for the chosen dates, clear it
       if (selectedRoom && !(data || []).some((r: any) => r.id === selectedRoom)) {
         setSelectedRoom("");
       }
     }
   };
 
-  // Calculate nights and auto-update price
+  // Auto-calc total price
   useEffect(() => {
     if (selectedRoom && checkIn && checkOut) {
       const room = availableRooms.find((r) => r.id === selectedRoom);
@@ -147,18 +112,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       }
     }
   }, [selectedRoom, checkIn, checkOut, availableRooms]);
+
   const handleSubmit = async () => {
-    // Validate minimum 1 night stay
     if (!checkIn || !checkOut) {
       toast.error("Please select check-in and check-out dates");
       return;
     }
-
     if (checkOut <= checkIn) {
-      toast.error("Check-out must be at least 1 day after check-in");
+      toast.error("Check-out must be after check-in");
       return;
     }
-
     if (!selectedRoom) {
       toast.error("Please select a room");
       return;
@@ -170,19 +133,8 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     try {
       let guestId = selectedGuest;
 
-      // If "new" is selected or no guest selected, create a new guest
+      // Create guest if new
       if (selectedGuest === "new" || !selectedGuest) {
-        // Validate required fields
-        // const validation = guestSchema.safeParse({
-        //   fullName: guestName,
-        //   phone: guestPhone,
-        //   email: guestEmail,
-        //   country: guestCountry,
-        //   city: guestCity,
-        //   guestCount: guestCount,
-        //   notes: notes,
-        //   totalPrice: totalPrice,
-        // });
         const validation = guestSchema.safeParse({
           fullName: guestName,
           phone: guestPhone,
@@ -195,9 +147,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         if (!validation.success) {
           const errors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
-            if (err.path[0]) {
-              errors[err.path[0] as string] = err.message;
-            }
+            if (err.path[0]) errors[err.path[0] as string] = err.message;
           });
           setValidationErrors(errors);
           toast.error("Please fill all required fields correctly");
@@ -212,9 +162,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             name: guestName,
             phone: guestPhone,
             email: guestEmail,
-            country: guestCountry,
-            city: guestCity,
-            address: guestAddress,
           })
           .select()
           .single();
@@ -225,13 +172,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
 
       const room = availableRooms.find((r) => r.id === selectedRoom);
       const existingGuest = guests.find((g) => g.id === guestId);
-
-      // Normalize dates before saving
       const normalize = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
       const ci = normalize(checkIn);
       const co = normalize(checkOut);
-
-      // Generate unique confirmation number
       const confirmationNumber = `wixo${Date.now()}${Math.random().toString(36).substring(2, 9)}`.toUpperCase();
 
       const { error } = await supabase.from("bookings").insert({
@@ -249,9 +192,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         status: "reserved",
         confirmation_number: confirmationNumber,
       });
+
       if (error) throw error;
 
-      // Create notification for new booking
       await supabase.from("notifications").insert({
         hotel_id: hotelId,
         type: "booking_created",
@@ -259,65 +202,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         message: `New reservation created for ${guestName || existingGuest?.name}`,
       });
 
-      // Send booking confirmation email to guest if email is provided via Edge Function
-      const finalEmail = guestEmail || existingGuest?.email;
-      if (finalEmail) {
-        try {
-          // Fetch hotel data for email template
-          const { data: hotelData } = await supabase
-            .from("hotels")
-            .select("name, email, phone, address, city, country")
-            .eq("id", hotelId)
-            .single();
-
-          if (hotelData) {
-            const { createBookingConfirmationEmail } = await import("@/lib/emailTemplates");
-            const htmlContent = createBookingConfirmationEmail({
-              guestName: guestName || existingGuest?.name || "Guest",
-              roomName: room?.name || "Room",
-              checkIn: format(ci, "PPP"),
-              checkOut: format(co, "PPP"),
-              totalAmount: totalPrice,
-              confirmationNumber: confirmationNumber,
-              hotel: hotelData,
-            });
-
-            await supabase.functions.invoke("send-email", {
-              body: {
-                hotel_id: hotelId,
-                recipient_email: finalEmail,
-                subject: `Booking Confirmation - ${hotelData.name}`,
-                email_type: "booking_confirmation",
-                html_content: htmlContent,
-              },
-            });
-          }
-        } catch (emailErr) {
-          console.error("Error invoking send-email:", emailErr);
-        }
-      }
-
-      toast.success("Reservation created and guest notified");
-
-      // Reset form
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 2);
-
-      setCheckIn(tomorrow);
-      setCheckOut(dayAfter);
-      setSelectedRoom("");
-      setSelectedGuest("");
-      setGuestName("");
-      setGuestEmail("");
-      setGuestPhone("");
-      setGuestCountry("");
-      setGuestCity("");
-      setGuestAddress("");
-      setGuestCount(1);
-      setNotes("");
-      setTotalPrice(0);
+      toast.success("Reservation created successfully");
 
       onSuccess();
       onClose();
@@ -336,6 +221,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-in</Label>
@@ -353,12 +239,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                     onSelect={(date) => {
                       if (date) {
                         setCheckIn(date);
-                        // Auto-adjust checkout to be at least 1 day after check-in
                         const minCheckout = new Date(date);
                         minCheckout.setDate(minCheckout.getDate() + 1);
-                        if (checkOut <= date) {
-                          setCheckOut(minCheckout);
-                        }
+                        if (checkOut <= date) setCheckOut(minCheckout);
                         setCheckInOpen(false);
                         setCheckOutOpen(true);
                       }
@@ -394,6 +277,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </div>
           </div>
 
+          {/* Room */}
           <div>
             <Label>Available Rooms</Label>
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -408,12 +292,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 ))}
               </SelectContent>
             </Select>
-            {selectedRoom && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Room price: €{availableRooms.find((r) => r.id === selectedRoom)?.price}/night
-              </p>
-            )}
           </div>
+
+          {/* Guest */}
           <div>
             <Label>Guest</Label>
             <div className="space-y-2">
@@ -436,14 +317,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       {guest.name}
                     </SelectItem>
                   ))}
-                  {guests.length === 0 && guestSearchTerm && (
-                    <div className="text-sm text-muted-foreground p-2">No guests found</div>
-                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* New guest */}
           {(!selectedGuest || selectedGuest === "new") && (
             <>
               <div>
@@ -460,95 +339,28 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <p className="text-xs text-destructive mt-1">{validationErrors.fullName}</p>
                 )}
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Phone *</Label>
-                  <Input
-                    value={guestPhone}
-                    onChange={(e) => {
-                      setGuestPhone(e.target.value);
-                      setValidationErrors((prev) => ({ ...prev, phone: "" }));
-                    }}
-                    className={validationErrors.phone ? "border-destructive" : ""}
-                  />
-                  {validationErrors.phone && <p className="text-xs text-destructive mt-1">{validationErrors.phone}</p>}
+                  <Label>Phone</Label>
+                  <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
                 </div>
                 <div>
                   <Label>Email</Label>
                   <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Country *</Label>
-                  <Select
-                    value={guestCountry}
-                    onValueChange={(value) => {
-                      setGuestCountry(value);
-                      setValidationErrors((prev) => ({ ...prev, country: "" }));
-                    }}
-                  >
-                    <SelectTrigger className={validationErrors.country ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-[100] max-h-[300px]">
-                      {getCountries().map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          {country.flag} {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {validationErrors.country && (
-                    <p className="text-xs text-destructive mt-1">{validationErrors.country}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>City *</Label>
-                  <Select
-                    value={guestCity}
-                    onValueChange={(value) => {
-                      setGuestCity(value);
-                      setValidationErrors((prev) => ({ ...prev, city: "" }));
-                    }}
-                    disabled={!guestCountry || availableCities.length === 0}
-                  >
-                    <SelectTrigger className={validationErrors.city ? "border-destructive" : ""}>
-                      <SelectValue placeholder={!guestCountry ? "Select country first" : "Select city"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-[100] max-h-[300px]">
-                      {availableCities.map((city) => (
-                        <SelectItem key={city} value={city}>
-                          {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {validationErrors.city && <p className="text-xs text-destructive mt-1">{validationErrors.city}</p>}
-                </div>
-              </div>
-              <div>
-                <Label>Address</Label>
-                <Input value={guestAddress} onChange={(e) => setGuestAddress(e.target.value)} />
-              </div>
             </>
           )}
 
           <div>
-            <Label>Number of Guests *</Label>
+            <Label>Number of Guests</Label>
             <Input
               type="number"
               min="1"
               value={guestCount}
-              onChange={(e) => {
-                setGuestCount(parseInt(e.target.value) || 1);
-                setValidationErrors((prev) => ({ ...prev, guestCount: "" }));
-              }}
-              className={validationErrors.guestCount ? "border-destructive" : ""}
+              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)}
             />
-            {validationErrors.guestCount && (
-              <p className="text-xs text-destructive mt-1">{validationErrors.guestCount}</p>
-            )}
           </div>
 
           <div>
@@ -559,11 +371,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               step="0.01"
               value={totalPrice}
               onChange={(e) => setTotalPrice(parseFloat(e.target.value) || 0)}
-              placeholder="Auto-calculated"
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              Auto-calculated based on nights. You can adjust for custom rates.
-            </p>
           </div>
 
           <div>
