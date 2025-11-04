@@ -40,6 +40,7 @@ const Landing = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   
   useEffect(() => {
     let mounted = true;
@@ -64,9 +65,22 @@ const Landing = () => {
 
   useEffect(() => {
     fetchHotels();
+    fetchSubscriptionPlans();
     // Auto-detect user location on page load
     getUserLocation();
   }, []);
+
+  const fetchSubscriptionPlans = async () => {
+    const { data } = await supabase
+      .from('subscription_plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    
+    if (data) {
+      setSubscriptionPlans(data);
+    }
+  };
 
   useEffect(() => {
     // Update available cities when country changes
@@ -262,47 +276,55 @@ const Landing = () => {
     }
   ];
 
-  const plans = [
-    {
-      name: "Basic",
-      price: "€15.99",
-      period: "/month",
-      features: [
-        "Up to 10 rooms",
-        "Basic booking calendar",
-        "Guest management",
-        "Email support",
-        "Monthly reports"
-      ]
-    },
-    {
-      name: "Pro",
-      price: "€19.99",
-      period: "/month",
-      popular: true,
-      features: [
-        "Up to 25 rooms",
-        "Advanced calendar",
-        "AI assistant",
-        "Priority support",
-        "Real-time analytics",
-        "Custom branding"
-      ]
-    },
-    {
-      name: "Premium",
-      price: "€22.99",
-      period: "/month",
-      features: [
-        "Unlimited rooms",
-        "White-label solution",
-        "Dedicated support",
-        "API access",
-        "Advanced automation",
-        "Multi-location support"
-      ]
-    }
-  ];
+  const plans = subscriptionPlans.length > 0 
+    ? subscriptionPlans.map((plan, index) => ({
+        name: plan.name,
+        price: `€${plan.price}`,
+        period: `/${plan.billing_period}`,
+        popular: index === 1, // Mark middle plan as popular
+        features: plan.features || []
+      }))
+    : [
+        {
+          name: "Basic",
+          price: "€15.99",
+          period: "/month",
+          features: [
+            "Up to 10 rooms",
+            "Basic booking calendar",
+            "Guest management",
+            "Email support",
+            "Monthly reports"
+          ]
+        },
+        {
+          name: "Pro",
+          price: "€19.99",
+          period: "/month",
+          popular: true,
+          features: [
+            "Up to 25 rooms",
+            "Advanced calendar",
+            "AI assistant",
+            "Priority support",
+            "Real-time analytics",
+            "Custom branding"
+          ]
+        },
+        {
+          name: "Premium",
+          price: "€22.99",
+          period: "/month",
+          features: [
+            "Unlimited rooms",
+            "White-label solution",
+            "Dedicated support",
+            "API access",
+            "Advanced automation",
+            "Multi-location support"
+          ]
+        }
+      ];
 
   return (
     <div className="min-h-screen">

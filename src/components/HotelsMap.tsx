@@ -43,17 +43,18 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels, userLocation }) => {
         mapboxRef.current.accessToken = mapboxToken;
 
         // Determine initial center and zoom
-        const initialCenter = userLocation 
+        const initialCenter: [number, number] = userLocation 
           ? [userLocation.lng, userLocation.lat]
           : [20, 45]; // Default to Europe
-        const initialZoom = userLocation ? 10 : 4;
+        const initialZoom = userLocation ? 10 : 3;
 
         // Initialize map
         map.current = new mapboxRef.current.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
+          style: 'mapbox://styles/mapbox/streets-v12',
           center: initialCenter,
           zoom: initialZoom,
+          attributionControl: true,
         });
 
         // Add navigation controls
@@ -69,6 +70,13 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels, userLocation }) => {
 
         // Wait for map to load
         map.current.on('load', () => {
+          console.log('Map loaded successfully');
+          setIsLoading(false);
+        });
+
+        map.current.on('error', (e: any) => {
+          console.error('Map error:', e);
+          setTokenError(true);
           setIsLoading(false);
         });
       } catch (error) {
@@ -84,7 +92,10 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels, userLocation }) => {
     return () => {
       markers.current.forEach((marker: any) => marker.remove());
       markers.current = [];
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
