@@ -17,18 +17,12 @@ import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-
   phone: z.string().optional().max(20, "Phone too long"),
-
   email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal("")),
-
   country: z.string().optional(),
   city: z.string().optional(),
-
   guestCount: z.number().min(1, "At least 1 guest required").optional(),
-
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-
   totalPrice: z.number().positive("Total price must be positive").optional(),
 });
 
