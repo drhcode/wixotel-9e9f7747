@@ -17,13 +17,13 @@ import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-  phone: z.string().trim().max(20, "Phone too long").optional(),
+  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
   email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal("")),
-  country: z.string().optional(),
-  city: z.string().optional(),
-  guestCount: z.number().min(1, "At least 1 guest required").optional(),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().min(1, "City is required"),
+  guestCount: z.number().min(1, "At least 1 guest required"),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-  totalPrice: z.number().positive("Total price must be positive").optional(),
+  totalPrice: z.number().positive("Total price must be positive"),
 });
 
 interface Props {
@@ -319,7 +319,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Check-in & Check-out */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-in</Label>
@@ -337,9 +336,12 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                     onSelect={(date) => {
                       if (date) {
                         setCheckIn(date);
+                        // Auto-adjust checkout to be at least 1 day after check-in
                         const minCheckout = new Date(date);
                         minCheckout.setDate(minCheckout.getDate() + 1);
-                        if (checkOut <= date) setCheckOut(minCheckout);
+                        if (checkOut <= date) {
+                          setCheckOut(minCheckout);
+                        }
                         setCheckInOpen(false);
                         setCheckOutOpen(true);
                       }
@@ -375,7 +377,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </div>
           </div>
 
-          {/* Room Selection */}
           <div>
             <Label>Available Rooms</Label>
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -397,7 +398,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             )}
           </div>
 
-          {/* Guest Selection */}
           <div>
             <Label>Guest</Label>
             <div className="space-y-2">
@@ -428,7 +428,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </div>
           </div>
 
-          {/* New Guest Form */}
           {(!selectedGuest || selectedGuest === "new") && (
             <>
               <div>
@@ -445,23 +444,35 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <p className="text-xs text-destructive mt-1">{validationErrors.fullName}</p>
                 )}
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Phone</Label>
-                  <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+                  <Label>Phone *</Label>
+                  <Input
+                    value={guestPhone}
+                    onChange={(e) => {
+                      setGuestPhone(e.target.value);
+                      setValidationErrors((prev) => ({ ...prev, phone: "" }));
+                    }}
+                    className={validationErrors.phone ? "border-destructive" : ""}
+                  />
+                  {validationErrors.phone && <p className="text-xs text-destructive mt-1">{validationErrors.phone}</p>}
                 </div>
                 <div>
                   <Label>Email</Label>
                   <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Country</Label>
-                  <Select value={guestCountry} onValueChange={setGuestCountry}>
-                    <SelectTrigger>
+                  <Label>Country *</Label>
+                  <Select
+                    value={guestCountry}
+                    onValueChange={(value) => {
+                      setGuestCountry(value);
+                      setValidationErrors((prev) => ({ ...prev, country: "" }));
+                    }}
+                  >
+                    <SelectTrigger className={validationErrors.country ? "border-destructive" : ""}>
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
@@ -472,16 +483,21 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.country && (
+                    <p className="text-xs text-destructive mt-1">{validationErrors.country}</p>
+                  )}
                 </div>
-
                 <div>
-                  <Label>City</Label>
+                  <Label>City *</Label>
                   <Select
                     value={guestCity}
-                    onValueChange={setGuestCity}
+                    onValueChange={(value) => {
+                      setGuestCity(value);
+                      setValidationErrors((prev) => ({ ...prev, city: "" }));
+                    }}
                     disabled={!guestCountry || availableCities.length === 0}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={validationErrors.city ? "border-destructive" : ""}>
                       <SelectValue placeholder={!guestCountry ? "Select country first" : "Select city"} />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
@@ -492,9 +508,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.city && <p className="text-xs text-destructive mt-1">{validationErrors.city}</p>}
                 </div>
               </div>
-
               <div>
                 <Label>Address</Label>
                 <Input value={guestAddress} onChange={(e) => setGuestAddress(e.target.value)} />
@@ -502,18 +518,23 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </>
           )}
 
-          {/* Guest Count */}
           <div>
-            <Label>Number of Guests</Label>
+            <Label>Number of Guests *</Label>
             <Input
               type="number"
               min="1"
               value={guestCount}
-              onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)}
+              onChange={(e) => {
+                setGuestCount(parseInt(e.target.value) || 1);
+                setValidationErrors((prev) => ({ ...prev, guestCount: "" }));
+              }}
+              className={validationErrors.guestCount ? "border-destructive" : ""}
             />
+            {validationErrors.guestCount && (
+              <p className="text-xs text-destructive mt-1">{validationErrors.guestCount}</p>
+            )}
           </div>
 
-          {/* Total Price */}
           <div>
             <Label>Total Price (€)</Label>
             <Input
@@ -529,13 +550,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             </p>
           </div>
 
-          {/* Notes */}
           <div>
             <Label>Notes</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-2">
             <Button onClick={handleSubmit} disabled={loading || !selectedRoom}>
               {loading ? "Creating..." : "Create Reservation"}
