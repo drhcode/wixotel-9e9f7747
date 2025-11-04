@@ -384,24 +384,19 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 <SelectValue placeholder="Select room" />
               </SelectTrigger>
               <SelectContent>
-                {availableRooms
-                  .slice() // clone to avoid mutating original array
-                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // ascending by creation date
-                  .map((room) => (
-                    <SelectItem key={room.id} value={room.id}>
-                      {room.room_number || room.name} - €{room.price}/night
-                    </SelectItem>
-                  ))}
+                {availableRooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.room_number || room.name} - €{room.price}/night
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-
             {selectedRoom && (
               <p className="text-sm text-muted-foreground mt-1">
                 Room price: €{availableRooms.find((r) => r.id === selectedRoom)?.price}/night
               </p>
             )}
           </div>
-
           <div>
             <Label>Guest</Label>
             <div className="space-y-2">
