@@ -386,7 +386,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               <SelectContent>
                 {availableRooms
                   .slice() // clone to avoid mutating original array
-                  .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) // ascending by creation date
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // ascending by creation date
                   .map((room) => (
                     <SelectItem key={room.id} value={room.id}>
                       {room.room_number || room.name} - €{room.price}/night
