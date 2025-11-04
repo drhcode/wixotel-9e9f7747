@@ -17,20 +17,13 @@ import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-
-  phone: z.string().trim().max(20, "Phone too long").optional(),
-
-  email: z.string().email("Invalid email").max(255, "Email too long").or(z.literal("")).optional(),
-
-  country: z.string().max(100, "Country name too long").optional(),
-
-  city: z.string().max(100, "City name too long").optional(),
-
-  guestCount: z.number().min(1, "At least 1 guest required").optional(),
-
+  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
+  email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal("")),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().min(1, "City is required"),
+  guestCount: z.number().min(1, "At least 1 guest required"),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-
-  totalPrice: z.number().positive("Total price must be positive").optional(),
+  totalPrice: z.number().positive("Total price must be positive"),
 });
 
 interface Props {
@@ -453,7 +446,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Phone</Label>
+                  <Label>Phone *</Label>
                   <Input
                     value={guestPhone}
                     onChange={(e) => {
@@ -495,7 +488,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   )}
                 </div>
                 <div>
-                  <Label>City</Label>
+                  <Label>City *</Label>
                   <Select
                     value={guestCity}
                     onValueChange={(value) => {
@@ -526,7 +519,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           )}
 
           <div>
-            <Label>Number of Guests</Label>
+            <Label>Number of Guests *</Label>
             <Input
               type="number"
               min="1"
