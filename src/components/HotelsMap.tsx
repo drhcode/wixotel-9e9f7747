@@ -110,6 +110,22 @@ const HotelsMap: React.FC<HotelsMapProps> = ({ hotels, userLocation }) => {
     });
   }, [userLocation]);
 
+  // Ensure map resizes correctly when container size changes
+  useEffect(() => {
+    if (!map.current) return;
+    const handleResize = () => {
+      try {
+        map.current?.resize();
+      } catch (e) {
+        console.warn('Map resize failed:', e);
+      }
+    };
+    // Initial resize after mount
+    setTimeout(handleResize, 0);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isLoading]);
+
   // Update markers when hotels change
   useEffect(() => {
     if (!map.current || !mapboxRef.current) return;
