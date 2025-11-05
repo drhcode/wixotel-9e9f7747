@@ -9,7 +9,6 @@ import { BookingLookup } from "@/components/BookingLookup";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import HotelsMap from "@/components/HotelsMap";
 
 
 interface PublicHotel {
@@ -713,21 +712,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Hotels Map Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-accent/30 to-background">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-              DISCOVER LOCATIONS
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Find Hotels Near You</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Explore our network of premium hotels across the globe
-            </p>
-          </div>
-          <HotelsMap hotels={filteredHotels} userLocation={userLocation} />
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="py-12 px-4 md:px-6 border-t">
