@@ -272,10 +272,38 @@ const HotelAdminDashboard = () => {
               </div>
             </div>
 
+            {/* Desktop Navigation Menu */}
+            <div className="hidden lg:block border-t">
+              <div className="flex px-4 py-2 gap-1">
+                {[
+                  { id: "overview", label: "Overview" },
+                  { id: "notifications", label: "Notifications" },
+                  { id: "calendar", label: "Calendar" },
+                  { id: "rooms", label: "Rooms" },
+                  { id: "bookings", label: "Bookings" },
+                  { id: "guests", label: "Guests" },
+                  { id: "leads", label: "Leads" },
+                  { id: "earnings", label: "Earnings" },
+                  { id: "support", label: "Support" },
+                  { id: "settings", label: "Settings" },
+                ].map((tab) => (
+                  <Button
+                    key={tab.id}
+                    variant={activeTab === tab.id ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab(tab.id)}
+                    className="whitespace-nowrap"
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "calendar", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
+                {["overview", "notifications", "calendar", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}

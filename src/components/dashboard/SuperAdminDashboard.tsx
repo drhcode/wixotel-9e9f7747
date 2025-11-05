@@ -336,6 +336,34 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
 
+            {/* Desktop Navigation Menu */}
+            <div className="hidden lg:block border-t">
+              <div className="flex px-4 py-2 gap-1">
+                {[
+                  { id: "overview", label: "Overview" },
+                  { id: "hotels", label: "Hotels" },
+                  { id: "earnings", label: "Earnings" },
+                  { id: "plans", label: "Plans" },
+                  { id: "subscriptions", label: "Subscriptions" },
+                  { id: "reservations", label: "Reservations" },
+                  { id: "guests", label: "Guests" },
+                  { id: "support", label: "Support" },
+                  { id: "reviews", label: "Reviews" },
+                  { id: "smtp", label: "Email Settings" },
+                ].map((tab) => (
+                  <Button
+                    key={tab.id}
+                    variant={activeTab === tab.id ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab(tab.id)}
+                    className="whitespace-nowrap"
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
