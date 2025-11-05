@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { mapDatabaseError } from "@/lib/errorUtils";
 
 interface ICalManagerProps {
   hotelId: string;
@@ -122,6 +123,34 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
       return;
     }
 
+    // Validate URL format
+    try {
+      const url = new URL(feedUrl);
+      if (!url.protocol.startsWith('http')) {
+        toast({
+          title: "Invalid URL",
+          description: "URL must start with https://",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!feedUrl.toLowerCase().endsWith('.ics')) {
+        toast({
+          title: "Invalid iCal URL",
+          description: "URL must end with .ics (iCalendar format)",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (e) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a complete URL starting with https://",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase.from("room_ical_feeds").insert({
         hotel_id: hotelId,
@@ -146,7 +175,7 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
       console.error("Error adding feed:", error);
       toast({
         title: "Error",
-        description: "Failed to add external calendar",
+        description: mapDatabaseError(error),
         variant: "destructive",
       });
     }
@@ -311,10 +340,13 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
             <div className="space-y-2">
               <Label>iCal Feed URL</Label>
               <Input
-                placeholder="https://..."
+                placeholder="https://www.airbnb.com/calendar/ical/123456.ics?s=..."
                 value={feedUrl}
                 onChange={(e) => setFeedUrl(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Enter the complete iCal URL ending in .ics from Airbnb, Booking.com, or other platforms
+              </p>
             </div>
 
             <div className="flex gap-2">
