@@ -198,17 +198,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const handleDelete = async () => {
-    // First, delete associated earnings record
-    const { error: earningsError } = await supabase
-      .from('earnings')
-      .delete()
-      .eq('booking_id', booking.id);
-
-    if (earningsError) {
-      console.error("Error deleting earnings:", earningsError);
-    }
-
-    // Then delete the booking
+    // Earnings will be automatically set to 'cancelled' by database trigger
     const { error } = await supabase
       .from('bookings')
       .delete()
