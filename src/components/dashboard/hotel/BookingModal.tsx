@@ -17,10 +17,10 @@ import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-  phone: z.string().trim().max(30, "Phone too long").optional().or(z.literal('')),
-  email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal('')),
-  country: z.string().max(100).optional().or(z.literal('')),
-  city: z.string().max(100).optional().or(z.literal('')),
+  phone: z.string().trim().max(30, "Phone too long").optional(),
+  email: z.union([z.string().email("Invalid email").max(255, "Email too long"), z.literal("")]).optional(),
+  country: z.string().max(100).optional(),
+  city: z.string().max(100).optional(),
   guestCount: z.number().min(1, "At least 1 guest required").optional(),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   totalPrice: z.number().nonnegative("Total price must be positive").optional(),
@@ -165,15 +165,15 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       // If "new" is selected or no guest selected, create a new guest
       if (selectedGuest === 'new' || !selectedGuest) {
         // Validate required fields
-        const newGuestPhone = guestPhone ? `${phonePrefix}${guestPhone}` : "";
+        const newGuestPhone = guestPhone?.trim() ? `${phonePrefix}${guestPhone}` : undefined;
         const validation = guestSchema.safeParse({
           fullName: guestName,
           phone: newGuestPhone,
-          email: guestEmail,
-          country: guestCountry,
-          city: guestCity,
+          email: guestEmail || undefined,
+          country: guestCountry || undefined,
+          city: guestCity || undefined,
           guestCount: guestCount || 1,
-          notes: notes,
+          notes: notes || undefined,
           totalPrice: totalPrice || 0,
         });
 
