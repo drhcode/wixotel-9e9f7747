@@ -412,6 +412,57 @@ export type Database = {
           },
         ]
       }
+      ical_sync_logs: {
+        Row: {
+          bookings_created: number | null
+          created_at: string
+          error_message: string | null
+          events_processed: number | null
+          feed_id: string
+          hotel_id: string
+          id: string
+          status: string
+          sync_duration_ms: number | null
+        }
+        Insert: {
+          bookings_created?: number | null
+          created_at?: string
+          error_message?: string | null
+          events_processed?: number | null
+          feed_id: string
+          hotel_id: string
+          id?: string
+          status: string
+          sync_duration_ms?: number | null
+        }
+        Update: {
+          bookings_created?: number | null
+          created_at?: string
+          error_message?: string | null
+          events_processed?: number | null
+          feed_id?: string
+          hotel_id?: string
+          id?: string
+          status?: string
+          sync_duration_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ical_sync_logs_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "room_ical_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_sync_logs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           check_in: string
@@ -693,6 +744,63 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_ical_feeds: {
+        Row: {
+          created_at: string
+          feed_url: string
+          hotel_id: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          platform: string
+          room_id: string
+          sync_error: string | null
+          sync_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feed_url: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          platform: string
+          room_id: string
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feed_url?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          platform?: string
+          room_id?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_ical_feeds_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_ical_feeds_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]

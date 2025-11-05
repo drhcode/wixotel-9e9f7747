@@ -11,3 +11,9 @@ verify_jwt = true
 
 [functions.clear-hotel-data]
 verify_jwt = true
+
+[functions.generate-ical]
+verify_jwt = false
+
+[functions.sync-ical]
+verify_jwt = true

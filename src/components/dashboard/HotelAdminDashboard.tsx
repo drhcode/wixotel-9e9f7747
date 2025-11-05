@@ -21,6 +21,7 @@ const LeadsManager = lazy(() => import("./hotel/LeadsManager"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SupportManager = lazy(() => import("./hotel/SupportManager"));
 const LazyEarningsManager = lazy(() => import("./hotel/EarningsManager"));
+const ICalManager = lazy(() => import("./hotel/ICalManager").then(m => ({ default: m.ICalManager })));
 
 interface HotelData {
   id: string;
@@ -258,6 +259,8 @@ const HotelAdminDashboard = () => {
         return <HotelOverview key={refreshKey} hotelId={hotel.id} />;
       case "calendar":
         return <CalendarManager key={refreshKey} hotelId={hotel.id} />;
+      case "ical":
+        return <ICalManager key={refreshKey} hotelId={hotel.id} />;
       case "rooms":
         return <RoomsManager key={refreshKey} hotelId={hotel.id} />;
       case "bookings":
