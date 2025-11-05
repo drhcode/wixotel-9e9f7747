@@ -43,7 +43,7 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
       fetchLeadsCount();
       
       // Subscribe to leads changes with a unique channel name
-      const channel = supabase
+      const leadsChannel = supabase
         .channel(`leads-count-${hotelId}`)
         .on(
           'postgres_changes',
@@ -55,17 +55,46 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
           },
           (payload) => {
             console.log('Leads change detected in sidebar:', payload);
-            // Immediately update count when leads change
             fetchLeadsCount();
           }
         )
-        .subscribe((status) => {
-          console.log('Leads subscription status:', status);
-        });
+        .subscribe();
+
+      // Also listen for manual broadcasts from app flows
+      const broadcastChannel = supabase
+        .channel(`hotel-${hotelId}`)
+        .on('broadcast', { event: 'leads_updated' }, (payload) => {
+          console.log('Broadcast leads_updated received:', payload);
+          fetchLeadsCount();
+        })
+        .subscribe();
+
+      // Fallback: listen to notifications inserts for new leads
+      const notificationsChannel = supabase
+        .channel(`notifications-${hotelId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `hotel_id=eq.${hotelId}`,
+          },
+          (payload) => {
+            const newRow: any = payload.new;
+            if (newRow?.type === 'new_lead') {
+              console.log('New lead notification detected -> refresh leads count');
+              fetchLeadsCount();
+            }
+          }
+        )
+        .subscribe();
 
       return () => {
-        console.log('Cleaning up leads subscription');
-        supabase.removeChannel(channel);
+        console.log('Cleaning up leads subscriptions');
+        supabase.removeChannel(leadsChannel);
+        supabase.removeChannel(broadcastChannel);
+        supabase.removeChannel(notificationsChannel);
       };
     }
   }, [hotelId]);

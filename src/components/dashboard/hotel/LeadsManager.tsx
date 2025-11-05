@@ -177,7 +177,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     try {
       const { error } = await supabase
         .from("leads")
-        .update({ status: newStatus })
+        .update({ status: newStatus, is_read: true })
         .eq("id", leadId);
 
       if (error) throw error;
@@ -286,8 +286,14 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         console.error("Error sending approval email:", emailError);
       }
 
-      // Update lead status to converted
+      // Update lead status to converted and broadcast update
       await updateLeadStatus(lead.id, "converted");
+
+      // Notify sidebar to refresh leads count immediately
+      const channel = supabase.channel(`hotel-${hotelId}`);
+      await channel.subscribe();
+      await channel.send({ type: 'broadcast', event: 'leads_updated', payload: { hotelId } });
+      await supabase.removeChannel(channel);
       
       // Create notifications
       await supabase.from('notifications').insert([
