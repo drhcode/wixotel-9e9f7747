@@ -242,13 +242,6 @@ const BookingsManager = ({ hotelId }: Props) => {
 
       if (error) throw error;
 
-      // Create notification
-      await supabase.from('notifications').insert({
-        hotel_id: hotelId,
-        type: 'booking_deleted',
-        title: 'Booking Deleted',
-        message: `Booking for ${bookingToDelete?.full_name} has been deleted`,
-      });
 
       toast.success("Booking deleted successfully");
       setDeletingBooking(null);

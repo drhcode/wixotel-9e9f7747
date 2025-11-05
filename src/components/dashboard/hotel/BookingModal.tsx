@@ -237,13 +237,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       });
       if (error) throw error;
       
-      // Create notification for new booking
-      await supabase.from('notifications').insert({
-        hotel_id: hotelId,
-        type: 'booking_created',
-        title: 'New Reservation',
-        message: `New reservation created for ${guestName || existingGuest?.name}`,
-      });
       
       // Send booking confirmation email to guest if email is provided via Edge Function
       const finalEmail = guestEmail || existingGuest?.email;
