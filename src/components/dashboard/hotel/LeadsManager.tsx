@@ -220,7 +220,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         check_out: lead.check_out,
         guest_count: lead.guests,
         total_amount: totalAmount,
-        status: "pending",
+        status: "reserved",
         payment_status: "pending",
         confirmation_number: confirmationNumber,
         notes: lead.message || "Created from booking request",
