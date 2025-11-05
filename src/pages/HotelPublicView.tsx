@@ -1304,6 +1304,13 @@ const HotelPublicView = () => {
                           ...bookingRequest,
                           guests: selectedRoom.capacity,
                         });
+                        // Scroll to the booking form
+                        setTimeout(() => {
+                          const formElement = document.querySelector('[data-booking-form]');
+                          if (formElement) {
+                            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
                       }}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
@@ -1311,7 +1318,7 @@ const HotelPublicView = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Card className="border-primary/20 bg-primary/5">
+                  <Card className="border-primary/20 bg-primary/5" data-booking-form>
                     <CardContent className="pt-6">
                       <h4 className="font-semibold mb-4 flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-primary" />

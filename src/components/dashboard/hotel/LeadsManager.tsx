@@ -183,6 +183,9 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       if (guestError) throw guestError;
 
+      // Generate unique confirmation number
+      const confirmationNumber = `WIXO${Date.now()}${Math.random().toString(36).substring(2, 9)}`.toUpperCase();
+
       // Then create booking from lead with calculated total
       const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
@@ -197,6 +200,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         total_amount: totalAmount,
         status: "pending",
         payment_status: "pending",
+        confirmation_number: confirmationNumber,
         notes: lead.message || "Created from booking request",
       }).select().single();
 
@@ -225,15 +229,14 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
           .single();
 
         if (hotelData) {
-          const { createLeadApprovedEmail } = await import('@/lib/emailTemplates');
-          const htmlContent = createLeadApprovedEmail({
+          const { createBookingConfirmationEmail } = await import('@/lib/emailTemplates');
+          const htmlContent = createBookingConfirmationEmail({
             guestName: lead.full_name,
             roomName: roomData.name,
             checkIn: format(new Date(lead.check_in), 'PPP'),
             checkOut: format(new Date(lead.check_out), 'PPP'),
-            guests: lead.guests,
-            nights: nights,
             totalAmount: totalAmount,
+            confirmationNumber: confirmationNumber,
             hotel: hotelData,
           });
 
@@ -241,8 +244,8 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
             body: {
               hotel_id: hotelId,
               recipient_email: lead.email,
-              subject: `Booking Request Approved - ${hotelData.name}`,
-              email_type: 'lead_approved',
+              subject: `Booking Confirmation - ${hotelData.name}`,
+              email_type: 'booking_confirmation',
               html_content: htmlContent,
             },
           });
