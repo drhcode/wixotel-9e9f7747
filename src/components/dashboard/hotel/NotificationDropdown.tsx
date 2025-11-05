@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,9 @@ interface NotificationDropdownProps {
 export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchNotifications();
@@ -48,9 +51,8 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
           console.log('Notification change:', payload);
           
           if (payload.eventType === 'INSERT') {
-            // Add new notification
-            setNotifications(prev => [payload.new as Notification, ...prev]);
-            setUnreadCount(prev => prev + 1);
+            // Refresh to maintain pagination
+            fetchNotifications();
           } else if (payload.eventType === 'UPDATE') {
             // Update existing notification
             setNotifications(prev => 
@@ -59,8 +61,7 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
             // Recalculate unread count
             fetchNotifications();
           } else if (payload.eventType === 'DELETE') {
-            // Remove deleted notification
-            setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+            // Refresh to maintain pagination
             fetchNotifications();
           }
         }
@@ -72,19 +73,44 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
     };
   }, [hotelId]);
 
+  useEffect(() => {
+    fetchNotifications();
+  }, [currentPage]);
+
   const fetchNotifications = async () => {
     try {
+      // Get total count
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: 'exact', head: true })
+        .eq("hotel_id", hotelId);
+
+      const total = count || 0;
+      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+
+      // Get unread count
+      const { count: unreadCountResult } = await supabase
+        .from("notifications")
+        .select("*", { count: 'exact', head: true })
+        .eq("hotel_id", hotelId)
+        .eq("is_read", false);
+      
+      setUnreadCount(unreadCountResult || 0);
+
+      // Get paginated data
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("hotel_id", hotelId)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .range(from, to);
 
       if (error) throw error;
       
       setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -150,7 +176,7 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
             </Button>
           )}
         </div>
-        <ScrollArea className="h-96">
+        <ScrollArea className="h-80">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               No notifications yet
@@ -178,6 +204,33 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
             ))
           )}
         </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 py-2 border-t">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="h-8"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="h-8"
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
