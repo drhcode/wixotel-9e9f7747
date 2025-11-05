@@ -350,7 +350,7 @@ const HotelRegistration = () => {
                         ...hotelData,
                         address: data.address,
                         city: data.city,
-                        country: data.countryCode,
+                        country: data.country,
                       });
                     }}
                     placeholder="Start typing your address..."
