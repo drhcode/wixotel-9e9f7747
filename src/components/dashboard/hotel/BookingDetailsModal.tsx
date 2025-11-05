@@ -88,33 +88,21 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
   };
   const canCheckIn = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const checkinDate = new Date(booking.check_in);
-    checkinDate.setHours(0, 0, 0, 0);
-    return today >= checkinDate;
+    return isToday(new Date(booking.check_in));
   };
 
   const canCheckOut = () => {
-    if (booking.status !== "checked_in") return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const checkoutDate = new Date(booking.check_out);
-    checkoutDate.setHours(0, 0, 0, 0);
-    
-    // Only allow checkout on or after the checkout date
-    return today >= checkoutDate;
+    return isToday(new Date(booking.check_out));
   };
 
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
     if (newStatus === 'checked_in' && !canCheckIn()) {
-      toast.error("Check-in can only be done on or after the check-in date");
+      toast.error("Check-in can only be done on the reservation date");
       return;
     }
 
     if (newStatus === 'checked_out' && !canCheckOut()) {
-      toast.error("Check-out can only be done on or after the checkout date");
+      toast.error("Check-out can only be done on the reservation checkout date");
       return;
     }
 
@@ -419,7 +407,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-in is only available on or after the check-in date ({format(new Date(booking.check_in), 'MMM dd, yyyy')})
+                Check-in is only available on the reservation date ({format(new Date(booking.check_in), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}
@@ -428,7 +416,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-out is only available on or after the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
+                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}
