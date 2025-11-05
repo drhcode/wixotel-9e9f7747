@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
             feed_url: feed.feed_url,
             room_id: feed.room_id,
             hotel_id: feed.hotel_id,
+            platform: feed.platform,
           },
         });
 

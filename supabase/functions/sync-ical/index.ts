@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { feed_id, feed_url, room_id, hotel_id } = await req.json();
+    const { feed_id, feed_url, room_id, hotel_id, platform } = await req.json();
 
     if (!feed_url || !room_id || !hotel_id) {
       return new Response(
@@ -91,6 +91,15 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log(`Syncing iCal feed for room ${room_id} from ${feed_url}`);
+
+    // Get room details for notifications
+    const { data: room } = await supabase
+      .from('rooms')
+      .select('name, room_number')
+      .eq('id', room_id)
+      .single();
+    
+    const roomName = room ? `${room.name} ${room.room_number ? `(${room.room_number})` : ''}` : 'Unknown Room';
 
     // Fetch the iCal feed
     const response = await fetch(feed_url, {
@@ -109,6 +118,7 @@ Deno.serve(async (req) => {
     console.log(`Parsed ${events.length} events from iCal feed`);
 
     let bookingsCreated = 0;
+    const conflicts: Array<{ dates: string; summary: string }> = [];
 
     // Process each event
     for (const event of events) {
@@ -137,6 +147,10 @@ Deno.serve(async (req) => {
 
         if (overlappingBookings && overlappingBookings.length > 0) {
           console.log(`Date overlap detected for event ${event.uid}, skipping`);
+          conflicts.push({
+            dates: `${event.dtstart} to ${event.dtend}`,
+            summary: event.summary || 'External Booking',
+          });
           continue;
         }
 
@@ -172,6 +186,25 @@ Deno.serve(async (req) => {
     }
 
     const duration = Date.now() - startTime;
+
+    // Create conflict notifications
+    if (conflicts.length > 0) {
+      const conflictMessage = conflicts.length === 1
+        ? `${platform || 'External'} booking (${conflicts[0].dates}) couldn't be imported for ${roomName} due to an existing reservation.`
+        : `${conflicts.length} ${platform || 'External'} bookings couldn't be imported for ${roomName} due to overlapping reservations. First conflict: ${conflicts[0].dates}.`;
+
+      await supabase
+        .from('notifications')
+        .insert({
+          hotel_id,
+          type: 'ical_conflict',
+          title: 'Calendar Sync Conflict',
+          message: conflictMessage,
+          is_read: false,
+        });
+      
+      console.log(`Created conflict notification for ${conflicts.length} overlapping booking(s)`);
+    }
 
     // Update feed sync status
     if (feed_id) {
