@@ -20,6 +20,8 @@ const hotelSchema = z.object({
   description: z.string().max(2000, "Description too long").optional(),
   about_us: z.string().max(5000, "About us too long").optional(),
   slug: z.string().trim().min(2, "Slug must be at least 2 characters").max(100, "Slug too long").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  seo_title: z.string().max(60, "SEO title should be under 60 characters").optional().or(z.literal('')),
+  seo_description: z.string().max(160, "SEO description should be under 160 characters").optional().or(z.literal('')),
 });
 
 interface Hotel {
@@ -38,6 +40,8 @@ interface Hotel {
   facebook_url: string | null;
   instagram_url: string | null;
   google_business_url: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
 }
 
 const ProfileSettings = () => {
@@ -56,6 +60,8 @@ const ProfileSettings = () => {
   const [instagramUrl, setInstagramUrl] = useState("");
   const [googleBusinessUrl, setGoogleBusinessUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
   
@@ -95,6 +101,8 @@ const ProfileSettings = () => {
       setInstagramUrl(hotelData.instagram_url || "");
       setGoogleBusinessUrl(hotelData.google_business_url || "");
       setLogoUrl(hotelData.logo_url || "");
+      setSeoTitle(hotelData.seo_title || "");
+      setSeoDescription(hotelData.seo_description || "");
     }
   };
 
@@ -194,7 +202,9 @@ const ProfileSettings = () => {
       phone: hotelPhone,
       description: hotelDescription,
       about_us: hotelAboutUs,
-      slug: hotelSlug || hotel.slug || ''
+      slug: hotelSlug || hotel.slug || '',
+      seo_title: seoTitle,
+      seo_description: seoDescription,
     });
 
     if (!validation.success) {
@@ -219,7 +229,9 @@ const ProfileSettings = () => {
         facebook_url: facebookUrl || null,
         instagram_url: instagramUrl || null,
         google_business_url: googleBusinessUrl || null,
-        logo_url: logoUrl || null
+        logo_url: logoUrl || null,
+        seo_title: seoTitle || null,
+        seo_description: seoDescription || null
       })
       .eq('id', hotel.id);
 
@@ -457,6 +469,46 @@ const ProfileSettings = () => {
             <p className="text-xs text-muted-foreground">
               Get this from your Google Business Profile share link
             </p>
+          </div>
+
+          <Separator className="my-6" />
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-1">SEO Settings</h3>
+              <p className="text-sm text-muted-foreground">
+                Optimize how your hotel appears in search engines
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="seo-title">SEO Title</Label>
+              <Input
+                id="seo-title"
+                value={seoTitle}
+                onChange={(e) => setSeoTitle(e.target.value)}
+                placeholder="Best Hotel in City | Your Hotel Name"
+                maxLength={60}
+              />
+              <p className="text-xs text-muted-foreground">
+                {seoTitle.length}/60 characters • This appears as the page title in search results
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="seo-description">SEO Meta Description</Label>
+              <Textarea
+                id="seo-description"
+                value={seoDescription}
+                onChange={(e) => setSeoDescription(e.target.value)}
+                placeholder="Discover luxury accommodation at our hotel. Perfect location, modern amenities, and exceptional service for your stay."
+                maxLength={160}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                {seoDescription.length}/160 characters • This appears as the description snippet in search results
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">

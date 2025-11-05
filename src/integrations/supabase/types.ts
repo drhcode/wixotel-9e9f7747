@@ -330,6 +330,8 @@ export type Database = {
           owner_id: string
           phone: string | null
           plan_id: string
+          seo_description: string | null
+          seo_title: string | null
           show_on_landing: boolean
           slug: string | null
           status: Database["public"]["Enums"]["hotel_status"]
@@ -362,6 +364,8 @@ export type Database = {
           owner_id: string
           phone?: string | null
           plan_id: string
+          seo_description?: string | null
+          seo_title?: string | null
           show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
@@ -394,6 +398,8 @@ export type Database = {
           owner_id?: string
           phone?: string | null
           plan_id?: string
+          seo_description?: string | null
+          seo_title?: string | null
           show_on_landing?: boolean
           slug?: string | null
           status?: Database["public"]["Enums"]["hotel_status"]
