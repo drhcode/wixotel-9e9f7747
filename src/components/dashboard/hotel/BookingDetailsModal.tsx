@@ -96,10 +96,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const canCheckOut = () => {
+    if (booking.status !== "checked_in") return false;
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const checkoutDate = new Date(booking.check_out);
     checkoutDate.setHours(0, 0, 0, 0);
+    
+    // Only allow checkout on or after the checkout date
     return today >= checkoutDate;
   };
 

@@ -172,7 +172,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       const co = normalize(checkOut);
       const confirmationNumber = `wixo${Date.now()}${Math.random().toString(36).substring(2, 9)}`.toUpperCase();
 
-      const { error } = await supabase.from("bookings").insert({
+      const { data: bookingData, error } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
         room_id: selectedRoom,
         guest_id: guestId,
@@ -186,9 +186,22 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         notes,
         status: "reserved",
         confirmation_number: confirmationNumber,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Create earnings record for platform commission (8%)
+      const commissionRate = 8;
+      const commissionAmount = (totalPrice * commissionRate) / 100;
+
+      await supabase.from("earnings").insert({
+        hotel_id: hotelId,
+        booking_id: bookingData.id,
+        total_amount: totalPrice,
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount,
+        status: 'pending',
+      });
 
       await supabase.from("notifications").insert({
         hotel_id: hotelId,
@@ -198,6 +211,20 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       });
 
       toast.success("Reservation created successfully");
+
+      // Clear form
+      setCheckIn(new Date());
+      setCheckOut(new Date());
+      setSelectedRoom("");
+      setSelectedGuest("");
+      setGuestSearchTerm("");
+      setGuestName("");
+      setGuestPhone("");
+      setGuestEmail("");
+      setGuestCount(1);
+      setNotes("");
+      setTotalPrice(0);
+      setValidationErrors({});
 
       onSuccess();
       onClose();
