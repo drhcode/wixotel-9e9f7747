@@ -69,7 +69,12 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
         .eq("hotel_id", hotelId)
         .order(sortField, { ascending: sortDirection === 'asc' });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching earnings:", error);
+        throw error;
+      }
+
+      console.log("Fetched earnings data:", data);
 
       const earningsData = data || [];
       setEarnings(earningsData);
