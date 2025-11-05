@@ -187,6 +187,14 @@ const RoomsManager = ({ hotelId }: Props) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Check if adding these files would exceed the 6-photo limit
+    const totalPhotos = galleryPhotos.length + files.length;
+    if (totalPhotos > 6) {
+      toast.error(`You can upload a maximum of 6 gallery photos. Currently you have ${galleryPhotos.length} photo(s).`);
+      e.target.value = ''; // Reset file input
+      return;
+    }
+
     setUploading(true);
     const urls: string[] = [];
 
@@ -495,20 +503,23 @@ const RoomsManager = ({ hotelId }: Props) => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gallery" className="text-sm font-medium">Gallery Photos</Label>
+                <Label htmlFor="gallery" className="text-sm font-medium">Gallery Photos (Max 6)</Label>
                 <Input
                   id="gallery"
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleGalleryUpload}
-                  disabled={uploading}
+                  disabled={uploading || galleryPhotos.length >= 6}
                   className="cursor-pointer"
                 />
                 {uploading && <p className="text-sm text-muted-foreground animate-pulse">Uploading...</p>}
+                {galleryPhotos.length >= 6 && (
+                  <p className="text-sm text-warning">Maximum of 6 photos reached. Remove a photo to upload more.</p>
+                )}
                 {galleryPhotos.length > 0 && (
                   <div className="space-y-2 mt-3">
-                    <p className="text-sm font-medium">Gallery Photos ({galleryPhotos.length}):</p>
+                    <p className="text-sm font-medium">Gallery Photos ({galleryPhotos.length}/6):</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {galleryPhotos.map((url, index) => (
                         <div key={url} className="relative group">
