@@ -17,6 +17,7 @@ const GuestsManager = lazy(() => import("./hotel/GuestsManager"));
 const CalendarManager = lazy(() => import("./hotel/CalendarManager"));
 const ProfileSettings = lazy(() => import("./hotel/ProfileSettings"));
 const LeadsManager = lazy(() => import("./hotel/LeadsManager"));
+const EarningsDetails = lazy(() => import("./hotel/EarningsDetails"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SupportManager = lazy(() => import("./hotel/SupportManager"));
 
@@ -208,6 +209,8 @@ const HotelAdminDashboard = () => {
         return <GuestsManager hotelId={hotel.id} />;
       case "leads":
         return <LeadsManager hotelId={hotel.id} />;
+      case "earnings":
+        return <EarningsDetails hotelId={hotel.id} />;
       case "support":
         return <SupportManager hotelId={hotel.id} />;
       case "notifications":
@@ -272,7 +275,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "calendar", "rooms", "bookings", "guests", "leads", "support", "settings"].map((tab) => (
+                {["overview", "calendar", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
@@ -280,7 +283,7 @@ const HotelAdminDashboard = () => {
                     onClick={() => setActiveTab(tab)}
                     className="capitalize whitespace-nowrap"
                   >
-                    {tab}
+                    {tab === "earnings" ? "Commission" : tab}
                   </Button>
                 ))}
               </div>
