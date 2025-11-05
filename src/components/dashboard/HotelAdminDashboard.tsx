@@ -22,6 +22,7 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const SupportManager = lazy(() => import("./hotel/SupportManager"));
 const LazyEarningsManager = lazy(() => import("./hotel/EarningsManager"));
 const ICalManager = lazy(() => import("./hotel/ICalManager").then(m => ({ default: m.ICalManager })));
+const ConflictsManager = lazy(() => import("./hotel/ConflictsManager"));
 
 interface HotelData {
   id: string;
@@ -261,6 +262,8 @@ const HotelAdminDashboard = () => {
         return <CalendarManager key={refreshKey} hotelId={hotel.id} />;
       case "ical":
         return <ICalManager key={refreshKey} hotelId={hotel.id} />;
+      case "conflicts":
+        return <ConflictsManager key={refreshKey} hotelId={hotel.id} />;
       case "rooms":
         return <RoomsManager key={refreshKey} hotelId={hotel.id} />;
       case "bookings":
@@ -334,11 +337,13 @@ const HotelAdminDashboard = () => {
 
             {/* Desktop Navigation Menu */}
             <div className="hidden lg:block border-t">
-              <div className="flex px-4 py-2 gap-1 items-center">
+              <div className="flex px-4 py-2 gap-1 items-center overflow-x-auto">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "notifications", label: "Notifications" },
                   { id: "calendar", label: "Calendar" },
+                  { id: "ical", label: "Sync" },
+                  { id: "conflicts", label: "Conflicts" },
                   { id: "rooms", label: "Rooms" },
                   { id: "bookings", label: "Bookings" },
                   { id: "guests", label: "Guests" },
@@ -381,7 +386,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "notifications", "calendar", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
+                {["overview", "notifications", "calendar", "ical", "conflicts", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}

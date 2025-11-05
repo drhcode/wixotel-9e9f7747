@@ -412,6 +412,98 @@ export type Database = {
           },
         ]
       }
+      ical_sync_conflicts: {
+        Row: {
+          conflicting_booking_id: string | null
+          created_at: string
+          detected_at: string
+          external_check_in: string
+          external_check_out: string
+          external_description: string | null
+          external_summary: string | null
+          external_uid: string | null
+          feed_id: string
+          hotel_id: string
+          id: string
+          notification_id: string | null
+          platform: string
+          resolution_notes: string | null
+          resolution_status: string
+          resolved_at: string | null
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          conflicting_booking_id?: string | null
+          created_at?: string
+          detected_at?: string
+          external_check_in: string
+          external_check_out: string
+          external_description?: string | null
+          external_summary?: string | null
+          external_uid?: string | null
+          feed_id: string
+          hotel_id: string
+          id?: string
+          notification_id?: string | null
+          platform: string
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          conflicting_booking_id?: string | null
+          created_at?: string
+          detected_at?: string
+          external_check_in?: string
+          external_check_out?: string
+          external_description?: string | null
+          external_summary?: string | null
+          external_uid?: string | null
+          feed_id?: string
+          hotel_id?: string
+          id?: string
+          notification_id?: string | null
+          platform?: string
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_ical_sync_conflicts_room"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_sync_conflicts_conflicting_booking_id_fkey"
+            columns: ["conflicting_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_sync_conflicts_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "room_ical_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_sync_conflicts_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ical_sync_logs: {
         Row: {
           bookings_created: number | null

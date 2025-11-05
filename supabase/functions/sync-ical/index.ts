@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
     console.log(`Parsed ${events.length} events from iCal feed`);
 
     let bookingsCreated = 0;
-    const conflicts: Array<{ dates: string; summary: string }> = [];
+    const conflicts: Array<{ dates: string; summary: string; event: ICalEvent; conflictingBookingId?: string }> = [];
 
     // Process each event
     for (const event of events) {
@@ -150,6 +150,8 @@ Deno.serve(async (req) => {
           conflicts.push({
             dates: `${event.dtstart} to ${event.dtend}`,
             summary: event.summary || 'External Booking',
+            event: event,
+            conflictingBookingId: overlappingBookings[0].id,
           });
           continue;
         }
@@ -187,8 +189,36 @@ Deno.serve(async (req) => {
 
     const duration = Date.now() - startTime;
 
-    // Create conflict notifications
+    // Create conflict records and notifications
     if (conflicts.length > 0) {
+      for (const conflict of conflicts) {
+        // Create detailed conflict record
+        const { data: conflictRecord, error: conflictError } = await supabase
+          .from('ical_sync_conflicts')
+          .insert({
+            feed_id,
+            hotel_id,
+            room_id,
+            platform: platform || 'External',
+            external_check_in: conflict.event.dtstart,
+            external_check_out: conflict.event.dtend,
+            external_summary: conflict.event.summary || 'External Booking',
+            external_uid: conflict.event.uid,
+            external_description: conflict.event.description,
+            conflicting_booking_id: conflict.conflictingBookingId,
+            resolution_status: 'unresolved',
+          })
+          .select()
+          .single();
+
+        if (conflictError) {
+          console.error('Error creating conflict record:', conflictError);
+        } else {
+          console.log('Created conflict record:', conflictRecord?.id);
+        }
+      }
+
+      // Create single notification for all conflicts
       const conflictMessage = conflicts.length === 1
         ? `${platform || 'External'} booking (${conflicts[0].dates}) couldn't be imported for ${roomName} due to an existing reservation.`
         : `${conflicts.length} ${platform || 'External'} bookings couldn't be imported for ${roomName} due to overlapping reservations. First conflict: ${conflicts[0].dates}.`;
