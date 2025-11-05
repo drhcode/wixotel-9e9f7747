@@ -89,16 +89,18 @@ const EarningsDetails = ({ hotelId }: Props) => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "outline", icon: any }> = {
-      pending: { variant: "secondary", icon: Clock },
-      completed: { variant: "default", icon: CheckCircle2 },
-    };
-    const config = variants[status] || { variant: "secondary", icon: Clock };
-    const Icon = config.icon;
+    if (status === "completed") {
+      return (
+        <Badge variant="default" className="flex items-center gap-1 w-fit">
+          <CheckCircle2 className="h-3 w-3" />
+          {status}
+        </Badge>
+      );
+    }
     
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
-        <Icon className="h-3 w-3" />
+      <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+        <Clock className="h-3 w-3" />
         {status}
       </Badge>
     );
