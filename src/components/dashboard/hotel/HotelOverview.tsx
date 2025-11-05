@@ -178,7 +178,7 @@ const HotelOverview = ({ hotelId }: Props) => {
       </div>
 
       {/* Main Stats */}
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Rooms</CardTitle>
@@ -209,17 +209,6 @@ const HotelOverview = ({ hotelId }: Props) => {
           <CardContent>
             <div className="text-3xl font-bold">{stats.totalGuests}</div>
             <p className="text-xs text-muted-foreground mt-1">Registered guests</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <Euro className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-success">€{stats.totalRevenue.toLocaleString('en-EU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-            <p className="text-xs text-muted-foreground mt-1">From checked out guests</p>
           </CardContent>
         </Card>
       </div>
