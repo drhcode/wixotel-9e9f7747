@@ -59,7 +59,10 @@ const HotelAdminDashboard = () => {
             filter: `hotel_id=eq.${hotel.id}`,
           },
           () => {
-            fetchLeadsCount();
+            // Small delay to ensure database update is complete
+            setTimeout(() => {
+              fetchLeadsCount();
+            }, 100);
           }
         )
         .subscribe();

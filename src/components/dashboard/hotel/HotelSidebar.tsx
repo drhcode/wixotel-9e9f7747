@@ -55,7 +55,10 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
           },
           (payload) => {
             console.log('Leads change detected in sidebar:', payload);
-            fetchLeadsCount();
+            // Small delay to ensure database update is complete
+            setTimeout(() => {
+              fetchLeadsCount();
+            }, 100);
           }
         )
         .subscribe();
