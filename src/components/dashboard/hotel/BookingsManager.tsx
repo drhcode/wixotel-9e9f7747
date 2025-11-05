@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Search, Trash2, Upload, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -36,6 +37,7 @@ interface Props {
 const BookingsManager = ({ hotelId }: Props) => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [deletingBooking, setDeletingBooking] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,7 +68,7 @@ const BookingsManager = ({ hotelId }: Props) => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Full Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Notes'];
+    const headers = ['Full Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Source', 'Notes'];
     const csvData = filteredBookings.map(booking => [
       booking.full_name || '',
       booking.guest_email || '',
@@ -77,6 +79,7 @@ const BookingsManager = ({ hotelId }: Props) => {
       `€${booking.total_amount}`,
       booking.status,
       booking.payment_status,
+      booking.source || 'manual',
       booking.notes || ''
     ]);
 
@@ -97,12 +100,16 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       booking.full_name?.toLowerCase().includes(searchLower) ||
       booking.guest_email?.toLowerCase().includes(searchLower) ||
       booking.rooms?.name?.toLowerCase().includes(searchLower) ||
       booking.status?.toLowerCase().includes(searchLower)
     );
+    
+    const matchesSource = sourceFilter === "all" || booking.source === sourceFilter;
+    
+    return matchesSearch && matchesSource;
   });
 
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
@@ -295,14 +302,26 @@ const BookingsManager = ({ hotelId }: Props) => {
       <Card>
         <CardHeader>
           <CardTitle>All Bookings</CardTitle>
-          <div className="relative mt-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by guest, room, or status..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by guest, room, or status..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bookings</SelectItem>
+                <SelectItem value="lead">From Leads</SelectItem>
+                <SelectItem value="manual">Manual Entry</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -320,6 +339,7 @@ const BookingsManager = ({ hotelId }: Props) => {
                   <TableHead>Check-in</TableHead>
                   <TableHead>Check-out</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -335,6 +355,11 @@ const BookingsManager = ({ hotelId }: Props) => {
                     <TableCell>
                       <Badge variant={getStatusVariant(booking.status)}>
                         {booking.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={booking.source === 'lead' ? 'default' : 'secondary'}>
+                        {booking.source === 'lead' ? 'From Lead' : 'Manual'}
                       </Badge>
                     </TableCell>
                     <TableCell>€{booking.total_amount}</TableCell>

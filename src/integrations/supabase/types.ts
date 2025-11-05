@@ -30,6 +30,7 @@ export type Database = {
           notes: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           room_id: string
+          source: string | null
           status: Database["public"]["Enums"]["booking_status"]
           total_amount: number
           updated_at: string
@@ -49,6 +50,7 @@ export type Database = {
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           room_id: string
+          source?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_amount: number
           updated_at?: string
@@ -68,6 +70,7 @@ export type Database = {
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           room_id?: string
+          source?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_amount?: number
           updated_at?: string
@@ -92,6 +95,57 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cancellation_requests: {
+        Row: {
+          booking_id: string
+          created_at: string | null
+          hotel_id: string
+          id: string
+          reason: string | null
+          requested_by: string
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string | null
+          hotel_id: string
+          id?: string
+          reason?: string | null
+          requested_by: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string | null
+          hotel_id?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_requests_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
             referencedColumns: ["id"]
           },
         ]

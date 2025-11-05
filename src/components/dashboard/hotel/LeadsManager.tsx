@@ -246,6 +246,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         payment_status: "pending",
         confirmation_number: confirmationNumber,
         notes: lead.message || "Created from booking request",
+        source: "lead", // Mark as coming from lead
       }).select().single();
 
       if (bookingError) throw bookingError;

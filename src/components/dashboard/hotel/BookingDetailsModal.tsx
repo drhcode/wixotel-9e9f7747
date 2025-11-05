@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +32,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCancellationRequest, setShowCancellationRequest] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   
@@ -205,6 +208,13 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       return;
     }
 
+    // Prevent direct deletion of bookings from leads
+    if (booking.source === 'lead') {
+      toast.error("Cannot delete bookings from leads directly. Please use 'Request Cancellation' instead.");
+      setShowDeleteConfirm(false);
+      return;
+    }
+
     // Earnings will be automatically set to 'cancelled' by database trigger
     const { error } = await supabase
       .from('bookings')
@@ -217,6 +227,43 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       toast.success("Booking deleted");
       onUpdate();
       onClose();
+    }
+  };
+
+  const handleRequestCancellation = async () => {
+    if (!cancellationReason.trim()) {
+      toast.error("Please provide a reason for cancellation");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from('cancellation_requests').insert({
+        booking_id: booking.id,
+        hotel_id: booking.hotel_id,
+        reason: cancellationReason,
+        requested_by: user.id,
+      });
+
+      if (error) throw error;
+
+      // Create notification for super admin
+      await supabase.from('notifications').insert({
+        hotel_id: booking.hotel_id,
+        type: 'cancellation_request',
+        title: 'Cancellation Request',
+        message: `Cancellation request for booking ${booking.confirmation_number || booking.full_name}`,
+      });
+
+      toast.success("Cancellation request sent to admin for approval");
+      setShowCancellationRequest(false);
+      setCancellationReason("");
+      onClose();
+    } catch (error: any) {
+      console.error("Error submitting cancellation request:", error);
+      toast.error("Failed to submit cancellation request");
     }
   };
 
@@ -446,11 +493,35 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   Note: Checked-out bookings cannot be deleted. Please contact support if you need assistance.
                 </p>
               )}
+              {booking.source === 'lead' && (
+                <p className="text-xs text-warning font-medium mt-2">
+                  Note: Bookings from leads cannot be deleted directly. Please use "Request Cancellation" instead.
+                </p>
+              )}
+            </div>
+          )}
+
+          {showCancellationRequest && (
+            <div className="space-y-3 p-4 border rounded-lg bg-warning/10">
+              <p className="text-sm font-medium">Request Booking Cancellation</p>
+              <p className="text-xs text-muted-foreground">
+                This booking originated from a lead. Cancellation requests require super admin approval.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="cancellation-reason">Reason for Cancellation *</Label>
+                <Textarea
+                  id="cancellation-reason"
+                  placeholder="Please provide a reason for cancelling this booking..."
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
             </div>
           )}
           
           <div className="flex gap-2 flex-wrap justify-start sm:justify-start">
-            {!isEditing && !showDeleteConfirm ? (
+            {!isEditing && !showDeleteConfirm && !showCancellationRequest ? (
               <>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
                   <Edit2 className="h-4 w-4 mr-2" />
@@ -466,15 +537,27 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     Check Out
                   </Button>
                 )}
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
-                  onClick={handleDeleteAttempt}
-                  disabled={booking.status === 'checked_out'}
-                  title={booking.status === 'checked_out' ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' : 'Delete this booking'}
-                >
-                  Delete
-                </Button>
+                {booking.source === 'lead' ? (
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    onClick={() => setShowCancellationRequest(true)}
+                    disabled={booking.status === 'checked_out'}
+                    title="Request cancellation for approval"
+                  >
+                    Request Cancellation
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    onClick={handleDeleteAttempt}
+                    disabled={booking.status === 'checked_out'}
+                    title={booking.status === 'checked_out' ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' : 'Delete this booking'}
+                  >
+                    Delete
+                  </Button>
+                )}
                 <Button size="sm" variant="outline" onClick={onClose}>
                   Close
                 </Button>
@@ -485,6 +568,18 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   Confirm Delete
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                  Cancel
+                </Button>
+              </>
+            ) : showCancellationRequest ? (
+              <>
+                <Button size="sm" variant="destructive" onClick={handleRequestCancellation}>
+                  Submit Request
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => {
+                  setShowCancellationRequest(false);
+                  setCancellationReason("");
+                }}>
                   Cancel
                 </Button>
               </>
