@@ -56,7 +56,7 @@ const Terms = () => {
               
               <h3 className="text-xl font-semibold mb-3">4.2 Refunds</h3>
               <p className="text-muted-foreground leading-relaxed mb-3">
-                We offer a 14-day free trial. After that, fees are non-refundable except as required by law.
+                Subscription fees are non-refundable except as required by law.
               </p>
               
               <h3 className="text-xl font-semibold mb-3">4.3 Cancellation</h3>

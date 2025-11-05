@@ -21,7 +21,7 @@ const RegisterHotelInfo = () => {
     {
       icon: CreditCard,
       title: "Choose Your Plan",
-      description: "Select a subscription plan that fits your needs. All plans include a 14-day free trial.",
+      description: "Select a subscription plan that fits your needs and start managing your hotel efficiently.",
       step: "Step 3"
     },
     {
@@ -93,13 +93,13 @@ const RegisterHotelInfo = () => {
                 increase bookings, and deliver exceptional guest experiences.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link to="/auth?mode=register">
+                <Link to="/register-hotel">
                   <Button 
                     size="lg" 
                     className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105"
                   >
                     <Hotel className="mr-2 h-5 w-5" />
-                    Start Free Trial
+                    Register Now
                   </Button>
                 </Link>
                 <Link to="/about">
@@ -210,14 +210,14 @@ const RegisterHotelInfo = () => {
                   <p className="text-5xl md:text-6xl font-bold">€15.99<span className="text-2xl text-muted-foreground">/month</span></p>
                 </div>
                 <p className="text-lg text-muted-foreground">
-                  All plans include a 14-day free trial. No credit card required to start.
+                  Get started today and manage your hotel with ease.
                 </p>
-                <Link to="/auth?mode=register">
+                <Link to="/register-hotel">
                   <Button 
                     size="lg" 
                     className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105"
                   >
-                    Start Your Free Trial
+                    Register Your Hotel
                   </Button>
                 </Link>
                 <p className="text-sm text-muted-foreground">
