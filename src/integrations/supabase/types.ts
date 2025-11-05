@@ -24,7 +24,7 @@ export type Database = {
           guest_count: number
           guest_email: string | null
           guest_id: string
-          guest_phone: string
+          guest_phone: string | null
           hotel_id: string
           id: string
           notes: string | null
@@ -43,7 +43,7 @@ export type Database = {
           guest_count?: number
           guest_email?: string | null
           guest_id: string
-          guest_phone: string
+          guest_phone?: string | null
           hotel_id: string
           id?: string
           notes?: string | null
@@ -62,7 +62,7 @@ export type Database = {
           guest_count?: number
           guest_email?: string | null
           guest_id?: string
-          guest_phone?: string
+          guest_phone?: string | null
           hotel_id?: string
           id?: string
           notes?: string | null
@@ -209,7 +209,7 @@ export type Database = {
           id: string
           id_number: string | null
           name: string
-          phone: string
+          phone: string | null
           preferences: string | null
           updated_at: string
         }
@@ -223,7 +223,7 @@ export type Database = {
           id?: string
           id_number?: string | null
           name: string
-          phone: string
+          phone?: string | null
           preferences?: string | null
           updated_at?: string
         }
@@ -237,7 +237,7 @@ export type Database = {
           id?: string
           id_number?: string | null
           name?: string
-          phone?: string
+          phone?: string | null
           preferences?: string | null
           updated_at?: string
         }
