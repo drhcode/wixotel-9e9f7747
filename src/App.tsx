@@ -18,6 +18,7 @@ const HotelRegistration = lazy(() => import("./pages/HotelRegistration"));
 const RegistrationSuccess = lazy(() => import("./pages/RegistrationSuccess"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
+import { BedLoader } from "@/components/ui/bed-loader";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Router>
-          <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><BedLoader size="lg" /></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/hotels" element={<Hotels />} />
