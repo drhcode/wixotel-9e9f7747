@@ -133,24 +133,19 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
     try {
       let guestId = selectedGuest;
 
-      // Create guest if new
+      // Create guest if new or no guest selected
       if (selectedGuest === "new" || !selectedGuest) {
-        const validation = guestSchema.safeParse({
-          fullName: guestName,
-          phone: guestPhone,
-          email: guestEmail,
-          guestCount,
-          notes,
-          totalPrice,
-        });
+        // Only validate full name is required
+        if (!guestName || guestName.trim().length === 0) {
+          setValidationErrors({ fullName: "Full name is required" });
+          toast.error("Please enter guest full name");
+          setLoading(false);
+          return;
+        }
 
-        if (!validation.success) {
-          const errors: Record<string, string> = {};
-          validation.error.errors.forEach((err) => {
-            if (err.path[0]) errors[err.path[0] as string] = err.message;
-          });
-          setValidationErrors(errors);
-          toast.error("Please fill all required fields correctly");
+        if (guestName.trim().length > 100) {
+          setValidationErrors({ fullName: "Name too long" });
+          toast.error("Guest name must be less than 100 characters");
           setLoading(false);
           return;
         }
@@ -159,9 +154,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           .from("guests")
           .insert({
             hotel_id: hotelId,
-            name: guestName,
-            phone: guestPhone,
-            email: guestEmail,
+            name: guestName.trim(),
+            phone: guestPhone || "",
+            email: guestEmail || null,
           })
           .select()
           .single();
