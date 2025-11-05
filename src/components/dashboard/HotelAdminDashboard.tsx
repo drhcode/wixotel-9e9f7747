@@ -223,7 +223,7 @@ const HotelAdminDashboard = () => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen w-full flex bg-background">
         <HotelSidebar activeTab={activeTab} onTabChange={setActiveTab} hotelId={hotel.id} />
 
