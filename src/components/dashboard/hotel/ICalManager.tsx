@@ -101,8 +101,8 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
   };
 
   const getICalUrl = (roomId: string) => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/functions/v1/generate-ical?room_id=${roomId}&hotel_id=${hotelId}`;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    return `${supabaseUrl}/functions/v1/generate-ical?room_id=${roomId}&hotel_id=${hotelId}`;
   };
 
   const copyToClipboard = (text: string) => {
