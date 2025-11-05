@@ -371,8 +371,16 @@ const BookingsManager = ({ hotelId }: Props) => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteAttempt(booking.id)}
+                        disabled={booking.source === 'lead' || booking.status === 'checked_out'}
+                        title={
+                          booking.source === 'lead' 
+                            ? 'Cannot delete bookings from leads - request cancellation instead' 
+                            : booking.status === 'checked_out'
+                            ? 'Cannot delete checked-out bookings'
+                            : 'Delete booking'
+                        }
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className={`h-4 w-4 ${booking.source === 'lead' || booking.status === 'checked_out' ? 'text-muted-foreground' : 'text-destructive'}`} />
                       </Button>
                     </TableCell>
                   </TableRow>
