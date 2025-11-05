@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { HotelSidebar } from "./hotel/HotelSidebar";
+import { PlatformChatbot } from "./hotel/PlatformChatbot";
 const HotelOverview = lazy(() => import("./hotel/HotelOverview"));
 const RoomsManager = lazy(() => import("./hotel/RoomsManager"));
 const BookingsManager = lazy(() => import("./hotel/BookingsManager"));
@@ -410,6 +411,7 @@ const HotelAdminDashboard = () => {
             </div>
           </main>
         </div>
+        <PlatformChatbot />
       </div>
     </SidebarProvider>
   );
