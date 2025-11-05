@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -44,11 +45,13 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   const [acceptingLead, setAcceptingLead] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchLeads();
-  }, [hotelId, currentPage]);
+  }, [hotelId, currentPage, searchQuery]);
 
   useEffect(() => {
     fetchRooms();
@@ -103,23 +106,42 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     try {
       setLoading(true);
       
-      // Get total count
-      const { count } = await supabase
+      // Build query with search
+      let countQuery = supabase
         .from("leads")
         .select("*", { count: 'exact', head: true })
         .eq("hotel_id", hotelId);
+
+      let dataQuery = supabase
+        .from("leads")
+        .select("*")
+        .eq("hotel_id", hotelId);
+
+      // Apply search filter if query exists
+      if (searchQuery.trim()) {
+        const search = `%${searchQuery.trim()}%`;
+        countQuery = countQuery.or(`full_name.ilike.${search},email.ilike.${search},phone.ilike.${search}`);
+        dataQuery = dataQuery.or(`full_name.ilike.${search},email.ilike.${search},phone.ilike.${search}`);
+      }
+
+      // Get total count with search
+      const { count } = await countQuery;
       
       const total = count || 0;
+      setTotalCount(total);
       setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+
+      // Reset to page 1 if current page exceeds total pages
+      if (currentPage > Math.ceil(total / ITEMS_PER_PAGE) && total > 0) {
+        setCurrentPage(1);
+        return;
+      }
 
       // Get paginated data
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("hotel_id", hotelId)
+      const { data, error } = await dataQuery
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -389,13 +411,33 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         <CardHeader>
           <CardTitle>Leads Management</CardTitle>
           <CardDescription>
-            Manage inquiries from potential guests ({leads.length} total)
+            Manage inquiries from potential guests ({totalCount} total)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {leads.length === 0 ? (
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or phone..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {leads.length === 0 && !searchQuery ? (
             <div className="text-center py-12 text-muted-foreground">
               No leads yet. They will appear here when visitors submit the contact form.
+            </div>
+          ) : leads.length === 0 && searchQuery ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No leads found matching "{searchQuery}". Try a different search term.
             </div>
           ) : (
             <div className="overflow-x-auto">
