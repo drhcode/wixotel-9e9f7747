@@ -23,6 +23,7 @@ interface Lead {
   created_at: string;
   room_id: string | null;
   is_read?: boolean;
+  total_amount?: number;
 }
 
 interface Room {
@@ -397,6 +398,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                     <TableHead>Contact</TableHead>
                     <TableHead>Stay Dates</TableHead>
                     <TableHead>Guests</TableHead>
+                    <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
@@ -438,6 +440,9 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                         {format(new Date(lead.check_in), "MMM dd")} - {format(new Date(lead.check_out), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell>{lead.guests}</TableCell>
+                      <TableCell className="font-medium">
+                        {lead.total_amount ? `€${lead.total_amount.toFixed(2)}` : 'N/A'}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(lead.status)}>
                           {lead.status}
@@ -531,6 +536,14 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                           {selectedLead.guests}
                         </div>
                       </div>
+                      {selectedLead.total_amount && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">Total Amount</div>
+                          <div className="font-medium text-lg text-primary">
+                            €{selectedLead.total_amount.toFixed(2)}
+                          </div>
+                        </div>
+                      )}
                       {selectedLead.room_id && (
                         <div>
                           <div className="text-sm text-muted-foreground">Requested Room</div>

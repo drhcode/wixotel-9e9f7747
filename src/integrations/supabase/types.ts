@@ -373,6 +373,7 @@ export type Database = {
           phone: string
           room_id: string | null
           status: string
+          total_amount: number | null
           updated_at: string
         }
         Insert: {
@@ -389,6 +390,7 @@ export type Database = {
           phone: string
           room_id?: string | null
           status?: string
+          total_amount?: number | null
           updated_at?: string
         }
         Update: {
@@ -405,6 +407,7 @@ export type Database = {
           phone?: string
           room_id?: string | null
           status?: string
+          total_amount?: number | null
           updated_at?: string
         }
         Relationships: [

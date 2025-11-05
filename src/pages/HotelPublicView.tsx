@@ -298,7 +298,8 @@ const HotelPublicView = () => {
         check_out: format(validated.checkOut, "yyyy-MM-dd"),
         guests: validated.guests,
         status: "new",
-        message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
+        total_amount: totalAmount,
+        message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"}) - ${nights} night(s) at €${selectedRoom.price}/night = €${totalAmount}`,
       };
       
       console.log("Submitting lead with data:", leadData);
@@ -334,6 +335,7 @@ const HotelPublicView = () => {
             checkIn: format(validated.checkIn, 'PPP'),
             checkOut: format(validated.checkOut, 'PPP'),
             guests: validated.guests,
+            totalAmount,
             message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
             hotel: hotelForEmail,
           });
@@ -355,6 +357,7 @@ const HotelPublicView = () => {
           checkIn: format(validated.checkIn, 'PPP'),
           checkOut: format(validated.checkOut, 'PPP'),
           guests: validated.guests,
+          totalAmount,
           hotel: hotelForEmail,
         });
 
