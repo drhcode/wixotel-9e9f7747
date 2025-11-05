@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, Wallet, Building2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { DollarSign, TrendingUp, Wallet, Building2, Filter, X } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 interface Earning {
   id: string;
@@ -38,21 +40,63 @@ const EarningsManager = () => {
     totalBookings: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [hotels, setHotels] = useState<{ id: string; name: string }[]>([]);
+  const [selectedHotel, setSelectedHotel] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  useEffect(() => {
+    fetchHotels();
+    fetchEarnings();
+  }, []);
 
   useEffect(() => {
     fetchEarnings();
-  }, []);
+  }, [selectedHotel, selectedMonth, selectedStatus]);
+
+  const fetchHotels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("hotels")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      setHotels(data || []);
+    } catch (error: any) {
+      console.error("Failed to load hotels:", error);
+    }
+  };
 
   const fetchEarnings = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("earnings")
         .select(`
           *,
           hotels:hotel_id (name)
-        `)
-        .order("created_at", { ascending: false });
+        `);
+
+      // Apply hotel filter
+      if (selectedHotel !== "all") {
+        query = query.eq("hotel_id", selectedHotel);
+      }
+
+      // Apply status filter
+      if (selectedStatus !== "all") {
+        query = query.eq("status", selectedStatus);
+      }
+
+      // Apply month filter
+      if (selectedMonth !== "all") {
+        const [year, month] = selectedMonth.split("-");
+        const startDate = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+        const endDate = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+        query = query.gte("created_at", startDate.toISOString()).lte("created_at", endDate.toISOString());
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -86,12 +130,103 @@ const EarningsManager = () => {
     return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
+  const clearFilters = () => {
+    setSelectedHotel("all");
+    setSelectedMonth("all");
+    setSelectedStatus("all");
+  };
+
+  const hasActiveFilters = selectedHotel !== "all" || selectedMonth !== "all" || selectedStatus !== "all";
+
+  // Generate month options (last 12 months)
+  const generateMonthOptions = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        value: format(date, "yyyy-MM"),
+        label: format(date, "MMMM yyyy"),
+      });
+    }
+    return months;
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center py-8">Loading earnings...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <CardTitle className="text-lg">Filters</CardTitle>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Hotel</label>
+              <Select value={selectedHotel} onValueChange={setSelectedHotel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Hotels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Hotels</SelectItem>
+                  {hotels.map((hotel) => (
+                    <SelectItem key={hotel.id} value={hotel.id}>
+                      {hotel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Month</label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  {generateMonthOptions().map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <Card>
