@@ -244,9 +244,6 @@ const HotelOverview = ({ hotelId }: Props) => {
               {format(new Date(), 'MMMM yyyy')}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Commission applied only on successfully checked-out guests
-          </p>
         </CardContent>
       </Card>
 

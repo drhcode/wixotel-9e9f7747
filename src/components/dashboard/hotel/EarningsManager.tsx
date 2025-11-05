@@ -97,6 +97,7 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
           leads(full_name)
         `)
         .eq("hotel_id", hotelId)
+        .neq("status", "cancelled")
         .order(sortField, { ascending: sortDirection === 'asc' });
 
       if (error) {
