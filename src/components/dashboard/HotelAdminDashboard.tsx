@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, AlertCircle, Menu, ExternalLink, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -36,10 +37,38 @@ const HotelAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [leadsCount, setLeadsCount] = useState(0);
 
   useEffect(() => {
     fetchHotelData();
   }, []);
+
+  useEffect(() => {
+    if (hotel?.id) {
+      fetchLeadsCount();
+      
+      // Subscribe to leads changes
+      const leadsChannel = supabase
+        .channel(`leads-count-horizontal-${hotel.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'leads',
+            filter: `hotel_id=eq.${hotel.id}`,
+          },
+          () => {
+            fetchLeadsCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(leadsChannel);
+      };
+    }
+  }, [hotel?.id]);
 
   const fetchHotelData = async () => {
     try {
@@ -65,6 +94,25 @@ const HotelAdminDashboard = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLeadsCount = async () => {
+    if (!hotel?.id) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from("leads")
+        .select("*", { count: "exact", head: true })
+        .eq("hotel_id", hotel.id)
+        .eq("is_read", false)
+        .neq("status", "lost")
+        .neq("status", "converted");
+
+      if (error) throw error;
+      setLeadsCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching leads count:", error);
     }
   };
 
@@ -298,9 +346,17 @@ const HotelAdminDashboard = () => {
                     variant={activeTab === tab.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setActiveTab(tab.id)}
-                    className="whitespace-nowrap"
+                    className="whitespace-nowrap relative"
                   >
                     {tab.label}
+                    {tab.id === "leads" && leadsCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {leadsCount}
+                      </Badge>
+                    )}
                   </Button>
                 ))}
                 <div className="ml-auto">
