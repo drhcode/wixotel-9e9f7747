@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut } from "lucide-react";
+import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -45,6 +45,7 @@ const SuperAdminDashboard = () => {
   const [stats, setStats] = useState<Stats>({ totalHotels: 0, activeHotels: 0, pendingHotels: 0, totalRevenue: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -117,6 +118,11 @@ const SuperAdminDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast.success("Refreshing data...");
   };
 
   const getStatusBadge = (status: string) => {
@@ -287,23 +293,23 @@ const SuperAdminDashboard = () => {
           </>
         );
       case "hotels":
-        return <HotelManagement />;
+        return <HotelManagement key={refreshKey} />;
       case "earnings":
-        return <EarningsManager />;
+        return <EarningsManager key={refreshKey} />;
       case "plans":
-        return <SubscriptionPlansManagement />;
+        return <SubscriptionPlansManagement key={refreshKey} />;
       case "subscriptions":
-        return <SubscriptionsManagement />;
+        return <SubscriptionsManagement key={refreshKey} />;
       case "reservations":
-        return <AllReservations />;
+        return <AllReservations key={refreshKey} />;
       case "guests":
-        return <AllGuests />;
+        return <AllGuests key={refreshKey} />;
       case "support":
-        return <SupportTickets />;
+        return <SupportTickets key={refreshKey} />;
       case "reviews":
-        return <ReviewsManagement />;
+        return <ReviewsManagement key={refreshKey} />;
       case "smtp":
-        return <SmtpSettings />;
+        return <SmtpSettings key={refreshKey} />;
       default:
         return null;
     }
@@ -338,7 +344,7 @@ const SuperAdminDashboard = () => {
 
             {/* Desktop Navigation Menu */}
             <div className="hidden lg:block border-t">
-              <div className="flex px-4 py-2 gap-1">
+              <div className="flex px-4 py-2 gap-1 items-center">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "hotels", label: "Hotels" },
@@ -361,6 +367,16 @@ const SuperAdminDashboard = () => {
                     {tab.label}
                   </Button>
                 ))}
+                <div className="ml-auto">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    title="Refresh data"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 

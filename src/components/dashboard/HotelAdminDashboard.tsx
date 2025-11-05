@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, AlertCircle, Menu, ExternalLink } from "lucide-react";
+import { LogOut, AlertCircle, Menu, ExternalLink, RefreshCw } from "lucide-react";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +35,7 @@ const HotelAdminDashboard = () => {
   const [hotel, setHotel] = useState<HotelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     fetchHotelData();
@@ -70,6 +71,11 @@ const HotelAdminDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast.success("Refreshing data...");
   };
 
   if (loading) {
@@ -198,27 +204,27 @@ const HotelAdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return <HotelOverview hotelId={hotel.id} />;
+        return <HotelOverview key={refreshKey} hotelId={hotel.id} />;
       case "calendar":
-        return <CalendarManager hotelId={hotel.id} />;
+        return <CalendarManager key={refreshKey} hotelId={hotel.id} />;
       case "rooms":
-        return <RoomsManager hotelId={hotel.id} />;
+        return <RoomsManager key={refreshKey} hotelId={hotel.id} />;
       case "bookings":
-        return <BookingsManager hotelId={hotel.id} />;
+        return <BookingsManager key={refreshKey} hotelId={hotel.id} />;
       case "guests":
-        return <GuestsManager hotelId={hotel.id} />;
+        return <GuestsManager key={refreshKey} hotelId={hotel.id} />;
       case "leads":
-        return <LeadsManager hotelId={hotel.id} />;
+        return <LeadsManager key={refreshKey} hotelId={hotel.id} />;
       case "earnings":
-        return <LazyEarningsManager hotelId={hotel.id} />;
+        return <LazyEarningsManager key={refreshKey} hotelId={hotel.id} />;
       case "support":
-        return <SupportManager hotelId={hotel.id} />;
+        return <SupportManager key={refreshKey} hotelId={hotel.id} />;
       case "notifications":
-        return <Notifications />;
+        return <Notifications key={refreshKey} />;
       case "settings":
-        return <ProfileSettings />;
+        return <ProfileSettings key={refreshKey} />;
       default:
-        return <HotelOverview hotelId={hotel.id} />;
+        return <HotelOverview key={refreshKey} hotelId={hotel.id} />;
     }
   };
 
@@ -274,7 +280,7 @@ const HotelAdminDashboard = () => {
 
             {/* Desktop Navigation Menu */}
             <div className="hidden lg:block border-t">
-              <div className="flex px-4 py-2 gap-1">
+              <div className="flex px-4 py-2 gap-1 items-center">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "notifications", label: "Notifications" },
@@ -297,6 +303,16 @@ const HotelAdminDashboard = () => {
                     {tab.label}
                   </Button>
                 ))}
+                <div className="ml-auto">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    title="Refresh data"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
