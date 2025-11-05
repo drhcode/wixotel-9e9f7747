@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star, Search } from "lucide-react";
+import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star, Search, Menu } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
 import { BookingLookup } from "@/components/BookingLookup";
 import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 
 interface PublicHotel {
@@ -32,6 +33,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [bookingLookupOpen, setBookingLookupOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hotels, setHotels] = useState<PublicHotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<PublicHotel[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
@@ -334,7 +336,9 @@ const Landing = () => {
             <Link to="/" className="flex items-center gap-2">
               <span className="text-3xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
             </Link>
-            <div className="flex items-center gap-6">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
               <Link to="/hotels" className="text-sm font-medium hover:text-primary transition-colors">
                 Hotels
               </Link>
@@ -357,10 +361,59 @@ const Landing = () => {
               </Button>
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
-                  <span className="hidden sm:inline">Login</span>
-                  <span className="sm:hidden">Login</span>
+                  Login
                 </Button>
               </Link>
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex md:hidden items-center gap-3">
+              <Link to="/register-hotel">
+                <Button size="sm" variant="outline">
+                  Register Hotel
+                </Button>
+              </Link>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px]">
+                  <div className="flex flex-col gap-6 mt-8">
+                    <Link 
+                      to="/hotels" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Hotels
+                    </Link>
+                    <Link 
+                      to="/about" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      About Us
+                    </Link>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setBookingLookupOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Find Booking
+                    </Button>
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant">
+                        Login
+                      </Button>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
