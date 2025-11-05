@@ -42,9 +42,9 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
     if (hotelId) {
       fetchLeadsCount();
       
-      // Subscribe to leads changes
+      // Subscribe to leads changes with a unique channel name
       const channel = supabase
-        .channel('leads-count')
+        .channel(`leads-count-${hotelId}`)
         .on(
           'postgres_changes',
           {
@@ -53,13 +53,18 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
             table: 'leads',
             filter: `hotel_id=eq.${hotelId}`,
           },
-          () => {
+          (payload) => {
+            console.log('Leads change detected in sidebar:', payload);
+            // Immediately update count when leads change
             fetchLeadsCount();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Leads subscription status:', status);
+        });
 
       return () => {
+        console.log('Cleaning up leads subscription');
         supabase.removeChannel(channel);
       };
     }
