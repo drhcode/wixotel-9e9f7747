@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, Trash2 } from "lucide-react";
+import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -42,9 +42,15 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [acceptingLead, setAcceptingLead] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchLeads();
+  }, [hotelId, currentPage]);
+
+  useEffect(() => {
     fetchRooms();
     
     // Subscribe to new leads
@@ -96,11 +102,26 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
+      
+      // Get total count
+      const { count } = await supabase
+        .from("leads")
+        .select("*", { count: 'exact', head: true })
+        .eq("hotel_id", hotelId);
+      
+      const total = count || 0;
+      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+
+      // Get paginated data
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       const { data, error } = await supabase
         .from("leads")
         .select("*")
         .eq("hotel_id", hotelId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setLeads(data || []);
@@ -333,24 +354,6 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     setSelectedLead(null);
   };
 
-  const deleteLead = async (leadId: string) => {
-    if (!confirm("Are you sure you want to delete this lead?")) return;
-
-    try {
-      const { error } = await supabase
-        .from("leads")
-        .delete()
-        .eq("id", leadId);
-
-      if (error) throw error;
-      toast.success("Lead deleted");
-      fetchLeads();
-      setSelectedLead(null);
-    } catch (error: any) {
-      console.error("Error deleting lead:", error);
-      toast.error("Failed to delete lead");
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -475,6 +478,33 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
 
       {/* Lead Details Dialog */}
       <Dialog open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
@@ -606,14 +636,10 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                   </Card>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-end pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
                     Submitted on {format(new Date(selectedLead.created_at), "MMMM dd, yyyy 'at' HH:mm")}
                   </div>
-                  <Button variant="destructive" size="sm" onClick={() => deleteLead(selectedLead.id)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Lead
-                  </Button>
                 </div>
               </div>
             </>

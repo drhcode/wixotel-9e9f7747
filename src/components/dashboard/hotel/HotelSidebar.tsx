@@ -29,6 +29,7 @@ const menuItems = [
   { id: "bookings", label: "Bookings", icon: BookOpen },
   { id: "guests", label: "Guests", icon: Users },
   { id: "leads", label: "Leads", icon: UserPlus },
+  { id: "earnings", label: "Earnings", icon: BarChart3 },
   { id: "support", label: "Support", icon: MessageSquare },
   { id: "settings", label: "Settings", icon: Settings },
 ];
