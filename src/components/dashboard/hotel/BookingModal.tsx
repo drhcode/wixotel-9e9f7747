@@ -17,13 +17,13 @@ import { mapDatabaseError } from "@/lib/errorUtils";
 
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
-  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone too long"),
+  phone: z.string().trim().max(30, "Phone too long").optional().or(z.literal('')),
   email: z.string().email("Invalid email").max(255, "Email too long").optional().or(z.literal('')),
-  country: z.string().min(1, "Country is required"),
-  city: z.string().min(1, "City is required"),
-  guestCount: z.number().min(1, "At least 1 guest required"),
+  country: z.string().max(100).optional().or(z.literal('')),
+  city: z.string().max(100).optional().or(z.literal('')),
+  guestCount: z.number().min(1, "At least 1 guest required").optional(),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-  totalPrice: z.number().positive("Total price must be positive"),
+  totalPrice: z.number().nonnegative("Total price must be positive").optional(),
 });
 
 interface Props {
@@ -44,6 +44,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [selectedGuest, setSelectedGuest] = useState("");
   const [guestSearchTerm, setGuestSearchTerm] = useState("");
   const [guestName, setGuestName] = useState("");
+  const [phonePrefix, setPhonePrefix] = useState("+1");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestCountry, setGuestCountry] = useState("");
@@ -164,15 +165,16 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       // If "new" is selected or no guest selected, create a new guest
       if (selectedGuest === 'new' || !selectedGuest) {
         // Validate required fields
+        const newGuestPhone = guestPhone ? `${phonePrefix}${guestPhone}` : "";
         const validation = guestSchema.safeParse({
           fullName: guestName,
-          phone: guestPhone,
+          phone: newGuestPhone,
           email: guestEmail,
           country: guestCountry,
           city: guestCity,
-          guestCount: guestCount,
+          guestCount: guestCount || 1,
           notes: notes,
-          totalPrice: totalPrice,
+          totalPrice: totalPrice || 0,
         });
 
         if (!validation.success) {
@@ -193,11 +195,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           .insert({ 
             hotel_id: hotelId, 
             name: guestName, 
-            phone: guestPhone, 
-            email: guestEmail,
-            country: guestCountry,
-            city: guestCity,
-            address: guestAddress
+            phone: newGuestPhone || null, 
+            email: guestEmail || null,
+            country: guestCountry || null,
+            city: guestCity || null,
+            address: guestAddress || null
           })
           .select()
           .single();
@@ -217,18 +219,19 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       // Generate unique confirmation number
       const confirmationNumber = `wixo${Date.now()}${Math.random().toString(36).substring(2, 9)}`.toUpperCase();
       
+      const fullPhone = guestPhone ? `${phonePrefix}${guestPhone}` : "";
       const { error } = await supabase.from('bookings').insert({
         hotel_id: hotelId,
         room_id: selectedRoom,
         guest_id: guestId,
         full_name: guestName || existingGuest?.name,
-        guest_phone: guestPhone || existingGuest?.phone,
-        guest_email: guestEmail || existingGuest?.email,
+        guest_phone: fullPhone || existingGuest?.phone || null,
+        guest_email: guestEmail || existingGuest?.email || null,
         check_in: format(ci, 'yyyy-MM-dd'),
         check_out: format(co, 'yyyy-MM-dd'),
-        total_amount: totalPrice,
-        guest_count: guestCount,
-        notes,
+        total_amount: totalPrice || 0,
+        guest_count: guestCount || 1,
+        notes: notes || null,
         status: 'reserved',
         confirmation_number: confirmationNumber
       });
@@ -293,6 +296,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       setSelectedRoom("");
       setSelectedGuest("");
       setGuestName("");
+      setPhonePrefix("+1");
       setGuestEmail("");
       setGuestPhone("");
       setGuestCountry("");
@@ -442,33 +446,97 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <p className="text-xs text-destructive mt-1">{validationErrors.fullName}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Phone *</Label>
+              <div>
+                <Label>Phone</Label>
+                <div className="flex gap-2">
+                  <Select value={phonePrefix} onValueChange={setPhonePrefix}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Prefix" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                      <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                      <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                      <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                      <SelectItem value="+39">🇮🇹 +39</SelectItem>
+                      <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                      <SelectItem value="+351">🇵🇹 +351</SelectItem>
+                      <SelectItem value="+31">🇳🇱 +31</SelectItem>
+                      <SelectItem value="+32">🇧🇪 +32</SelectItem>
+                      <SelectItem value="+41">🇨🇭 +41</SelectItem>
+                      <SelectItem value="+43">🇦🇹 +43</SelectItem>
+                      <SelectItem value="+45">🇩🇰 +45</SelectItem>
+                      <SelectItem value="+46">🇸🇪 +46</SelectItem>
+                      <SelectItem value="+47">🇳🇴 +47</SelectItem>
+                      <SelectItem value="+358">🇫🇮 +358</SelectItem>
+                      <SelectItem value="+353">🇮🇪 +353</SelectItem>
+                      <SelectItem value="+30">🇬🇷 +30</SelectItem>
+                      <SelectItem value="+420">🇨🇿 +420</SelectItem>
+                      <SelectItem value="+48">🇵🇱 +48</SelectItem>
+                      <SelectItem value="+36">🇭🇺 +36</SelectItem>
+                      <SelectItem value="+40">🇷🇴 +40</SelectItem>
+                      <SelectItem value="+359">🇧🇬 +359</SelectItem>
+                      <SelectItem value="+385">🇭🇷 +385</SelectItem>
+                      <SelectItem value="+386">🇸🇮 +386</SelectItem>
+                      <SelectItem value="+421">🇸🇰 +421</SelectItem>
+                      <SelectItem value="+372">🇪🇪 +372</SelectItem>
+                      <SelectItem value="+371">🇱🇻 +371</SelectItem>
+                      <SelectItem value="+370">🇱🇹 +370</SelectItem>
+                      <SelectItem value="+7">🇷🇺 +7</SelectItem>
+                      <SelectItem value="+380">🇺🇦 +380</SelectItem>
+                      <SelectItem value="+90">🇹🇷 +90</SelectItem>
+                      <SelectItem value="+971">🇦🇪 +971</SelectItem>
+                      <SelectItem value="+966">🇸🇦 +966</SelectItem>
+                      <SelectItem value="+20">🇪🇬 +20</SelectItem>
+                      <SelectItem value="+27">🇿🇦 +27</SelectItem>
+                      <SelectItem value="+91">🇮🇳 +91</SelectItem>
+                      <SelectItem value="+86">🇨🇳 +86</SelectItem>
+                      <SelectItem value="+81">🇯🇵 +81</SelectItem>
+                      <SelectItem value="+82">🇰🇷 +82</SelectItem>
+                      <SelectItem value="+852">🇭🇰 +852</SelectItem>
+                      <SelectItem value="+65">🇸🇬 +65</SelectItem>
+                      <SelectItem value="+60">🇲🇾 +60</SelectItem>
+                      <SelectItem value="+66">🇹🇭 +66</SelectItem>
+                      <SelectItem value="+84">🇻🇳 +84</SelectItem>
+                      <SelectItem value="+63">🇵🇭 +63</SelectItem>
+                      <SelectItem value="+62">🇮🇩 +62</SelectItem>
+                      <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                      <SelectItem value="+64">🇳🇿 +64</SelectItem>
+                      <SelectItem value="+55">🇧🇷 +55</SelectItem>
+                      <SelectItem value="+52">🇲🇽 +52</SelectItem>
+                      <SelectItem value="+54">🇦🇷 +54</SelectItem>
+                      <SelectItem value="+56">🇨🇱 +56</SelectItem>
+                      <SelectItem value="+57">🇨🇴 +57</SelectItem>
+                      <SelectItem value="+51">🇵🇪 +51</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input 
+                    type="tel"
+                    placeholder="123456789"
                     value={guestPhone} 
                     onChange={(e) => {
-                      setGuestPhone(e.target.value);
+                      setGuestPhone(e.target.value.replace(/[^0-9]/g, ''));
                       setValidationErrors(prev => ({ ...prev, phone: "" }));
                     }}
-                    className={validationErrors.phone ? "border-destructive" : ""}
-                  />
-                  {validationErrors.phone && (
-                    <p className="text-xs text-destructive mt-1">{validationErrors.phone}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input 
-                    type="email" 
-                    value={guestEmail} 
-                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className={`flex-1 ${validationErrors.phone ? "border-destructive" : ""}`}
                   />
                 </div>
+                {validationErrors.phone && (
+                  <p className="text-xs text-destructive mt-1">{validationErrors.phone}</p>
+                )}
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input 
+                  type="email" 
+                  placeholder="guest@example.com"
+                  value={guestEmail} 
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Country *</Label>
+                  <Label>Country</Label>
                   <Select 
                     value={guestCountry} 
                     onValueChange={(value) => {
@@ -476,7 +544,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       setValidationErrors(prev => ({ ...prev, country: "" }));
                     }}
                   >
-                    <SelectTrigger className={validationErrors.country ? "border-destructive" : ""}>
+                    <SelectTrigger>
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
@@ -487,12 +555,9 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       ))}
                     </SelectContent>
                   </Select>
-                  {validationErrors.country && (
-                    <p className="text-xs text-destructive mt-1">{validationErrors.country}</p>
-                  )}
                 </div>
                 <div>
-                  <Label>City *</Label>
+                  <Label>City</Label>
                   <Select 
                     value={guestCity} 
                     onValueChange={(value) => {
@@ -501,7 +566,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                     }}
                     disabled={!guestCountry || availableCities.length === 0}
                   >
-                    <SelectTrigger className={validationErrors.city ? "border-destructive" : ""}>
+                    <SelectTrigger>
                       <SelectValue placeholder={!guestCountry ? "Select country first" : "Select city"} />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-[100] max-h-[300px]">
@@ -512,9 +577,6 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                       ))}
                     </SelectContent>
                   </Select>
-                  {validationErrors.city && (
-                    <p className="text-xs text-destructive mt-1">{validationErrors.city}</p>
-                  )}
                 </div>
               </div>
               <div>
@@ -525,7 +587,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
           )}
 
           <div>
-            <Label>Number of Guests *</Label>
+            <Label>Number of Guests</Label>
             <Input 
               type="number" 
               min="1" 
@@ -534,11 +596,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                 setGuestCount(parseInt(e.target.value) || 1);
                 setValidationErrors(prev => ({ ...prev, guestCount: "" }));
               }}
-              className={validationErrors.guestCount ? "border-destructive" : ""}
             />
-            {validationErrors.guestCount && (
-              <p className="text-xs text-destructive mt-1">{validationErrors.guestCount}</p>
-            )}
           </div>
 
           <div>
