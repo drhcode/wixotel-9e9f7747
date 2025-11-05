@@ -38,6 +38,7 @@ import {
   Star,
   MessageSquare,
   Search,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -47,6 +48,9 @@ import "react-phone-number-input/style.css";
 import { cn } from "@/lib/utils";
 import { ReviewModal } from "@/components/hotel/ReviewModal";
 import { BookingLookup } from "@/components/BookingLookup";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Link } from "react-router-dom";
+import wixotelLogo from "@/assets/wixotel-logo.png";
 
 interface Hotel {
   id: string;
@@ -517,21 +521,24 @@ const HotelPublicView = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
+            {/* Logo */}
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               {hotel?.logo_url ? (
                 <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
-              ) : null}
-              <div className="flex flex-col items-start leading-none">
+              ) : (
+                <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" />
+              )}
+              <div className="hidden sm:flex flex-col items-start leading-none">
                 <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
                 <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
               </div>
             </button>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-6">
               <button
                 onClick={() => scrollToSection("rooms")}
                 className="text-sm font-medium hover:text-primary transition-colors"
@@ -567,55 +574,54 @@ const HotelPublicView = () => {
               </Button>
             </nav>
 
-            {/* Mobile Menu Toggle */}
-            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
             {/* Mobile Navigation */}
-            {mobileMenuOpen && (
-              <nav className="md:hidden py-4 border-t animate-fade-in">
-                <div className="flex flex-col gap-4">
-                  <button
-                    onClick={() => scrollToSection("rooms")}
-                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                  >
-                    Rooms
-                  </button>
-                  <button
-                    onClick={() => scrollToSection("about")}
-                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                  >
-                    About Us
-                  </button>
-                  <button
-                    onClick={() => scrollToSection("reviews")}
-                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                  >
-                    Reviews
-                  </button>
-                  <button
-                    onClick={() => scrollToSection("contact")}
-                    className="text-left py-2 px-4 hover:bg-accent rounded-lg transition-colors"
-                  >
-                    Contact Us
-                  </button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setBookingLookupOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 mx-4"
-                  >
-                    <Search className="h-4 w-4" />
-                    Find Booking
+            <div className="flex lg:hidden items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBookingLookupOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Find Booking</span>
+              </Button>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2">
+                    <Menu className="h-5 w-5" />
                   </Button>
-                </div>
-              </nav>
-            )}
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px]">
+                  <div className="flex flex-col gap-6 mt-8">
+                    <button
+                      onClick={() => scrollToSection("rooms")}
+                      className="text-lg font-medium hover:text-primary transition-colors text-left"
+                    >
+                      Rooms
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("about")}
+                      className="text-lg font-medium hover:text-primary transition-colors text-left"
+                    >
+                      About Us
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("reviews")}
+                      className="text-lg font-medium hover:text-primary transition-colors text-left"
+                    >
+                      Reviews
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("contact")}
+                      className="text-lg font-medium hover:text-primary transition-colors text-left"
+                    >
+                      Contact Us
+                    </button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
         </div>
       </header>
 
