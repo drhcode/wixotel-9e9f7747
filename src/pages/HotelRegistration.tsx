@@ -8,12 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, MapPin, Phone, Mail, Image, Info, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, UserPlus, Calendar, Users, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { getCountries, getCitiesForCountry } from "@/lib/countries";
+import demoCalendar from "@/assets/demo-calendar.jpg";
+import demoBookings from "@/assets/demo-bookings.jpg";
+import demoMobile from "@/assets/demo-mobile.jpg";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2, "Min 2 characters").max(100),
@@ -257,31 +260,33 @@ const HotelRegistration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10 p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       
-      <div className="w-full max-w-3xl relative z-10 animate-fade-in">
+      <div className="w-full max-w-7xl mx-auto relative z-10 animate-fade-in">
         <Link to="/" className="inline-flex items-center gap-2 mb-8 text-sm text-muted-foreground hover:text-primary transition-colors group">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to home
         </Link>
 
-        <Card className="shadow-2xl border-border/50 backdrop-blur-sm bg-card/95">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-primary"></div>
-          
-          <CardHeader className="space-y-3 pb-6 pt-8">
-            <CardTitle className="text-3xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-              Register Your Hotel
-            </CardTitle>
-            <CardDescription className="text-center text-base">
-              Step {step} of {totalSteps}
-            </CardDescription>
-            <Progress value={progress} className="h-2" />
-          </CardHeader>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Left Column - Registration Form */}
+          <Card className="shadow-2xl border-border/50 backdrop-blur-sm bg-card/95">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-primary"></div>
+            
+            <CardHeader className="space-y-3 pb-6 pt-8">
+              <CardTitle className="text-3xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
+                Register Your Hotel
+              </CardTitle>
+              <CardDescription className="text-center text-base">
+                Step {step} of {totalSteps}
+              </CardDescription>
+              <Progress value={progress} className="h-2" />
+            </CardHeader>
 
-          <CardContent className="pb-8">
+            <CardContent className="pb-8">
             {/* Step 1: Hotel Information */}
             {step === 1 && (
               <div className="space-y-6 animate-fade-in">
@@ -537,7 +542,7 @@ const HotelRegistration = () => {
             {step === 4 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  <Info className="h-5 w-5 text-primary" />
+                  <Building2 className="h-5 w-5 text-primary" />
                   Review & Submit
                 </div>
 
@@ -586,42 +591,115 @@ const HotelRegistration = () => {
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8 pt-6 border-t">
-              {step > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={loading}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-              )}
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-8 pt-6 border-t">
+                {step > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={loading}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                )}
 
-              {step < totalSteps ? (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
-                >
-                  Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
-                >
-                  {loading ? "Submitting..." : "Submit for Review"}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                {step < totalSteps ? (
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
+                  >
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="ml-auto bg-gradient-primary hover:opacity-90 transition-all shadow-elegant"
+                  >
+                    {loading ? "Submitting..." : "Submit for Review"}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right Column - How It Works */}
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start hidden lg:block">
+            <Card className="shadow-2xl border-border/50 backdrop-blur-sm bg-card/95 overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  How Wixotel Works
+                </CardTitle>
+                <CardDescription>
+                  Manage your hotel with powerful tools designed for success
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/10 p-2 mt-1">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Visual Calendar</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Track bookings, availability, and reservations at a glance with an intuitive timeline view
+                      </p>
+                    </div>
+                  </div>
+                  <img 
+                    src={demoCalendar} 
+                    alt="Calendar Management" 
+                    className="rounded-lg border border-border/50 w-full shadow-lg"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/10 p-2 mt-1">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Booking Management</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Handle reservations, guest details, and check-ins/checkouts effortlessly
+                      </p>
+                    </div>
+                  </div>
+                  <img 
+                    src={demoBookings} 
+                    alt="Booking Management" 
+                    className="rounded-lg border border-border/50 w-full shadow-lg"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/10 p-2 mt-1">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Mobile Ready</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Access your dashboard anywhere, anytime from any device
+                      </p>
+                    </div>
+                  </div>
+                  <img 
+                    src={demoMobile} 
+                    alt="Mobile Dashboard" 
+                    className="rounded-lg border border-border/50 w-full shadow-lg"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
