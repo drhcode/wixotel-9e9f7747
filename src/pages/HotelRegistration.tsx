@@ -14,6 +14,7 @@ import { z } from "zod";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { getCountries, getCitiesForCountry } from "@/lib/countries";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import demoCalendar from "@/assets/demo-calendar.jpg";
 import demoBookings from "@/assets/demo-bookings.jpg";
 import demoMobile from "@/assets/demo-mobile.jpg";
@@ -372,13 +373,22 @@ const HotelRegistration = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="address">Full Address *</Label>
-                  <Input
-                    id="address"
-                    placeholder="123 Main Street, Suite 100"
+                  <AddressAutocomplete
                     value={hotelData.address}
-                    onChange={(e) => setHotelData({ ...hotelData, address: e.target.value })}
-                    required
+                    onChange={(value) => setHotelData({ ...hotelData, address: value })}
+                    onSelectAddress={(data) => {
+                      setHotelData({
+                        ...hotelData,
+                        address: data.address,
+                        city: data.city,
+                        country: data.countryCode,
+                      });
+                    }}
+                    placeholder="Start typing your address..."
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Start typing to see suggestions with street names
+                  </p>
                 </div>
 
                 <div className="space-y-2">

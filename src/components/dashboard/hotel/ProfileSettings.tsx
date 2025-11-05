@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Shield, Hotel, Lock, Upload } from "lucide-react";
 import { z } from "zod";
 import { mapAuthError, mapDatabaseError } from "@/lib/errorUtils";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2, "Hotel name must be at least 2 characters").max(200, "Name too long"),
@@ -345,13 +346,19 @@ const ProfileSettings = () => {
 
           <div className="space-y-2">
             <Label htmlFor="hotel-address">Address *</Label>
-            <Textarea
-              id="hotel-address"
+            <AddressAutocomplete
               value={hotelAddress}
-              onChange={(e) => setHotelAddress(e.target.value)}
-              placeholder="Enter hotel address"
-              rows={3}
+              onChange={(value) => setHotelAddress(value)}
+              onSelectAddress={(data) => {
+                setHotelAddress(data.address);
+                setHotelCity(data.city);
+                setHotelCountry(data.country);
+              }}
+              placeholder="Start typing your address..."
             />
+            <p className="text-xs text-muted-foreground">
+              Start typing to see suggestions with street names
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
