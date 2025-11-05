@@ -593,9 +593,11 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
               min="1" 
               value={guestCount} 
               onChange={(e) => {
-                setGuestCount(parseInt(e.target.value) || 1);
+                const val = e.target.value;
+                setGuestCount(val === '' ? 1 : parseInt(val) || 1);
                 setValidationErrors(prev => ({ ...prev, guestCount: "" }));
               }}
+              onFocus={(e) => e.target.select()}
             />
           </div>
 
