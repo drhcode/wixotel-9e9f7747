@@ -227,6 +227,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                 <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
               </div>
               
+              {booking.confirmation_number && (
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-lg border-2 border-primary/30">
+                  <p className="text-sm text-muted-foreground mb-1">Confirmation Number</p>
+                  <p className="text-xl font-bold font-mono tracking-wider text-primary">{booking.confirmation_number}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Use this number for check-in and review submission</p>
+                </div>
+              )}
+              
               <div>
                 <p className="text-sm text-muted-foreground">Room</p>
                 <p className="font-medium">{booking.rooms?.room_number || booking.rooms?.name}</p>
