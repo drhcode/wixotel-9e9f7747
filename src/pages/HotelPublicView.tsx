@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAnalyticsTracking } from "@/hooks/useAnalyticsTracking";
@@ -133,6 +133,7 @@ const HotelPublicView = () => {
   });
   const [bookingCheckInOpen, setBookingCheckInOpen] = useState(false);
   const [bookingCheckOutOpen, setBookingCheckOutOpen] = useState(false);
+  const bookingFormRef = useRef<HTMLDivElement>(null);
 
   const leadSchema = z.object({
     fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -1304,6 +1305,13 @@ const HotelPublicView = () => {
                           ...bookingRequest,
                           guests: selectedRoom.capacity,
                         });
+                        // Scroll to booking form after state updates
+                        setTimeout(() => {
+                          bookingFormRef.current?.scrollIntoView({ 
+                            behavior: "smooth", 
+                            block: "start" 
+                          });
+                        }, 100);
                       }}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
@@ -1311,7 +1319,7 @@ const HotelPublicView = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Card className="border-primary/20 bg-primary/5">
+                  <Card ref={bookingFormRef} className="border-primary/20 bg-primary/5">
                     <CardContent className="pt-6">
                       <h4 className="font-semibold mb-4 flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-primary" />
