@@ -6,6 +6,9 @@ import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 
 const Landing = lazy(() => import("./pages/Landing"));
+const Hotels = lazy(() => import("./pages/Hotels"));
+const About = lazy(() => import("./pages/About"));
+const RegisterHotelInfo = lazy(() => import("./pages/RegisterHotelInfo"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const HotelPublicView = lazy(() => import("./pages/HotelPublicView"));
@@ -29,12 +32,15 @@ const App = () => (
           <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/hotels" element={<Hotels />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/register-hotel" element={<RegisterHotelInfo />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />
-          <Route path="/register-hotel" element={<HotelRegistration />} />
-          <Route path="/registration-success" element={<RegistrationSuccess />} />
-          <Route path="*" element={<NotFound />} />
+              <Route path="/hotel-registration" element={<HotelRegistration />} />
+              <Route path="/registration-success" element={<RegistrationSuccess />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </Router>

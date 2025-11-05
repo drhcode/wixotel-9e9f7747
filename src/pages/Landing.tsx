@@ -331,10 +331,21 @@ const Landing = () => {
       <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 z-50 shadow-sm">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <span className="text-3xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
-            </div>
-            <div className="flex items-center gap-3">
+            </Link>
+            <div className="flex items-center gap-6">
+              <Link to="/hotels" className="text-sm font-medium hover:text-primary transition-colors">
+                Hotels
+              </Link>
+              <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
+                About Us
+              </Link>
+              <Link to="/register-hotel">
+                <Button size="sm" variant="outline">
+                  Register Hotel
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
@@ -346,7 +357,7 @@ const Landing = () => {
               </Button>
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
-                  <span className="hidden sm:inline">Login to Panel</span>
+                  <span className="hidden sm:inline">Login</span>
                   <span className="sm:hidden">Login</span>
                 </Button>
               </Link>
@@ -476,7 +487,7 @@ const Landing = () => {
 
             {/* Hotels Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {filteredHotels.map((hotel) => (
+              {filteredHotels.slice(0, 6).map((hotel) => (
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
                   <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-video relative overflow-hidden bg-accent">
@@ -551,6 +562,20 @@ const Landing = () => {
                 </Link>
               ))}
             </div>
+
+            {filteredHotels.length > 6 && (
+              <div className="col-span-full text-center mt-8">
+                <Link to="/hotels">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-2 hover:border-primary hover:bg-primary/5 transition-all"
+                  >
+                    View All Hotels
+                  </Button>
+                </Link>
+              </div>
+            )}
 
             {filteredHotels.length === 0 && (
               <div className="text-center py-12">
