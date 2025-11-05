@@ -19,6 +19,7 @@ import SmtpSettings from "./superadmin/SmtpSettings";
 import { SupportTickets } from "./superadmin/SupportTickets";
 import ReviewsManagement from "./superadmin/ReviewsManagement";
 import EarningsManager from "./superadmin/EarningsManager";
+import CancellationRequests from "./superadmin/CancellationRequests";
 
 interface Hotel {
   id: string;
@@ -304,6 +305,8 @@ const SuperAdminDashboard = () => {
         return <AllReservations key={refreshKey} />;
       case "guests":
         return <AllGuests key={refreshKey} />;
+      case "cancellations":
+        return <CancellationRequests key={refreshKey} />;
       case "support":
         return <SupportTickets key={refreshKey} />;
       case "reviews":
@@ -353,6 +356,7 @@ const SuperAdminDashboard = () => {
                   { id: "subscriptions", label: "Subscriptions" },
                   { id: "reservations", label: "Reservations" },
                   { id: "guests", label: "Guests" },
+                  { id: "cancellations", label: "Cancellations" },
                   { id: "support", label: "Support" },
                   { id: "reviews", label: "Reviews" },
                   { id: "smtp", label: "Email Settings" },
@@ -383,7 +387,7 @@ const SuperAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "hotels", "earnings", "plans", "subscriptions", "reservations", "guests", "support", "reviews", "smtp"].map((tab) => (
+                {["overview", "hotels", "earnings", "plans", "subscriptions", "reservations", "guests", "cancellations", "support", "reviews", "smtp"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
