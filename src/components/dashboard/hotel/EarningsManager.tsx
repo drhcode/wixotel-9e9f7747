@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowUpDown, TrendingUp, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import BookingDetailsModal from "./BookingDetailsModal";
 
 interface Earning {
   id: string;
@@ -14,10 +15,24 @@ interface Earning {
   commission_rate: number;
   status: string;
   created_at: string;
+  booking_id: string | null;
   bookings: {
+    id: string;
     full_name: string;
     check_in: string;
     check_out: string;
+    guest_email: string;
+    guest_phone: string;
+    guest_count: number;
+    total_amount: number;
+    status: string;
+    confirmation_number: string;
+    notes: string;
+    rooms: {
+      id: string;
+      name: string;
+      room_number: string;
+    };
   } | null;
   leads: {
     full_name: string;
@@ -42,6 +57,7 @@ type SortDirection = 'asc' | 'desc';
 const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [stats, setStats] = useState<Stats>({
     totalEarnings: 0,
     platformCommission: 0,
@@ -63,7 +79,21 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
         .from("earnings")
         .select(`
           *,
-          bookings(full_name, check_in, check_out),
+          bookings(
+            id,
+            full_name,
+            check_in,
+            check_out,
+            guest_email,
+            guest_phone,
+            guest_count,
+            total_amount,
+            status,
+            confirmation_number,
+            notes,
+            hotel_id,
+            rooms(id, name, room_number)
+          ),
           leads(full_name)
         `)
         .eq("hotel_id", hotelId)
@@ -109,6 +139,12 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
     } else {
       setSortField(field);
       setSortDirection('desc');
+    }
+  };
+
+  const handleRowClick = (earning: Earning) => {
+    if (earning.bookings) {
+      setSelectedBooking(earning.bookings);
     }
   };
 
@@ -261,7 +297,11 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
                     const netAmount = Number(earning.total_amount) - Number(earning.commission_amount);
                     
                     return (
-                      <TableRow key={earning.id}>
+                      <TableRow 
+                        key={earning.id}
+                        className={earning.bookings ? "cursor-pointer hover:bg-accent/50" : ""}
+                        onClick={() => earning.bookings && handleRowClick(earning)}
+                      >
                         <TableCell className="font-medium">{guestName}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(earning.created_at), "MMM dd, yyyy")}
@@ -294,6 +334,17 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
           )}
         </CardContent>
       </Card>
+
+      {selectedBooking && (
+        <BookingDetailsModal
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+          onUpdate={() => {
+            fetchEarnings();
+            setSelectedBooking(null);
+          }}
+        />
+      )}
     </div>
   );
 };
