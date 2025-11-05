@@ -9,6 +9,8 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Hotels = lazy(() => import("./pages/Hotels"));
 const About = lazy(() => import("./pages/About"));
 const RegisterHotelInfo = lazy(() => import("./pages/RegisterHotelInfo"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const HotelPublicView = lazy(() => import("./pages/HotelPublicView"));
@@ -35,6 +37,8 @@ const App = () => (
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/about" element={<About />} />
               <Route path="/register-hotel" element={<RegisterHotelInfo />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />

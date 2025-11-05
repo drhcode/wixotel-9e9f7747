@@ -256,15 +256,29 @@ const About = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 md:px-6 border-t">
+      <footer className="py-12 px-4 md:px-6 border-t bg-accent/30">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="text-2xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
-            </Link>
-            <p className="text-sm text-muted-foreground">
-              © 2025 WIXOTEL. All rights reserved.
-            </p>
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <Link to="/" className="flex items-center gap-2">
+                <span className="text-2xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
+              </Link>
+              <p className="text-sm text-muted-foreground mt-4">Modern hotel management for the digital age</p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <div className="space-y-2">
+                <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="block text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Contact</h3>
+              <a href="mailto:support@wixotel.com" className="block text-sm text-primary hover:underline">support@wixotel.com</a>
+            </div>
+          </div>
+          <div className="border-t pt-8 text-center">
+            <p className="text-sm text-muted-foreground">© 2025 WIXOTEL. All rights reserved. GDPR Compliant.</p>
           </div>
         </div>
       </footer>
