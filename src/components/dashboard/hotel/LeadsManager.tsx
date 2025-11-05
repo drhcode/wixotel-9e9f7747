@@ -250,24 +250,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
       if (bookingError) throw bookingError;
 
-      // Create earnings record for platform commission (8%)
-      const commissionRate = 8;
-      const commissionAmount = (totalAmount * commissionRate) / 100;
-
-      const { error: earningsError } = await supabase.from("earnings").insert({
-        hotel_id: hotelId,
-        lead_id: lead.id,
-        booking_id: bookingData.id,
-        total_amount: totalAmount,
-        commission_rate: commissionRate,
-        commission_amount: commissionAmount,
-        status: 'pending', // Will be updated to 'completed' when guest checks out
-      });
-
-      if (earningsError) {
-        console.error("Error creating earnings record:", earningsError);
-        toast.error("Booking created but earnings tracking failed. Please contact support.");
-      }
+      // Note: Earnings will be automatically created when booking is checked out
 
       // Send approval email to guest via Edge Function
       try {

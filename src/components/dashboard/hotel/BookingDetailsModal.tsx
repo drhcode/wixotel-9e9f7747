@@ -198,6 +198,13 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const handleDelete = async () => {
+    // Prevent deletion of checked-out bookings
+    if (booking.status === 'checked_out') {
+      toast.error("Cannot delete checked-out bookings. Please contact support if you need to modify this reservation.");
+      setShowDeleteConfirm(false);
+      return;
+    }
+
     // Earnings will be automatically set to 'cancelled' by database trigger
     const { error } = await supabase
       .from('bookings')
@@ -434,6 +441,11 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <div className="space-y-2 p-4 border rounded-lg bg-destructive/10">
               <p className="text-sm font-medium">Are you sure you want to delete this booking?</p>
               <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
+              {booking.status === 'checked_out' && (
+                <p className="text-xs text-warning font-medium mt-2">
+                  Note: Checked-out bookings cannot be deleted. Please contact support if you need assistance.
+                </p>
+              )}
             </div>
           )}
           
@@ -454,7 +466,13 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     Check Out
                   </Button>
                 )}
-                <Button size="sm" variant="destructive" onClick={handleDeleteAttempt}>
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={handleDeleteAttempt}
+                  disabled={booking.status === 'checked_out'}
+                  title={booking.status === 'checked_out' ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' : 'Delete this booking'}
+                >
                   Delete
                 </Button>
                 <Button size="sm" variant="outline" onClick={onClose}>

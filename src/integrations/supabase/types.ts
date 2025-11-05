@@ -942,6 +942,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_checkout_overdue_bookings: { Args: never; Returns: undefined }
       check_booking_overlap: {
         Args: {
           p_booking_id?: string
