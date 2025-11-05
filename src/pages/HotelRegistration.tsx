@@ -13,8 +13,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { getCountries, getCitiesForCountry } from "@/lib/countries";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
 import demoCalendar from "@/assets/demo-calendar.jpg";
 import demoBookings from "@/assets/demo-bookings.jpg";
 import demoMobile from "@/assets/demo-mobile.jpg";
@@ -77,7 +77,6 @@ const HotelRegistration = () => {
     confirmPassword: "",
   });
 
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [defaultCountry, setDefaultCountry] = useState<any>("US");
 
   const totalSteps = 4;
@@ -88,28 +87,15 @@ const HotelRegistration = () => {
     fetch('https://ipapi.co/json/')
       .then(response => response.json())
       .then(data => {
-        if (data.country_code) {
+        if (data.country_name) {
           setDefaultCountry(data.country_code);
-          setHotelData(prev => ({ ...prev, country: data.country_code }));
+          setHotelData(prev => ({ ...prev, country: data.country_name }));
         }
       })
       .catch(() => {
         // Silently fail, keep default
       });
   }, []);
-
-  // Update cities when country changes
-  useEffect(() => {
-    if (hotelData.country) {
-      const cities = getCitiesForCountry(hotelData.country);
-      setAvailableCities(cities);
-      if (hotelData.city && !cities.includes(hotelData.city)) {
-        setHotelData(prev => ({ ...prev, city: "" }));
-      }
-    } else {
-      setAvailableCities([]);
-    }
-  }, [hotelData.country]);
 
   const addRoom = () => {
     setRooms([...rooms, { name: "", price: 0, capacity: 2 }]);
@@ -208,10 +194,6 @@ const HotelRegistration = () => {
         .eq('name', 'Basic')
         .single();
 
-      // Get full country name from code
-      const selectedCountry = getCountries().find(c => c.code === hotelValidation.data.country);
-      const countryName = selectedCountry?.name || hotelValidation.data.country;
-
       // Create hotel
       const { data: hotel, error: hotelError } = await supabase
         .from('hotels')
@@ -220,7 +202,7 @@ const HotelRegistration = () => {
           name: hotelValidation.data.name,
           address: hotelValidation.data.address,
           city: hotelValidation.data.city,
-          country: countryName,
+          country: hotelValidation.data.country,
           phone: hotelValidation.data.phone,
           email: hotelValidation.data.email,
           description: hotelValidation.data.description || null,
@@ -333,41 +315,28 @@ const HotelRegistration = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="country">Country *</Label>
-                    <Select
+                    <PlaceAutocomplete
                       value={hotelData.country}
-                      onValueChange={(value) => setHotelData({ ...hotelData, country: value })}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {getCountries().map((country) => (
-                          <SelectItem key={country.code} value={country.code}>
-                            {country.flag} {country.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={(value) => setHotelData({ ...hotelData, country: value })}
+                      onSelectPlace={(data) => {
+                        setHotelData({ ...hotelData, country: data.name });
+                      }}
+                      placeholder="Start typing a country..."
+                      type="country"
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="city">City *</Label>
-                    <Select
+                    <PlaceAutocomplete
                       value={hotelData.city}
-                      onValueChange={(value) => setHotelData({ ...hotelData, city: value })}
-                      disabled={!hotelData.country || availableCities.length === 0}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={!hotelData.country ? "Select country first" : "Select city"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {availableCities.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={(value) => setHotelData({ ...hotelData, city: value })}
+                      onSelectPlace={(data) => {
+                        setHotelData({ ...hotelData, city: data.name });
+                      }}
+                      placeholder="Start typing a city..."
+                      type="city"
+                    />
                   </div>
                 </div>
 
