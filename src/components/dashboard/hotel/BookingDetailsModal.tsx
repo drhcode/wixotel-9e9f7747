@@ -92,7 +92,11 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const canCheckOut = () => {
-    return isToday(new Date(booking.check_out));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkoutDate = new Date(booking.check_out);
+    checkoutDate.setHours(0, 0, 0, 0);
+    return today >= checkoutDate;
   };
 
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
@@ -102,7 +106,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
 
     if (newStatus === 'checked_out' && !canCheckOut()) {
-      toast.error("Check-out can only be done on the reservation checkout date");
+      toast.error("Check-out can only be done on or after the checkout date");
       return;
     }
 
@@ -416,7 +420,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
+                Check-out is only available on or after the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}

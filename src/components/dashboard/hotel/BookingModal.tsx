@@ -14,14 +14,14 @@ import { format } from "date-fns";
 import { z } from "zod";
 import { mapDatabaseError } from "@/lib/errorUtils";
 
-// ✅ Simplified schema – only Full Name and totalPrice are required
+// ✅ Only Full Name is required for guest validation
 const guestSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100, "Name too long"),
   phone: z.string().optional().or(z.literal("")),
   email: z.string().optional().or(z.literal("")),
   guestCount: z.number().min(1, "At least 1 guest required").optional(),
   notes: z.string().optional(),
-  totalPrice: z.number().positive("Total price must be positive"),
+  totalPrice: z.number().min(0).optional(),
 });
 
 interface Props {
