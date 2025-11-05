@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Search, CheckCheck, Trash2 } from "lucide-react";
+import { Bell, Search, CheckCheck, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -24,6 +24,10 @@ const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [hotelId, setHotelId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 15;
 
   useEffect(() => {
     fetchHotelId();
@@ -45,15 +49,8 @@ const Notifications = () => {
             filter: `hotel_id=eq.${hotelId}`
           },
           (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setNotifications(prev => [payload.new as Notification, ...prev]);
-            } else if (payload.eventType === 'UPDATE') {
-              setNotifications(prev => 
-                prev.map(n => n.id === payload.new.id ? payload.new as Notification : n)
-              );
-            } else if (payload.eventType === 'DELETE') {
-              setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
-            }
+            // Refresh data to maintain pagination
+            fetchNotifications();
           }
         )
         .subscribe();
@@ -65,21 +62,13 @@ const Notifications = () => {
   }, [hotelId]);
 
   useEffect(() => {
-    // Filter notifications based on search query
-    if (searchQuery.trim() === "") {
-      setFilteredNotifications(notifications);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredNotifications(
-        notifications.filter(
-          n => 
-            n.title.toLowerCase().includes(query) ||
-            n.message.toLowerCase().includes(query) ||
-            n.type.toLowerCase().includes(query)
-        )
-      );
-    }
-  }, [searchQuery, notifications]);
+    fetchNotifications();
+  }, [currentPage, hotelId]);
+
+  useEffect(() => {
+    // Filter is now client-side only for the current page
+    setFilteredNotifications(notifications);
+  }, [notifications]);
 
   const fetchHotelId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -97,13 +86,49 @@ const Notifications = () => {
   };
 
   const fetchNotifications = async () => {
+    if (!hotelId) return;
+    
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Build query with search
+      let countQuery = supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('hotel_id', hotelId);
+
+      let dataQuery = supabase
         .from('notifications')
         .select('*')
-        .eq('hotel_id', hotelId)
-        .order('created_at', { ascending: false });
+        .eq('hotel_id', hotelId);
+
+      // Apply search filter if query exists
+      if (searchQuery.trim()) {
+        const search = `%${searchQuery.trim()}%`;
+        countQuery = countQuery.or(`title.ilike.${search},message.ilike.${search},type.ilike.${search}`);
+        dataQuery = dataQuery.or(`title.ilike.${search},message.ilike.${search},type.ilike.${search}`);
+      }
+
+      // Get total count with search
+      const { count } = await countQuery;
+      
+      const total = count || 0;
+      setTotalCount(total);
+      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+
+      // Reset to page 1 if current page exceeds total pages
+      if (currentPage > Math.ceil(total / ITEMS_PER_PAGE) && total > 0) {
+        setCurrentPage(1);
+        return;
+      }
+
+      // Get paginated data
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      const { data, error } = await dataQuery
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setNotifications(data || []);
@@ -211,7 +236,15 @@ const Notifications = () => {
         <Input
           placeholder="Search notifications..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1); // Reset to first page on search
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              fetchNotifications();
+            }
+          }}
           className="pl-10"
         />
       </div>
@@ -287,6 +320,31 @@ const Notifications = () => {
               </CardHeader>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} ({totalCount} total)
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
         </div>
       )}
     </div>
