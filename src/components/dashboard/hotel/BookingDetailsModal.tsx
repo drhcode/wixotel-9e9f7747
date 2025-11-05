@@ -88,7 +88,11 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
   };
   const canCheckIn = () => {
-    return isToday(new Date(booking.check_in));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkinDate = new Date(booking.check_in);
+    checkinDate.setHours(0, 0, 0, 0);
+    return today >= checkinDate;
   };
 
   const canCheckOut = () => {
@@ -101,7 +105,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
 
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
     if (newStatus === 'checked_in' && !canCheckIn()) {
-      toast.error("Check-in can only be done on the reservation date");
+      toast.error("Check-in can only be done on or after the check-in date");
       return;
     }
 
@@ -411,7 +415,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Check-in is only available on the reservation date ({format(new Date(booking.check_in), 'MMM dd, yyyy')})
+                Check-in is only available on or after the check-in date ({format(new Date(booking.check_in), 'MMM dd, yyyy')})
               </AlertDescription>
             </Alert>
           )}
