@@ -41,6 +41,11 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [acceptingLead, setAcceptingLead] = useState(false);
+  const [leadCalculations, setLeadCalculations] = useState<{
+    totalAmount: number;
+    nights: number;
+    commissionAmount: number;
+  } | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -77,6 +82,42 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       supabase.removeChannel(channel);
     };
   }, [hotelId]);
+
+  // Calculate commission when a lead is selected
+  useEffect(() => {
+    const calculateLeadDetails = async () => {
+      if (!selectedLead || !selectedLead.room_id) {
+        setLeadCalculations(null);
+        return;
+      }
+
+      try {
+        const { data: roomData } = await supabase
+          .from("rooms")
+          .select("price")
+          .eq("id", selectedLead.room_id)
+          .single();
+
+        if (roomData) {
+          const checkInDate = new Date(selectedLead.check_in);
+          const checkOutDate = new Date(selectedLead.check_out);
+          const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+          const totalAmount = nights * Number(roomData.price);
+          const commissionAmount = (totalAmount * 8) / 100;
+
+          setLeadCalculations({
+            totalAmount,
+            nights,
+            commissionAmount,
+          });
+        }
+      } catch (error) {
+        console.error("Error calculating lead details:", error);
+      }
+    };
+
+    calculateLeadDetails();
+  }, [selectedLead]);
 
   const fetchRooms = async () => {
     try {
@@ -206,7 +247,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       const commissionRate = 8;
       const commissionAmount = (totalAmount * commissionRate) / 100;
 
-      await supabase.from("earnings").insert({
+      const { error: earningsError } = await supabase.from("earnings").insert({
         hotel_id: hotelId,
         lead_id: lead.id,
         booking_id: bookingData.id,
@@ -215,6 +256,10 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         commission_amount: commissionAmount,
         status: 'pending', // Will be updated to 'completed' when guest checks out
       });
+
+      if (earningsError) {
+        console.error("Error creating earnings record:", earningsError);
+      }
 
       // Send approval email to guest via Edge Function
       try {
@@ -270,7 +315,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         }
       ]);
       
-      toast.success("Booking request accepted! Reservation created and guest notified.");
+      toast.success(`Booking accepted! Platform commission: €${commissionAmount.toFixed(2)}`);
       setSelectedLead(null);
     } catch (error: any) {
       console.error("Error accepting booking request:", error);
@@ -557,37 +602,63 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                   </Card>
                 )}
 
-                {selectedLead.room_id && selectedLead.status === "new" && (
-                  <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="pt-6">
-                      <h4 className="font-semibold mb-3">Booking Request Actions</h4>
-                      <div className="flex gap-3">
-                        <Button 
-                          onClick={() => acceptBookingRequest(selectedLead)}
-                          disabled={acceptingLead}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                        >
-                          {acceptingLead ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Accepting...
-                            </>
-                          ) : (
-                            <>
-                              ✓ Accept & Create Booking
-                            </>
-                          )}
-                        </Button>
-                        <Button 
-                          onClick={() => rejectBookingRequest(selectedLead.id)}
-                          variant="destructive"
-                          className="flex-1"
-                        >
-                          ✗ Reject Request
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {selectedLead.room_id && selectedLead.status === "new" && leadCalculations && (
+                  <>
+                    {/* Commission Calculation Display */}
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="text-base">Booking Summary</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Number of Nights:</span>
+                          <span className="font-semibold">{leadCalculations.nights}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Total Amount:</span>
+                          <span className="font-semibold">€{leadCalculations.totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t pt-2 mt-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-warning font-medium">Platform Commission (8%):</span>
+                            <span className="font-bold text-warning">€{leadCalculations.commissionAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Action Buttons */}
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardContent className="pt-6">
+                        <h4 className="font-semibold mb-3">Booking Request Actions</h4>
+                        <div className="flex gap-3">
+                          <Button 
+                            onClick={() => acceptBookingRequest(selectedLead)}
+                            disabled={acceptingLead}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            {acceptingLead ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Accepting...
+                              </>
+                            ) : (
+                              <>
+                                ✓ Accept & Create Booking
+                              </>
+                            )}
+                          </Button>
+                          <Button 
+                            onClick={() => rejectBookingRequest(selectedLead.id)}
+                            variant="destructive"
+                            className="flex-1"
+                          >
+                            ✗ Reject Request
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
                 )}
 
                 <div className="flex items-center justify-between pt-4 border-t">
