@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
     const icalContent = await response.text();
     const contentType = response.headers.get('content-type') || '';
     console.log(`Fetched iCal feed content-type: ${contentType}, length: ${icalContent.length}`);
+    console.log(`iCal head: ${icalContent.substring(0, 200).replace(/\n/g, ' | ')}`);
     if (!/BEGIN:VEVENT/i.test(icalContent)) {
       console.log('Warning: No VEVENT entries found in iCal feed body');
     }
