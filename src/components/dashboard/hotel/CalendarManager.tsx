@@ -34,6 +34,7 @@ const CalendarManager = ({ hotelId }: Props) => {
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(startOfDay(new Date()));
   const [isLoading, setIsLoading] = useState(true);
   const [ready, setReady] = useState(true); // will defer for Safari if needed
+  const [isSyncing, setIsSyncing] = useState(false);
   const TIMELINE_DAYS = 12;
 
   // Detect iOS Safari / iOS WebKit (treat as Safari)
@@ -292,6 +293,29 @@ const CalendarManager = ({ hotelId }: Props) => {
     return { start: false, span: 0 };
   };
 
+  const handleSyncIcal = async () => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-all-icals');
+      
+      if (error) throw error;
+      
+      toast.success(`Synced ${data.totalFeeds} calendar feeds successfully`);
+      
+      // Refresh bookings after sync
+      if (isSafari) {
+        await fetchBookingsForDate(selectedDate);
+      } else {
+        await fetchBookings();
+      }
+    } catch (error: any) {
+      console.error('iCal sync error:', error);
+      toast.error(error.message || 'Failed to sync calendars');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const modifiers = useMemo(() => {
     if (isSafari) return {} as Record<string, Date[]>;
     const booked = bookings
@@ -341,7 +365,11 @@ const CalendarManager = ({ hotelId }: Props) => {
         </div>
       )}
 
-      <CalendarHeader onNewReservation={() => setIsModalOpen(true)} />
+      <CalendarHeader 
+        onNewReservation={() => setIsModalOpen(true)}
+        onSyncIcal={handleSyncIcal}
+        isSyncing={isSyncing}
+      />
 
       <CalendarLegend />
 
