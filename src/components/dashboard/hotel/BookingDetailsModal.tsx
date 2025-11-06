@@ -313,26 +313,26 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
               {booking.notes && (
                 <div>
                   <p className="text-sm text-muted-foreground">Notes</p>
-                  <div className="text-sm whitespace-pre-wrap">
+                  <div className="text-sm space-y-1">
                     {booking.notes.split('\n').map((line: string, i: number) => {
-                      const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
-                      if (urlMatch) {
-                        const [before, url] = line.split(urlMatch[0]);
-                        const after = line.substring(before.length + url.length);
-                        return (
-                          <div key={i}>
-                            {before}
-                            <a 
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary underline hover:text-primary/80"
-                            >
-                              {url}
-                            </a>
-                            {after}
-                          </div>
-                        );
+                      // Check if line contains "Reservation URL:"
+                      if (line.includes('Reservation URL:')) {
+                        const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                        if (urlMatch) {
+                          const url = urlMatch[0];
+                          return (
+                            <div key={i} className="bg-primary/5 p-2 rounded border border-primary/20">
+                              <a 
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary font-medium underline hover:text-primary/80 flex items-center gap-1"
+                              >
+                                Reservation URL: View on Platform →
+                              </a>
+                            </div>
+                          );
+                        }
                       }
                       return <div key={i}>{line}</div>;
                     })}
