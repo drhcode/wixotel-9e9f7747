@@ -313,7 +313,30 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
               {booking.notes && (
                 <div>
                   <p className="text-sm text-muted-foreground">Notes</p>
-                  <p className="text-sm">{booking.notes}</p>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {booking.notes.split('\n').map((line: string, i: number) => {
+                      const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                      if (urlMatch) {
+                        const [before, url] = line.split(urlMatch[0]);
+                        const after = line.substring(before.length + url.length);
+                        return (
+                          <div key={i}>
+                            {before}
+                            <a 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary underline hover:text-primary/80"
+                            >
+                              {url}
+                            </a>
+                            {after}
+                          </div>
+                        );
+                      }
+                      return <div key={i}>{line}</div>;
+                    })}
+                  </div>
                 </div>
               )}
             </>
