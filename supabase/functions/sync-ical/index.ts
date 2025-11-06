@@ -112,6 +112,33 @@ Deno.serve(async (req) => {
     
     const roomName = room ? `${room.name} ${room.room_number ? `(${room.room_number})` : ''}` : 'Unknown Room';
 
+    // Ensure placeholder guest exists for external calendar events
+    let externalGuestId: string | null = null;
+    const { data: existingExternalGuest, error: guestQueryError } = await supabase
+      .from('guests')
+      .select('id')
+      .eq('hotel_id', hotel_id)
+      .eq('name', 'External Calendar Guest')
+      .limit(1);
+
+    if (guestQueryError) {
+      console.error('Error checking external guest:', guestQueryError);
+    }
+    if (existingExternalGuest && existingExternalGuest.length > 0) {
+      externalGuestId = existingExternalGuest[0].id;
+    } else {
+      const { data: newGuest, error: guestInsertError } = await supabase
+        .from('guests')
+        .insert({ hotel_id, name: 'External Calendar Guest' })
+        .select('id')
+        .single();
+      if (guestInsertError) {
+        console.error('Error creating external guest:', guestInsertError);
+      } else {
+        externalGuestId = newGuest.id;
+      }
+    }
+
     // Fetch the iCal feed
     const response = await fetch(feed_url, {
       headers: {
@@ -178,20 +205,25 @@ Deno.serve(async (req) => {
         }
 
         // Create a blocked booking
+        if (!externalGuestId) {
+          console.error('External guest not available, skipping booking creation');
+          continue;
+        }
         const { error: insertError } = await supabase
           .from('bookings')
           .insert({
             hotel_id,
             room_id,
+            guest_id: externalGuestId,
             check_in: event.dtstart,
             check_out: event.dtend,
-            full_name: 'External Booking (Blocked)',
+            full_name: `External Booking (${platform || 'External'})`,
             guest_email: null,
             guest_phone: null,
             guest_count: 1,
             total_amount: 0,
             status: 'reserved',
-            payment_status: 'paid',
+            payment_status: 'pending',
             source: 'ical_sync',
             confirmation_number: `ICAL-${event.uid.substring(0, 8)}`,
             notes: `iCal UID: ${event.uid}\nSummary: ${event.summary}\n${event.description || ''}`,
