@@ -134,7 +134,7 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
         });
         return;
       }
-      if (!feedUrl.toLowerCase().endsWith('.ics')) {
+      if (!url.pathname.toLowerCase().endsWith('.ics')) {
         toast({
           title: "Invalid iCal URL",
           description: "URL must end with .ics (iCalendar format)",
