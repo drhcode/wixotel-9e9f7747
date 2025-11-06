@@ -26,16 +26,26 @@ function parseICalDate(dateStr: string): string {
 
 function parseICalContent(icalContent: string): ICalEvent[] {
   const events: ICalEvent[] = [];
-  const lines = icalContent.split(/\r?\n/);
-  
+
+  // Unfold lines per RFC 5545 (join lines that start with space or tab)
+  const rawLines = icalContent.split(/\r?\n/);
+  const lines: string[] = [];
+  for (const line of rawLines) {
+    if (line.startsWith(' ') || line.startsWith('\t')) {
+      // append to previous line (remove leading whitespace)
+      if (lines.length > 0) lines[lines.length - 1] += line.trimStart();
+    } else {
+      lines.push(line);
+    }
+  }
+
   let currentEvent: Partial<ICalEvent> | null = null;
-  
+
   for (const line of lines) {
     const trimmedLine = line.trim();
-    
-    if (trimmedLine === 'BEGIN:VEVENT') {
+    if (trimmedLine.toUpperCase() === 'BEGIN:VEVENT') {
       currentEvent = {};
-    } else if (trimmedLine === 'END:VEVENT' && currentEvent) {
+    } else if (trimmedLine.toUpperCase() === 'END:VEVENT' && currentEvent) {
       if (currentEvent.uid && currentEvent.dtstart && currentEvent.dtend) {
         events.push(currentEvent as ICalEvent);
       }
@@ -43,30 +53,31 @@ function parseICalContent(icalContent: string): ICalEvent[] {
     } else if (currentEvent) {
       const colonIndex = trimmedLine.indexOf(':');
       if (colonIndex > 0) {
-        const key = trimmedLine.substring(0, colonIndex).split(';')[0];
+        const rawKey = trimmedLine.substring(0, colonIndex);
+        const key = rawKey.split(';')[0].toUpperCase();
         const value = trimmedLine.substring(colonIndex + 1);
-        
+
         switch (key) {
           case 'UID':
-            currentEvent.uid = value;
+            currentEvent.uid = value.trim();
             break;
           case 'SUMMARY':
-            currentEvent.summary = value;
+            currentEvent.summary = value.trim();
             break;
           case 'DTSTART':
-            currentEvent.dtstart = parseICalDate(value);
+            currentEvent.dtstart = parseICalDate(value.trim());
             break;
           case 'DTEND':
-            currentEvent.dtend = parseICalDate(value);
+            currentEvent.dtend = parseICalDate(value.trim());
             break;
           case 'DESCRIPTION':
-            currentEvent.description = value;
+            currentEvent.description = value.trim();
             break;
         }
       }
     }
   }
-  
+
   return events;
 }
 
@@ -104,7 +115,11 @@ Deno.serve(async (req) => {
     // Fetch the iCal feed
     const response = await fetch(feed_url, {
       headers: {
-        'User-Agent': 'Wixotel-iCal-Sync/1.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0 Safari/537.36',
+        'Accept': 'text/calendar, text/plain, */*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
       },
     });
 
@@ -113,6 +128,11 @@ Deno.serve(async (req) => {
     }
 
     const icalContent = await response.text();
+    const contentType = response.headers.get('content-type') || '';
+    console.log(`Fetched iCal feed content-type: ${contentType}, length: ${icalContent.length}`);
+    if (!/BEGIN:VEVENT/i.test(icalContent)) {
+      console.log('Warning: No VEVENT entries found in iCal feed body');
+    }
     const events = parseICalContent(icalContent);
     
     console.log(`Parsed ${events.length} events from iCal feed`);
