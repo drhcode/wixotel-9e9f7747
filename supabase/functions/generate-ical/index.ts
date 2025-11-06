@@ -81,12 +81,18 @@ Deno.serve(async (req) => {
     }
 
     // Fetch bookings for this room (exclude cancelled)
+    // Include bookings from 30 days ago to ensure recent bookings are visible during Airbnb sync
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
       .select('id, check_in, check_out, full_name, status, confirmation_number')
       .eq('room_id', roomId)
       .neq('status', 'cancelled')
-      .gte('check_out', new Date().toISOString().split('T')[0]); // Only future/current bookings
+      .gte('check_out', thirtyDaysAgo.toISOString().split('T')[0]);
+    
+    console.log(`Found ${bookings?.length || 0} bookings for room ${roomId}`);
 
     if (bookingsError) {
       console.error('Error fetching bookings:', bookingsError);
@@ -116,6 +122,9 @@ END:VCALENDAR`;
         ...corsHeaders,
         'Content-Type': 'text/calendar; charset=utf-8',
         'Content-Disposition': `attachment; filename="${hotel.name}-${room.name}.ics"`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     });
   } catch (error) {
