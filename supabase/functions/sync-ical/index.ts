@@ -81,6 +81,27 @@ function parseICalContent(icalContent: string): ICalEvent[] {
   return events;
 }
 
+function extractGuestName(summary?: string, description?: string, platform?: string): string | null {
+  // Try common patterns across platforms
+  const text = [summary || '', description || ''].join('\n');
+  const patterns: RegExp[] = [
+    /guest\s*name\s*[:\-]\s*([^\n]+)/i,
+    /guest\s*[:\-]\s*([^\n]+)/i,
+    /name\s*[:\-]\s*([^\n]+)/i,
+    /guests?:\s*([A-Z][\w\-']+(?:\s+[A-Z][\w\-']+){0,3})/i,
+    // Booking.com style: "John Doe" sometimes appears in SUMMARY
+    /^\s*booking\.com[:\s-]*([^\n]+)/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m && m[1]) {
+      const name = m[1].trim();
+      if (name && !/reserved|blocked|booking\.com|airbnb/i.test(name)) return name;
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -176,7 +197,7 @@ Deno.serve(async (req) => {
           .from('bookings')
           .select('id')
           .eq('room_id', room_id)
-          .eq('notes', `iCal UID: ${event.uid}`)
+          .like('notes', `iCal UID: ${event.uid}%`)
           .single();
 
         if (existingBooking) {
@@ -190,8 +211,8 @@ Deno.serve(async (req) => {
           .select('id')
           .eq('room_id', room_id)
           .neq('status', 'cancelled')
-          .lte('check_in', event.dtend)
-          .gte('check_out', event.dtstart);
+          .lt('check_in', event.dtend)
+          .gt('check_out', event.dtstart);
 
         if (overlappingBookings && overlappingBookings.length > 0) {
           console.log(`Date overlap detected for event ${event.uid}, skipping`);
@@ -209,6 +230,7 @@ Deno.serve(async (req) => {
           console.error('External guest not available, skipping booking creation');
           continue;
         }
+        const guestName = extractGuestName(event.summary, event.description, platform);
         const { error: insertError } = await supabase
           .from('bookings')
           .insert({
@@ -217,7 +239,7 @@ Deno.serve(async (req) => {
             guest_id: externalGuestId,
             check_in: event.dtstart,
             check_out: event.dtend,
-            full_name: `External Booking (${platform || 'External'})`,
+            full_name: guestName || `External Booking (${platform || 'External'})`,
             guest_email: null,
             guest_phone: null,
             guest_count: 1,
@@ -318,6 +340,7 @@ Deno.serve(async (req) => {
         success: true,
         events_processed: events.length,
         bookings_created: bookingsCreated,
+        conflicts_detected: conflicts.length,
         duration_ms: duration,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

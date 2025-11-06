@@ -198,7 +198,7 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
 
       toast({
         title: "Sync complete",
-        description: `Processed ${data.events_processed} events, created ${data.bookings_created} bookings`,
+        description: `Processed ${data.events_processed} events, created ${data.bookings_created} bookings, ${data.conflicts_detected || 0} conflicts`,
       });
 
       fetchData();
