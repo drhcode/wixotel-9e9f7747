@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
             total_amount: 0,
             status: 'reserved',
             payment_status: 'pending',
-            source: 'manual',
+            source: 'ical_sync',
             confirmation_number: `ICAL-${event.uid.substring(0, 8)}`,
             notes: `iCal UID: ${event.uid}\nSummary: ${event.summary}\n${event.description || ''}`,
           });
