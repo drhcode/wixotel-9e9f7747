@@ -112,11 +112,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       return;
     }
 
-    if (newStatus === 'checked_out' && !canCheckOut()) {
-      toast.error("Check-out can only be done on the reservation checkout date");
-      return;
-    }
-
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })
@@ -484,15 +479,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
             </Alert>
           )}
 
-          {booking.status === 'checked_in' && !canCheckOut() && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Check-out is only available on the checkout date ({format(new Date(booking.check_out), 'MMM dd, yyyy')})
-              </AlertDescription>
-            </Alert>
-          )}
-
           {showDeleteConfirm && (
             <div className="space-y-2 p-4 border rounded-lg bg-destructive/10">
               <p className="text-sm font-medium">Are you sure you want to delete this booking?</p>
@@ -542,7 +528,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                   </Button>
                 )}
                 {booking.status === 'checked_in' && (
-                  <Button size="sm" onClick={() => handleStatusUpdate('checked_out')} disabled={!canCheckOut()}>
+                  <Button size="sm" onClick={() => handleStatusUpdate('checked_out')}>
                     Check Out
                   </Button>
                 )}
