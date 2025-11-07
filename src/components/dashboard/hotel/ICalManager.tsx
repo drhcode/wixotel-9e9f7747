@@ -214,23 +214,23 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
     }
   };
 
-  const handleSyncByPlatform = async (platformName: string) => {
-    const platformFeeds = feeds.filter(f => f.platform === platformName && f.is_active);
+  const handleSyncAll = async () => {
+    const activeFeeds = feeds.filter(f => f.is_active);
     
-    if (platformFeeds.length === 0) {
+    if (activeFeeds.length === 0) {
       toast({
         title: "No calendars found",
-        description: `No active ${platformName === "booking" ? "Booking.com" : "Airbnb"} calendars to sync`,
+        description: "No active calendars to sync",
         variant: "destructive",
       });
       return;
     }
 
-    setSyncing(`platform-${platformName}`);
+    setSyncing("all");
     let successCount = 0;
     let failCount = 0;
 
-    for (const feed of platformFeeds) {
+    for (const feed of activeFeeds) {
       try {
         const { error } = await supabase.functions.invoke("sync-ical", {
           body: {
@@ -252,7 +252,7 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
 
     toast({
       title: "Sync complete",
-      description: `Synced ${successCount} ${platformName === "booking" ? "Booking.com" : "Airbnb"} calendars${failCount > 0 ? `, ${failCount} failed` : ""}`,
+      description: `Synced ${successCount} calendar${successCount !== 1 ? 's' : ''}${failCount > 0 ? `, ${failCount} failed` : ""}`,
       variant: failCount > 0 ? "destructive" : "default",
     });
 
@@ -355,20 +355,19 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSyncByPlatform("airbnb")}
-              disabled={syncing === "platform-airbnb" || !feeds.some(f => f.platform === "airbnb" && f.is_active)}
+              onClick={() => setShowAddForm(true)}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing === "platform-airbnb" ? "animate-spin" : ""}`} />
-              Sync Airbnb
+              <Plus className="h-4 w-4 mr-2" />
+              Add External Calendar
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSyncByPlatform("booking")}
-              disabled={syncing === "platform-booking" || !feeds.some(f => f.platform === "booking" && f.is_active)}
+              onClick={handleSyncAll}
+              disabled={syncing === "all" || feeds.filter(f => f.is_active).length === 0}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing === "platform-booking" ? "animate-spin" : ""}`} />
-              Sync Booking
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing === "all" ? "animate-spin" : ""}`} />
+              Sync All
             </Button>
           </div>
         </div>
