@@ -15,6 +15,7 @@ import SubscriptionsManagement from "./superadmin/SubscriptionsManagement";
 import AllReservations from "./superadmin/AllReservations";
 import AllGuests from "./superadmin/AllGuests";
 import SubscriptionPlansManagement from "./superadmin/SubscriptionPlansManagement";
+import InvoicesManagement from "./superadmin/InvoicesManagement";
 import SmtpSettings from "./superadmin/SmtpSettings";
 import { SupportTickets } from "./superadmin/SupportTickets";
 import ReviewsManagement from "./superadmin/ReviewsManagement";
@@ -301,6 +302,8 @@ const SuperAdminDashboard = () => {
         return <SubscriptionPlansManagement key={refreshKey} />;
       case "subscriptions":
         return <SubscriptionsManagement key={refreshKey} />;
+      case "invoices":
+        return <InvoicesManagement key={refreshKey} />;
       case "reservations":
         return <AllReservations key={refreshKey} />;
       case "guests":

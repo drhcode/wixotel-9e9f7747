@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle, Receipt } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ const menuItems = [
   { id: "earnings", label: "Earnings", icon: DollarSign },
   { id: "plans", label: "Plans", icon: CreditCard },
   { id: "subscriptions", label: "Subscriptions", icon: UserCog },
+  { id: "invoices", label: "Invoices", icon: Receipt },
   { id: "reservations", label: "Reservations", icon: BookOpen },
   { id: "guests", label: "Guests", icon: Users },
   { id: "cancellations", label: "Cancellation Requests", icon: XCircle },

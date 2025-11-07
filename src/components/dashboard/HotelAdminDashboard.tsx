@@ -17,6 +17,7 @@ const BookingsManager = lazy(() => import("./hotel/BookingsManager"));
 const GuestsManager = lazy(() => import("./hotel/GuestsManager"));
 const CalendarManager = lazy(() => import("./hotel/CalendarManager"));
 const ProfileSettings = lazy(() => import("./hotel/ProfileSettings"));
+const InvoicesViewer = lazy(() => import("./hotel/InvoicesViewer"));
 const LeadsManager = lazy(() => import("./hotel/LeadsManager"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SupportManager = lazy(() => import("./hotel/SupportManager"));
@@ -274,6 +275,8 @@ const HotelAdminDashboard = () => {
         return <LeadsManager key={refreshKey} hotelId={hotel.id} />;
       case "earnings":
         return <LazyEarningsManager key={refreshKey} hotelId={hotel.id} />;
+      case "invoices":
+        return <InvoicesViewer key={refreshKey} />;
       case "support":
         return <SupportManager key={refreshKey} hotelId={hotel.id} />;
       case "notifications":

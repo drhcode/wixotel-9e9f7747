@@ -561,6 +561,81 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          billing_period_end: string
+          billing_period_start: string
+          created_at: string
+          currency: string
+          due_date: string
+          hotel_id: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          payment_date: string | null
+          status: string
+          subscription_id: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_period_end: string
+          billing_period_start: string
+          created_at?: string
+          currency?: string
+          due_date: string
+          hotel_id: string
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_amount?: number
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_period_end?: string
+          billing_period_start?: string
+          created_at?: string
+          currency?: string
+          due_date?: string
+          hotel_id?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           check_in: string
@@ -1046,7 +1121,7 @@ export type Database = {
           end_date: string
           hotel_id: string
           id: string
-          plan: Database["public"]["Enums"]["subscription_plan"]
+          plan: Database["public"]["Enums"]["subscription_plan"] | null
           plan_id: string
           start_date: string
           status: Database["public"]["Enums"]["payment_status"]
@@ -1058,7 +1133,7 @@ export type Database = {
           end_date: string
           hotel_id: string
           id?: string
-          plan: Database["public"]["Enums"]["subscription_plan"]
+          plan?: Database["public"]["Enums"]["subscription_plan"] | null
           plan_id: string
           start_date?: string
           status?: Database["public"]["Enums"]["payment_status"]
@@ -1070,7 +1145,7 @@ export type Database = {
           end_date?: string
           hotel_id?: string
           id?: string
-          plan?: Database["public"]["Enums"]["subscription_plan"]
+          plan?: Database["public"]["Enums"]["subscription_plan"] | null
           plan_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["payment_status"]
@@ -1223,6 +1298,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_invoice_number: { Args: never; Returns: string }
       get_available_rooms: {
         Args: {
           p_booking_id?: string
