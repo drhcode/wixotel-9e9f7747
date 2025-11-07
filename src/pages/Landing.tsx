@@ -357,7 +357,7 @@ const Landing = () => {
                 className="flex items-center gap-2"
               >
                 <Search className="h-4 w-4" />
-                Find Booking
+                Find My Booking
               </Button>
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
@@ -375,7 +375,7 @@ const Landing = () => {
                 className="flex items-center gap-2"
               >
                 <Search className="h-4 w-4" />
-                <span className="text-xs sm:text-sm">Find Booking</span>
+                <span className="text-xs sm:text-sm">Find My Booking</span>
               </Button>
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
