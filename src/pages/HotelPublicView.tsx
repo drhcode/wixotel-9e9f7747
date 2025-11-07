@@ -241,16 +241,16 @@ const HotelPublicView = () => {
 
     try {
       setLoadingAvailability(true);
-      
+
       // Check if there are any overlapping bookings
-      const { data, error } = await supabase.rpc('check_booking_overlap', {
+      const { data, error } = await supabase.rpc("check_booking_overlap", {
         p_room_id: selectedRoom.id,
         p_check_in: format(checkIn, "yyyy-MM-dd"),
         p_check_out: format(checkOut, "yyyy-MM-dd"),
       });
 
       if (error) throw error;
-      
+
       setIsRoomAvailable(!data);
     } catch (error: any) {
       console.error("Error checking availability:", error);
@@ -304,9 +304,9 @@ const HotelPublicView = () => {
         total_amount: totalAmount,
         message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"}) - ${nights} night(s) at €${selectedRoom.price}/night = €${totalAmount}`,
       };
-      
+
       console.log("Submitting lead with data:", leadData);
-      
+
       const { error } = await supabase.from("leads").insert(leadData);
 
       if (error) {
@@ -318,8 +318,8 @@ const HotelPublicView = () => {
 
       // Send emails via Edge Function (hotel + guest)
       try {
-        const { createLeadConfirmationEmail, createHotelNotificationEmail } = await import('@/lib/emailTemplates');
-        
+        const { createLeadConfirmationEmail, createHotelNotificationEmail } = await import("@/lib/emailTemplates");
+
         const hotelForEmail = {
           name: hotel.name,
           email: hotel.email,
@@ -335,20 +335,20 @@ const HotelPublicView = () => {
             guestName: validated.fullName,
             guestEmail: validated.email,
             guestPhone: validated.phone,
-            checkIn: format(validated.checkIn, 'PPP'),
-            checkOut: format(validated.checkOut, 'PPP'),
+            checkIn: format(validated.checkIn, "PPP"),
+            checkOut: format(validated.checkOut, "PPP"),
             guests: validated.guests,
             totalAmount,
             message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
             hotel: hotelForEmail,
           });
 
-          await supabase.functions.invoke('send-email', {
+          await supabase.functions.invoke("send-email", {
             body: {
               hotel_id: hotel.id,
               recipient_email: hotel.email,
               subject: `New Booking Inquiry - ${validated.fullName}`,
-              email_type: 'new_lead',
+              email_type: "new_lead",
               html_content: hotelHtmlContent,
             },
           });
@@ -357,24 +357,24 @@ const HotelPublicView = () => {
         // Send confirmation to guest
         const guestHtmlContent = createLeadConfirmationEmail({
           guestName: validated.fullName,
-          checkIn: format(validated.checkIn, 'PPP'),
-          checkOut: format(validated.checkOut, 'PPP'),
+          checkIn: format(validated.checkIn, "PPP"),
+          checkOut: format(validated.checkOut, "PPP"),
           guests: validated.guests,
           totalAmount,
           hotel: hotelForEmail,
         });
 
-        await supabase.functions.invoke('send-email', {
+        await supabase.functions.invoke("send-email", {
           body: {
             hotel_id: hotel.id,
             recipient_email: validated.email,
             subject: `Booking Request Received - ${hotel.name}`,
-            email_type: 'lead_confirmation',
+            email_type: "lead_confirmation",
             html_content: guestHtmlContent,
           },
         });
       } catch (emailErr) {
-        console.error('Error sending lead emails:', emailErr);
+        console.error("Error sending lead emails:", emailErr);
       }
 
       toast.success("Booking request sent successfully! We'll contact you soon.");
@@ -439,12 +439,12 @@ const HotelPublicView = () => {
       // Send emails via Edge Function (hotel + guest)
       try {
         if (hotel.email) {
-          await supabase.functions.invoke('send-email', {
+          await supabase.functions.invoke("send-email", {
             body: {
               hotel_id: hotel.id,
               recipient_email: hotel.email,
               subject: `New Inquiry - ${validatedData.fullName}`,
-              email_type: 'new_lead',
+              email_type: "new_lead",
               html_content: `
                 <h2>New Booking Inquiry</h2>
                 <ul>
@@ -459,12 +459,12 @@ const HotelPublicView = () => {
             },
           });
         }
-        await supabase.functions.invoke('send-email', {
+        await supabase.functions.invoke("send-email", {
           body: {
             hotel_id: hotel.id,
             recipient_email: validatedData.email,
             subject: `Inquiry Received - ${hotel.name}`,
-            email_type: 'lead_confirmation',
+            email_type: "lead_confirmation",
             html_content: `
               <h2>Booking Request Received</h2>
               <p>Dear ${validatedData.fullName},</p>
@@ -473,7 +473,7 @@ const HotelPublicView = () => {
           },
         });
       } catch (emailErr) {
-        console.error('Error sending contact emails:', emailErr);
+        console.error("Error sending contact emails:", emailErr);
       }
 
       toast.success("Thank you! Your inquiry has been submitted successfully.");
@@ -524,9 +524,11 @@ const HotelPublicView = () => {
               onClick={() => navigate("/")}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" />
+              {/* <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" /> */}
               <div className="hidden sm:flex flex-col items-start leading-none">
-                <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
+                <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  {hotel?.name}
+                </span>
                 <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
               </div>
             </button>
@@ -1131,9 +1133,7 @@ const HotelPublicView = () => {
                           <Star
                             key={i}
                             className={`h-4 w-4 ${
-                              i < review.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-muted-foreground"
+                              i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
                             }`}
                           />
                         ))}
@@ -1149,9 +1149,7 @@ const HotelPublicView = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
-                      {review.review_text}
-                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.review_text}</p>
                     {review.photo_url && (
                       <img
                         src={review.photo_url}
@@ -1309,9 +1307,9 @@ const HotelPublicView = () => {
                         });
                         // Scroll to the booking form
                         setTimeout(() => {
-                          const formElement = document.querySelector('[data-booking-form]');
+                          const formElement = document.querySelector("[data-booking-form]");
                           if (formElement) {
-                            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            formElement.scrollIntoView({ behavior: "smooth", block: "start" });
                           }
                         }, 100);
                       }}
@@ -1419,11 +1417,14 @@ const HotelPublicView = () => {
                           </div>
                         )}
 
-                        {!loadingAvailability && !isRoomAvailable && bookingRequest.checkIn && bookingRequest.checkOut && (
-                          <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
-                            This room is not available for the selected dates. Please choose different dates.
-                          </div>
-                        )}
+                        {!loadingAvailability &&
+                          !isRoomAvailable &&
+                          bookingRequest.checkIn &&
+                          bookingRequest.checkOut && (
+                            <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+                              This room is not available for the selected dates. Please choose different dates.
+                            </div>
+                          )}
 
                         <div className="space-y-2">
                           <Label htmlFor="bookingName">Full Name *</Label>
