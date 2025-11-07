@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Send, Download } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, differenceInMonths, differenceInYears } from "date-fns";
 import { createInvoiceEmail } from "@/lib/emailTemplates";
 
 interface Invoice {
@@ -72,35 +72,30 @@ const InvoicesManagement = () => {
       const sub = subscriptions.find(s => s.id === formData.subscription_id);
       if (sub) {
         setSelectedSubscription(sub);
-        
-        // Calculate billing period based on the plan's billing_period
-        const today = new Date();
-        let startDate = today.toISOString().split('T')[0];
-        let endDate: string;
-        
-        if (sub.subscription_plans.billing_period === 'monthly') {
-          // Add 1 month
-          const nextMonth = new Date(today);
-          nextMonth.setMonth(nextMonth.getMonth() + 1);
-          endDate = nextMonth.toISOString().split('T')[0];
-        } else if (sub.subscription_plans.billing_period === 'yearly') {
-          // Add 1 year
-          const nextYear = new Date(today);
-          nextYear.setFullYear(nextYear.getFullYear() + 1);
-          endDate = nextYear.toISOString().split('T')[0];
+
+        // Use the subscription's actual period
+        const start = new Date(sub.start_date);
+        const end = new Date(sub.end_date);
+        const startStr = start.toISOString().split('T')[0];
+        const endStr = end.toISOString().split('T')[0];
+
+        // Calculate how many billing units are covered by this subscription
+        let computedAmount = sub.subscription_plans.price;
+        if (sub.subscription_plans.billing_period === 'yearly') {
+          const years = Math.max(1, differenceInYears(end, start));
+          computedAmount = sub.subscription_plans.price * years;
         } else {
-          // Default to 1 month
-          const nextMonth = new Date(today);
-          nextMonth.setMonth(nextMonth.getMonth() + 1);
-          endDate = nextMonth.toISOString().split('T')[0];
+          // Default to monthly
+          const months = Math.max(1, differenceInMonths(end, start));
+          computedAmount = sub.subscription_plans.price * months;
         }
-        
+
         setFormData(prev => ({
           ...prev,
           hotel_id: sub.hotel_id,
-          amount: sub.subscription_plans.price.toString(),
-          billing_period_start: startDate,
-          billing_period_end: endDate
+          amount: computedAmount.toFixed(2),
+          billing_period_start: startStr,
+          billing_period_end: endStr
         }));
         // Tax will be auto-calculated by the amount useEffect
       }
