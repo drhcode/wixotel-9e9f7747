@@ -26,31 +26,68 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get authenticated user (JWT already verified by verify_jwt = true)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Authentication failed:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { hotel_id, recipient_email, subject, html_content, email_type }: EmailRequest = await req.json();
 
-    // For test emails, skip hotel verification (uses dummy hotel_id)
-    if (email_type !== 'test') {
-      // Get authenticated user from JWT (automatically verified by verify_jwt = true)
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
+    // Validate inputs
+    if (!recipient_email || !recipient_email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid recipient email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!subject || subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Subject must be between 1-200 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!html_content || html_content.length > 100000) {
+      return new Response(
+        JSON.stringify({ error: 'Email content must be between 1-100000 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify user is super_admin for test emails
+    if (email_type === 'test') {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'super_admin')
+        .single();
+
+      if (!roleData) {
+        console.error('Unauthorized test email attempt by:', user.id);
         return new Response(
-          JSON.stringify({ error: 'Missing authorization header' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'Only super admins can send test emails' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        console.error('Authentication failed:', authError);
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Verify hotel ownership for non-test emails
+    } else {
+      // Verify hotel ownership for regular emails
       const { data: hotel, error: hotelError } = await supabase
         .from('hotels')
         .select('id')
@@ -63,6 +100,23 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: 'Forbidden: You do not have access to this hotel' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Rate limiting check: max 50 emails per hotel per hour
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: recentEmails, error: countError } = await supabase
+        .from('email_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('hotel_id', hotel_id)
+        .gte('created_at', oneHourAgo);
+
+      if (countError) {
+        console.error('Rate limit check failed:', countError);
+      } else if (recentEmails && (recentEmails as any).count >= 50) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Maximum 50 emails per hour.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }
