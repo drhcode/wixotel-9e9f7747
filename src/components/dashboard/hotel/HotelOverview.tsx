@@ -131,12 +131,13 @@ const HotelOverview = ({ hotelId }: Props) => {
       // Get current month start date
       const monthStart = startOfMonth(new Date());
 
-      // Fetch completed earnings for this month
+      // Fetch completed earnings for this month from LEAD bookings only
       const { data: earningsData } = await supabase
         .from('earnings')
-        .select('commission_amount')
+        .select('commission_amount, lead_id')
         .eq('hotel_id', hotelId)
         .eq('status', 'completed')
+        .not('lead_id', 'is', null)
         .gte('created_at', monthStart.toISOString());
 
       const total = earningsData?.reduce((sum, earning) => sum + Number(earning.commission_amount), 0) || 0;
