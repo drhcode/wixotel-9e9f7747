@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Send, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { createInvoiceEmail } from "@/lib/emailTemplates";
 
 interface Invoice {
   id: string;
@@ -187,32 +188,59 @@ const InvoicesManagement = () => {
 
   const handleSendInvoice = async (invoice: Invoice) => {
     try {
+      // Fetch full hotel details
+      const { data: hotelData, error: hotelError } = await supabase
+        .from('hotels')
+        .select('name, email, phone, address, city, country')
+        .eq('id', invoice.hotel_id)
+        .single();
+
+      if (hotelError || !hotelData) {
+        toast.error('Failed to fetch hotel details');
+        return;
+      }
+
+      if (!hotelData.email) {
+        toast.error('Hotel does not have an email address configured');
+        return;
+      }
+
+      // Generate beautiful invoice email
+      const emailHtml = createInvoiceEmail({
+        invoiceNumber: invoice.invoice_number,
+        hotelName: hotelData.name,
+        amount: invoice.amount,
+        taxAmount: invoice.tax_amount,
+        totalAmount: invoice.total_amount,
+        billingPeriodStart: format(new Date(invoice.billing_period_start), 'MMM dd, yyyy'),
+        billingPeriodEnd: format(new Date(invoice.billing_period_end), 'MMM dd, yyyy'),
+        issueDate: format(new Date(invoice.issue_date), 'MMM dd, yyyy'),
+        dueDate: format(new Date(invoice.due_date), 'MMM dd, yyyy'),
+        status: invoice.status,
+        currency: 'EUR',
+        notes: invoice.notes || undefined,
+        hotel: {
+          name: hotelData.name,
+          email: hotelData.email,
+          phone: hotelData.phone,
+          address: hotelData.address,
+          city: hotelData.city,
+          country: hotelData.country,
+        }
+      });
+
       const { error } = await supabase.functions.invoke('send-email', {
         body: {
           hotel_id: invoice.hotel_id,
-          recipient_email: invoice.hotels.email,
-          subject: `Invoice ${invoice.invoice_number}`,
-          html_content: `
-            <h2>Invoice ${invoice.invoice_number}</h2>
-            <p>Dear ${invoice.hotels.name},</p>
-            <p>Please find your invoice details below:</p>
-            <ul>
-              <li><strong>Invoice Number:</strong> ${invoice.invoice_number}</li>
-              <li><strong>Amount:</strong> €${invoice.amount}</li>
-              <li><strong>Tax:</strong> €${invoice.tax_amount}</li>
-              <li><strong>Total:</strong> €${invoice.total_amount}</li>
-              <li><strong>Due Date:</strong> ${format(new Date(invoice.due_date), 'MMM dd, yyyy')}</li>
-              <li><strong>Billing Period:</strong> ${format(new Date(invoice.billing_period_start), 'MMM dd, yyyy')} - ${format(new Date(invoice.billing_period_end), 'MMM dd, yyyy')}</li>
-            </ul>
-            ${invoice.notes ? `<p><strong>Notes:</strong> ${invoice.notes}</p>` : ''}
-            <p>Thank you for your business!</p>
-          `,
+          recipient_email: hotelData.email,
+          subject: `Invoice ${invoice.invoice_number} - ${hotelData.name}`,
+          html_content: emailHtml,
           email_type: 'invoice'
         }
       });
 
       if (error) throw error;
-      toast.success("Invoice sent successfully");
+      toast.success("Invoice sent successfully to " + hotelData.email);
     } catch (error: any) {
       toast.error("Failed to send invoice: " + error.message);
     }
