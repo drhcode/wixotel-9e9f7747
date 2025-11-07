@@ -359,7 +359,7 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
         .insert({
           booking_id: booking.id,
           hotel_id: booking.hotel_id,
-          requested_by: booking.guest_id,
+          
           status: 'pending',
           reason: canCancelForFree() 
             ? 'Free cancellation within 14-day policy window' 
