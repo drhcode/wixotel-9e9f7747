@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, Calendar, MapPin, Users, CreditCard } from "lucide-react";
+import { Loader2, Search, Calendar, MapPin, Users, CreditCard, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -109,15 +109,22 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
           {booking && (
             <div className="space-y-4 border-t pt-6">
               <div className="bg-gradient-primary p-4 rounded-lg text-white">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-sm opacity-90">Status</p>
-                    <p className="text-lg font-bold capitalize">{booking.status}</p>
-                  </div>
-                  <div className="text-right">
                     <p className="text-sm opacity-90">Confirmation</p>
                     <p className="text-lg font-mono font-bold">{booking.confirmation_number}</p>
                   </div>
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div>
+                  <p className="text-sm opacity-90">Status</p>
+                  <p className="text-lg font-bold capitalize">{booking.status.replace(/_/g, ' ')}</p>
                 </div>
               </div>
 
