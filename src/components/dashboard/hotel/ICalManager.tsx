@@ -214,6 +214,52 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
     }
   };
 
+  const handleSyncByPlatform = async (platformName: string) => {
+    const platformFeeds = feeds.filter(f => f.platform === platformName && f.is_active);
+    
+    if (platformFeeds.length === 0) {
+      toast({
+        title: "No calendars found",
+        description: `No active ${platformName === "booking" ? "Booking.com" : "Airbnb"} calendars to sync`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSyncing(`platform-${platformName}`);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const feed of platformFeeds) {
+      try {
+        const { error } = await supabase.functions.invoke("sync-ical", {
+          body: {
+            feed_id: feed.id,
+            feed_url: feed.feed_url,
+            room_id: feed.room_id,
+            hotel_id: hotelId,
+            platform: feed.platform,
+          },
+        });
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Error syncing feed ${feed.id}:`, error);
+        failCount++;
+      }
+    }
+
+    toast({
+      title: "Sync complete",
+      description: `Synced ${successCount} ${platformName === "booking" ? "Booking.com" : "Airbnb"} calendars${failCount > 0 ? `, ${failCount} failed` : ""}`,
+      variant: failCount > 0 ? "destructive" : "default",
+    });
+
+    fetchData();
+    setSyncing(null);
+  };
+
   const handleDeleteFeed = async () => {
     if (!deleteId) return;
 
@@ -300,10 +346,32 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
 
       {/* Import Section */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <ExternalLink className="h-5 w-5" />
-          External Calendars
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            External Calendars
+          </h3>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSyncByPlatform("airbnb")}
+              disabled={syncing === "platform-airbnb" || !feeds.some(f => f.platform === "airbnb" && f.is_active)}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing === "platform-airbnb" ? "animate-spin" : ""}`} />
+              Sync Airbnb
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSyncByPlatform("booking")}
+              disabled={syncing === "platform-booking" || !feeds.some(f => f.platform === "booking" && f.is_active)}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing === "platform-booking" ? "animate-spin" : ""}`} />
+              Sync Booking
+            </Button>
+          </div>
+        </div>
 
         {showAddForm && (
           <div className="mb-6 p-4 border rounded-lg space-y-4">
