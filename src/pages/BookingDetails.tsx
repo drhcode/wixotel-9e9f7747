@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
 import jsPDF from "jspdf";
-import logoImage from "@/assets/wixotel-logo.png";
 
 export default function BookingDetails() {
   const { confirmationNumber } = useParams();
@@ -73,232 +72,255 @@ export default function BookingDetails() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 12;
+    let yPosition = 15;
 
-    const logo = new Image();
-    logo.src = logoImage;
-    logo.onload = () => {
-      const logoWidth = 35;
-      const logoHeight = 13;
-      const logoX = (pageWidth - logoWidth) / 2;
-      doc.addImage(logo, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+    // Header
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(128, 90, 213);
+    doc.text("WIXOTEL", pageWidth / 2, yPosition, { align: "center" });
+    
+    yPosition += 8;
+    doc.setFontSize(18);
+    doc.setTextColor(74, 58, 135);
+    doc.text("Booking Confirmation", pageWidth / 2, yPosition, { align: "center" });
+    
+    yPosition += 5;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text("Your reservation details", pageWidth / 2, yPosition, { align: "center" });
+    
+    yPosition += 8;
+    doc.setDrawColor(128, 90, 213);
+    doc.setLineWidth(1);
+    doc.line(20, yPosition, pageWidth - 20, yPosition);
+    
+    yPosition += 10;
+
+    // Confirmation box
+    doc.setFillColor(240, 237, 255);
+    doc.roundedRect(15, yPosition - 4, pageWidth - 30, 20, 3, 3, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(60, 60, 60);
+    doc.text("Confirmation Number:", 20, yPosition);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(128, 90, 213);
+    doc.text(booking.confirmation_number, 75, yPosition);
+    
+    yPosition += 8;
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(60, 60, 60);
+    doc.text("Status:", 20, yPosition);
+    doc.setFont("helvetica", "normal");
+    const statusText = booking.status.replace(/_/g, ' ').toUpperCase();
+    doc.setTextColor(34, 197, 94);
+    doc.text(statusText, 75, yPosition);
+    
+    yPosition += 16;
+
+    // Two column layout
+    const leftColumnX = 20;
+    const rightColumnX = pageWidth / 2 + 5;
+    const columnWidth = pageWidth / 2 - 25;
+    
+    // Row 1: Hotel Information & Stay Information
+    let leftY = yPosition;
+    let rightY = yPosition;
+
+    // Left: Hotel Information
+    doc.setFillColor(128, 90, 213);
+    doc.rect(leftColumnX, leftY, 3, 6, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(74, 58, 135);
+    doc.text("Hotel Information", leftColumnX + 5, leftY + 4);
+    leftY += 9;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "bold");
+    doc.text(booking.hotels.name, leftColumnX, leftY);
+    leftY += 5;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    const address = [booking.hotels.address, booking.hotels.city, booking.hotels.country].filter(Boolean).join(', ');
+    const addressLines = doc.splitTextToSize(address, columnWidth);
+    doc.text(addressLines, leftColumnX, leftY);
+    leftY += addressLines.length * 4;
+    
+    if (booking.hotels.phone) {
+      doc.text(`Phone: ${booking.hotels.phone}`, leftColumnX, leftY);
+      leftY += 4;
+    }
+    
+    if (booking.hotels.email) {
+      doc.text(`Email: ${booking.hotels.email}`, leftColumnX, leftY);
+      leftY += 4;
+    }
+
+    // Right: Stay Information
+    doc.setFillColor(128, 90, 213);
+    doc.rect(rightColumnX, rightY, 3, 6, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(74, 58, 135);
+    doc.text("Stay Information", rightColumnX + 5, rightY + 4);
+    rightY += 9;
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Check-in:`, rightColumnX, rightY);
+    doc.setFont("helvetica", "bold");
+    doc.text(format(new Date(booking.check_in), 'MMM dd, yyyy'), rightColumnX + 20, rightY);
+    rightY += 5;
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Check-out:`, rightColumnX, rightY);
+    doc.setFont("helvetica", "bold");
+    doc.text(format(new Date(booking.check_out), 'MMM dd, yyyy'), rightColumnX + 20, rightY);
+    rightY += 5;
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    const roomText = `Room: ${booking.rooms.name}${booking.rooms.room_number ? ` (${booking.rooms.room_number})` : ''}`;
+    const roomLines = doc.splitTextToSize(roomText, columnWidth);
+    doc.text(roomLines, rightColumnX, rightY);
+    rightY += roomLines.length * 4;
+    
+    // Move to next row
+    yPosition = Math.max(leftY, rightY) + 12;
+    leftY = yPosition;
+    rightY = yPosition;
+
+    // Row 2 Left: Guest Information
+    doc.setFillColor(128, 90, 213);
+    doc.rect(leftColumnX, leftY, 3, 6, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(74, 58, 135);
+    doc.text("Guest Information", leftColumnX + 5, leftY + 4);
+    leftY += 9;
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Name: ${booking.full_name}`, leftColumnX, leftY);
+    leftY += 4.5;
+    
+    const guestEmail = doc.splitTextToSize(`Email: ${booking.guest_email}`, columnWidth);
+    doc.text(guestEmail, leftColumnX, leftY);
+    leftY += guestEmail.length * 4;
+    
+    if (booking.guest_phone) {
+      doc.text(`Phone: ${booking.guest_phone}`, leftColumnX, leftY);
+      leftY += 4.5;
+    }
+    
+    doc.text(`Guests: ${booking.guest_count}`, leftColumnX, leftY);
+    leftY += 4.5;
+
+    // Row 2 Right: Payment Information
+    doc.setFillColor(128, 90, 213);
+    doc.rect(rightColumnX, rightY, 3, 6, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(74, 58, 135);
+    doc.text("Payment Information", rightColumnX + 5, rightY + 4);
+    rightY += 9;
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(128, 90, 213);
+    doc.text(`€${booking.total_amount}`, rightColumnX, rightY);
+    rightY += 6;
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Status: ${booking.payment_status.replace(/_/g, ' ').toUpperCase()}`, rightColumnX, rightY);
+    rightY += 5;
+    
+    // Move to notes section
+    yPosition = Math.max(leftY, rightY) + 10;
       
-      yPosition += logoHeight + 6;
-
-      doc.setFontSize(20);
+    // Notes section (full width)
+    if (booking.notes) {
+      doc.setFillColor(128, 90, 213);
+      doc.rect(leftColumnX, yPosition, 3, 6, 'F');
+      
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(74, 58, 135);
-      doc.text("Booking Confirmation", pageWidth / 2, yPosition, { align: "center" });
+      doc.text("Notes", leftColumnX + 5, yPosition + 4);
+      yPosition += 9;
       
-      yPosition += 4;
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(100, 100, 100);
-      doc.text("Your reservation details", pageWidth / 2, yPosition, { align: "center" });
-      
-      yPosition += 7;
-      doc.setDrawColor(128, 90, 213);
-      doc.setLineWidth(0.8);
-      doc.line(20, yPosition, pageWidth - 20, yPosition);
-      doc.setDrawColor(160, 120, 220);
-      doc.setLineWidth(0.2);
-      doc.line(20, yPosition + 0.5, pageWidth - 20, yPosition + 0.5);
-      
-      yPosition += 10;
+      doc.setTextColor(80, 80, 80);
+      const splitNotes = doc.splitTextToSize(booking.notes, pageWidth - 40);
+      doc.text(splitNotes, leftColumnX, yPosition);
+      yPosition += splitNotes.length * 4 + 5;
+    }
 
-      doc.setFillColor(240, 237, 255);
-      doc.roundedRect(15, yPosition - 4, pageWidth - 30, 20, 3, 3, 'F');
+    // QR Code section (centered)
+    if (qrDataUrl) {
+      yPosition += 5;
       
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(60, 60, 60);
-      doc.text("Confirmation Number:", 20, yPosition);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(128, 90, 213);
-      doc.text(booking.confirmation_number, 75, yPosition);
+      doc.setFillColor(250, 250, 250);
+      const qrBoxHeight = 55;
+      doc.roundedRect(15, yPosition, pageWidth - 30, qrBoxHeight, 3, 3, 'F');
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(15, yPosition, pageWidth - 30, qrBoxHeight, 3, 3, 'S');
       
       yPosition += 8;
-
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(60, 60, 60);
-      doc.text("Status:", 20, yPosition);
-      doc.setFont("helvetica", "normal");
-      const statusText = booking.status.replace(/_/g, ' ').toUpperCase();
-      doc.setTextColor(34, 197, 94);
-      doc.text(statusText, 75, yPosition);
-      
-      yPosition += 14;
-
-      doc.setFillColor(128, 90, 213);
-      doc.rect(15, yPosition, 3, 6, 'F');
-      
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(74, 58, 135);
-      doc.text("Hotel Information", 20, yPosition + 4);
-      yPosition += 9;
-      
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.setFont("helvetica", "bold");
-      doc.text(booking.hotels.name, 20, yPosition);
-      yPosition += 5;
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-      const address = [booking.hotels.address, booking.hotels.city, booking.hotels.country].filter(Boolean).join(', ');
-      const addressLines = doc.splitTextToSize(address, pageWidth - 40);
-      doc.text(addressLines, 20, yPosition);
-      yPosition += addressLines.length * 5;
-      
-      if (booking.hotels.phone) {
-        doc.text(`Phone: ${booking.hotels.phone}`, 20, yPosition);
-        yPosition += 4.5;
-      }
-      
-      if (booking.hotels.email) {
-        doc.text(`Email: ${booking.hotels.email}`, 20, yPosition);
-        yPosition += 4.5;
-      }
-      
+      doc.text("Scan QR Code to View Booking", pageWidth / 2, yPosition, { align: "center" });
       yPosition += 7;
+      
+      const qrSize = 38;
+      const qrX = (pageWidth - qrSize) / 2;
+      doc.addImage(qrDataUrl, 'PNG', qrX, yPosition, qrSize, qrSize);
+    }
 
-      doc.setFillColor(128, 90, 213);
-      doc.rect(15, yPosition, 3, 6, 'F');
-      
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(74, 58, 135);
-      doc.text("Stay Information", 20, yPosition + 4);
-      yPosition += 9;
-      
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Check-in: ${format(new Date(booking.check_in), 'MMM dd, yyyy')}`, 20, yPosition);
-      yPosition += 5;
-      
-      doc.text(`Check-out: ${format(new Date(booking.check_out), 'MMM dd, yyyy')}`, 20, yPosition);
-      yPosition += 5;
-      
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(60, 60, 60);
-      doc.text(`Room: ${booking.rooms.name}${booking.rooms.room_number ? ` (${booking.rooms.room_number})` : ''}`, 20, yPosition);
-      yPosition += 9;
-
-      doc.setFillColor(128, 90, 213);
-      doc.rect(15, yPosition, 3, 6, 'F');
-      
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(74, 58, 135);
-      doc.text("Guest Information", 20, yPosition + 4);
-      yPosition += 9;
-      
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Name: ${booking.full_name}`, 20, yPosition);
-      yPosition += 5;
-      
-      doc.text(`Email: ${booking.guest_email}`, 20, yPosition);
-      yPosition += 5;
-      
-      if (booking.guest_phone) {
-        doc.text(`Phone: ${booking.guest_phone}`, 20, yPosition);
-        yPosition += 5;
-      }
-      
-      doc.text(`Number of Guests: ${booking.guest_count}`, 20, yPosition);
-      yPosition += 9;
-
-      doc.setFillColor(128, 90, 213);
-      doc.rect(15, yPosition, 3, 6, 'F');
-      
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(74, 58, 135);
-      doc.text("Payment Information", 20, yPosition + 4);
-      yPosition += 9;
-      
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(128, 90, 213);
-      doc.text(`Total Amount: €${booking.total_amount}`, 20, yPosition);
-      yPosition += 6;
-      
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Payment Status: ${booking.payment_status.replace(/_/g, ' ').toUpperCase()}`, 20, yPosition);
-      
-      if (booking.notes) {
-        yPosition += 8;
-        doc.setFillColor(128, 90, 213);
-        doc.rect(15, yPosition, 3, 6, 'F');
-        
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(74, 58, 135);
-        doc.text("Notes", 20, yPosition + 4);
-        yPosition += 9;
-        
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(80, 80, 80);
-        const splitNotes = doc.splitTextToSize(booking.notes, pageWidth - 40);
-        doc.text(splitNotes, 20, yPosition);
-        yPosition += splitNotes.length * 4.5;
-      }
-
-      if (qrDataUrl) {
-        yPosition += 8;
-        
-        doc.setFillColor(250, 250, 250);
-        const qrBoxHeight = 50;
-        doc.roundedRect(15, yPosition, pageWidth - 30, qrBoxHeight, 3, 3, 'FD');
-        
-        yPosition += 6;
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(74, 58, 135);
-        doc.text("Scan QR Code to View Booking Online", pageWidth / 2, yPosition, { align: "center" });
-        yPosition += 6;
-        
-        const qrSize = 35;
-        const qrX = (pageWidth - qrSize) / 2;
-        doc.addImage(qrDataUrl, 'PNG', qrX, yPosition, qrSize, qrSize);
-      }
-
-      const footerY = pageHeight - 20;
-      
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.3);
-      doc.line(20, footerY, pageWidth - 20, footerY);
-      
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Generated on ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, pageWidth / 2, footerY + 5, { align: "center" });
-      
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(128, 90, 213);
-      doc.text("Need Help? Contact us at support@wixotel.com", pageWidth / 2, footerY + 10, { align: "center" });
-      
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "italic");
-      doc.setTextColor(120, 120, 120);
-      doc.text("Wixotel - Hotel Management Platform", pageWidth / 2, footerY + 14, { align: "center" });
-
-      doc.save(`booking-${booking.confirmation_number}.pdf`);
-      toast.success("Booking details downloaded successfully");
-    };
+    // Footer
+    const footerY = pageHeight - 20;
     
-    logo.onerror = () => {
-      toast.error("Failed to load logo");
-    };
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(20, footerY, pageWidth - 20, footerY);
+    
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, pageWidth / 2, footerY + 5, { align: "center" });
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(128, 90, 213);
+    doc.text("Need Help? Contact us at support@wixotel.com", pageWidth / 2, footerY + 10, { align: "center" });
+    
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(120, 120, 120);
+    doc.text("Wixotel - Hotel Management Platform", pageWidth / 2, footerY + 14, { align: "center" });
+
+    doc.save(`booking-${booking.confirmation_number}.pdf`);
+    toast.success("Booking details downloaded successfully");
   };
 
   if (loading) {
