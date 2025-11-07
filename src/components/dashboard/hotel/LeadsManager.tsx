@@ -247,6 +247,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         confirmation_number: confirmationNumber,
         notes: lead.message || "Created from booking request",
         source: "lead", // Mark as coming from lead
+        lead_id: lead.id, // Link booking to the originating lead
       }).select().single();
 
       if (bookingError) throw bookingError;

@@ -27,6 +27,7 @@ export type Database = {
           guest_phone: string | null
           hotel_id: string
           id: string
+          lead_id: string | null
           notes: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           room_id: string
@@ -47,6 +48,7 @@ export type Database = {
           guest_phone?: string | null
           hotel_id: string
           id?: string
+          lead_id?: string | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           room_id: string
@@ -67,6 +69,7 @@ export type Database = {
           guest_phone?: string | null
           hotel_id?: string
           id?: string
+          lead_id?: string | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           room_id?: string
@@ -91,6 +94,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
@@ -106,7 +116,7 @@ export type Database = {
           hotel_id: string
           id: string
           reason: string | null
-          requested_by: string
+          requested_by: string | null
           reviewed_by: string | null
           status: string
           updated_at: string | null
@@ -117,7 +127,7 @@ export type Database = {
           hotel_id: string
           id?: string
           reason?: string | null
-          requested_by: string
+          requested_by?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
@@ -128,7 +138,7 @@ export type Database = {
           hotel_id?: string
           id?: string
           reason?: string | null
-          requested_by?: string
+          requested_by?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
