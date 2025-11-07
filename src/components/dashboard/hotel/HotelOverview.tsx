@@ -131,12 +131,12 @@ const HotelOverview = ({ hotelId }: Props) => {
       // Get current month start date
       const monthStart = startOfMonth(new Date());
 
-      // Fetch completed earnings for this month from LEAD bookings only
+      // Fetch earnings valid from check-in (pending or completed) for this month from LEAD bookings only
       const { data: earningsData } = await supabase
         .from('earnings')
-        .select('commission_amount, lead_id')
+        .select('commission_amount, lead_id, status')
         .eq('hotel_id', hotelId)
-        .eq('status', 'completed')
+        .in('status', ['pending', 'completed'])
         .not('lead_id', 'is', null)
         .gte('created_at', monthStart.toISOString());
 
@@ -292,7 +292,7 @@ const HotelOverview = ({ hotelId }: Props) => {
               Platform Commission (This Month)
             </CardTitle>
             <CardDescription className="text-xs">
-              8% service fee from completed bookings
+              8% service fee, valid from check-in (pending + completed)
             </CardDescription>
           </div>
         </CardHeader>
