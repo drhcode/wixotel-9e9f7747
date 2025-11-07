@@ -66,6 +66,18 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     }
   }, [checkIn, checkOut, isEditing]);
 
+  // Auto-calculate price when dates or room changes during edit
+  useEffect(() => {
+    if (isEditing && selectedRoom && checkIn && checkOut && availableRooms.length > 0) {
+      const room = availableRooms.find(r => r.id === selectedRoom);
+      if (room) {
+        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+        const calculatedPrice = room.price * nights;
+        setTotalAmount(calculatedPrice.toString());
+      }
+    }
+  }, [isEditing, selectedRoom, checkIn, checkOut, availableRooms]);
+
   const fetchAvailableRooms = async () => {
     if (!checkIn || !checkOut) return;
     
