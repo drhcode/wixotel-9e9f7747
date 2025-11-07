@@ -163,8 +163,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
         guest_phone: guestPhone.trim(),
         guest_count: guestCount,
         notes: notes.trim() || null,
-        total_amount: parseFloat(totalAmount) || 0,
-        status: status
+        total_amount: parseFloat(totalAmount) || 0
       })
       .eq('id', booking.id);
     setLoading(false);
@@ -440,22 +439,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     </PopoverContent>
                   </Popover>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={status} onValueChange={(val) => setStatus(val as BookingStatus)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="reserved">Reserved</SelectItem>
-                    <SelectItem value="checked_in">Checked In</SelectItem>
-                    <SelectItem value="checked_out">Checked Out</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
