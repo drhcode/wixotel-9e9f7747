@@ -530,12 +530,10 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     size="sm" 
                     variant="destructive" 
                     onClick={handleDeleteAttempt}
-                    disabled={booking.status === 'checked_out' || hasCheckedIn()}
+                    disabled={booking.status === 'checked_out'}
                     title={
                       booking.status === 'checked_out' 
                         ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' 
-                        : hasCheckedIn()
-                        ? 'Cannot delete bookings after check-in date has passed'
                         : 'Delete this booking'
                     }
                   >
