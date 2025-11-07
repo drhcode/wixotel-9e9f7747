@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import HotelsMap from "@/components/HotelsMap";
 
 interface PublicHotel {
   id: string;
@@ -32,9 +33,10 @@ interface PublicHotel {
   reviewCount?: number;
 }
 
-const HOTELS_PER_PAGE = 12;
+const HOTELS_PER_PAGE = 8;
 
 const Hotels = () => {
+  const navigate = useNavigate();
   const [hotels, setHotels] = useState<PublicHotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<PublicHotel[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
@@ -314,7 +316,7 @@ const Hotels = () => {
         </div>
       </section>
 
-      {/* Hotels Grid */}
+      {/* Hotels Grid with Map */}
       <section className="py-16 px-4 md:px-6">
         <div className="container mx-auto">
           {currentHotels.length > 0 ? (
@@ -325,7 +327,9 @@ const Hotels = () => {
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              <div className="grid lg:grid-cols-[1fr,600px] gap-8">
+                {/* Hotels List - 2 per row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
                 {currentHotels.map((hotel) => (
                   <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
                     <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
@@ -392,6 +396,17 @@ const Hotels = () => {
                     </Card>
                   </Link>
                 ))}
+                </div>
+
+                {/* Map - Sticky */}
+                <div className="hidden lg:block">
+                  <div className="sticky top-24 h-[calc(100vh-200px)] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+                    <HotelsMap 
+                      hotels={filteredHotels}
+                      onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Pagination */}
