@@ -360,7 +360,7 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
           booking_id: booking.id,
           hotel_id: booking.hotel_id,
           requested_by: booking.guest_id,
-          status: canCancelForFree() ? 'approved' : 'pending',
+          status: 'pending',
           reason: canCancelForFree() 
             ? 'Free cancellation within 14-day policy window' 
             : 'Cancellation request outside free cancellation window'
@@ -368,39 +368,22 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
 
       if (error) throw error;
 
-      // If approved immediately, update booking status
-      if (canCancelForFree()) {
-        const { error: updateError } = await supabase
-          .from('bookings')
-          .update({ status: 'cancelled' })
-          .eq('id', booking.id);
+      toast.success("Cancellation request submitted. The hotel will review your request.");
 
-        if (updateError) throw updateError;
-      }
-
-      toast.success(
-        canCancelForFree()
-          ? "Booking cancelled successfully. No charges applied."
-          : "Cancellation request submitted. The hotel will review your request."
-      );
-      
       setShowCancelDialog(false);
-      
       // Refresh booking data
-      const { data } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          rooms (name, room_number),
-          hotels (name, email, phone, address, city, country)
-        `)
-        .eq('confirmation_number', confirmationNumber.trim().toUpperCase())
-        .single();
-      
-      if (data) setBooking(data);
-    } catch (error) {
-      console.error("Error cancelling booking:", error);
-      toast.error("Failed to cancel booking. Please try again.");
+      const { data: refreshedBooking } = await supabase
+        .from("bookings")
+        .select("*, rooms(name)")
+        .eq("confirmation_number", confirmationNumber)
+        .maybeSingle();
+
+      if (refreshedBooking) {
+        setBooking(refreshedBooking);
+      }
+    } catch (error: any) {
+      console.error('Cancellation error:', error);
+      toast.error("Failed to submit cancellation request");
     } finally {
       setCancelling(false);
     }

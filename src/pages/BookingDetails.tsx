@@ -352,7 +352,7 @@ export default function BookingDetails() {
           booking_id: booking.id,
           hotel_id: booking.hotel_id,
           requested_by: booking.guest_id,
-          status: canCancelForFree() ? 'approved' : 'pending',
+          status: 'pending',
           reason: canCancelForFree() 
             ? 'Free cancellation within 14-day policy window' 
             : 'Cancellation request outside free cancellation window'
@@ -360,39 +360,14 @@ export default function BookingDetails() {
 
       if (error) throw error;
 
-      // If approved immediately, update booking status
-      if (canCancelForFree()) {
-        const { error: updateError } = await supabase
-          .from('bookings')
-          .update({ status: 'cancelled' })
-          .eq('id', booking.id);
+      toast.success("Cancellation request submitted. The hotel will review your request.");
 
-        if (updateError) throw updateError;
-      }
-
-      toast.success(
-        canCancelForFree()
-          ? "Booking cancelled successfully. No charges applied."
-          : "Cancellation request submitted. The hotel will review your request."
-      );
-      
       setShowCancelDialog(false);
-      
-      // Refresh booking data
-      const { data } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          rooms (name, room_number),
-          hotels (name, email, phone, address, city, country, logo_url)
-        `)
-        .eq('confirmation_number', confirmationNumber!.toUpperCase())
-        .single();
-      
-      if (data) setBooking(data);
-    } catch (error) {
-      console.error("Error cancelling booking:", error);
-      toast.error("Failed to cancel booking. Please try again.");
+      // Refresh page to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Cancellation error:', error);
+      toast.error("Failed to submit cancellation request");
     } finally {
       setCancelling(false);
     }
