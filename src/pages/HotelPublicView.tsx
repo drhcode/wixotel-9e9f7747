@@ -525,7 +525,7 @@ const HotelPublicView = () => {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               {/* <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" /> */}
-              <div className="hidden sm:flex flex-col items-start leading-none">
+              <div className="flex flex-col items-start leading-none">
                 <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
                   {hotel?.name}
                 </span>
