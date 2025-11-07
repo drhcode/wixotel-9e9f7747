@@ -3,12 +3,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, Calendar, MapPin, Users, CreditCard, Download } from "lucide-react";
+import { Loader2, Search, Calendar, MapPin, Users, CreditCard, Download, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import jsPDF from "jspdf";
 import { QRCodeCanvas } from "qrcode.react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BookingLookupProps {
   open: boolean;
@@ -19,6 +29,8 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
   const [confirmationNumber, setConfirmationNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [booking, setBooking] = useState<any>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const handleLookup = async () => {
     if (!confirmationNumber.trim()) {
@@ -331,6 +343,69 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
     toast.success("Booking details downloaded successfully");
   };
 
+  const canCancelForFree = () => {
+    if (!booking) return false;
+    const daysUntilCheckIn = differenceInDays(new Date(booking.check_in), new Date());
+    return daysUntilCheckIn >= 14;
+  };
+
+  const handleCancelBooking = async () => {
+    if (!booking) return;
+    
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from('cancellation_requests')
+        .insert({
+          booking_id: booking.id,
+          hotel_id: booking.hotel_id,
+          requested_by: booking.guest_id,
+          status: canCancelForFree() ? 'approved' : 'pending',
+          reason: canCancelForFree() 
+            ? 'Free cancellation within 14-day policy window' 
+            : 'Cancellation request outside free cancellation window'
+        });
+
+      if (error) throw error;
+
+      // If approved immediately, update booking status
+      if (canCancelForFree()) {
+        const { error: updateError } = await supabase
+          .from('bookings')
+          .update({ status: 'cancelled' })
+          .eq('id', booking.id);
+
+        if (updateError) throw updateError;
+      }
+
+      toast.success(
+        canCancelForFree()
+          ? "Booking cancelled successfully. No charges applied."
+          : "Cancellation request submitted. The hotel will review your request."
+      );
+      
+      setShowCancelDialog(false);
+      
+      // Refresh booking data
+      const { data } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          rooms (name, room_number),
+          hotels (name, email, phone, address, city, country)
+        `)
+        .eq('confirmation_number', confirmationNumber.trim().toUpperCase())
+        .single();
+      
+      if (data) setBooking(data);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      toast.error("Failed to cancel booking. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -456,6 +531,25 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
                 )}
               </div>
 
+              {booking.status !== 'cancelled' && (
+                <div className="text-sm text-muted-foreground bg-muted/50 px-4 py-3 rounded-md border border-border/50 flex items-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  <div>
+                    <p className="font-medium mb-1">Cancellation Policy</p>
+                    <p>
+                      Free cancellation up to 14 days before check-in. 
+                      {canCancelForFree() 
+                        ? " You can cancel this booking for free." 
+                        : " Cancellations within 14 days of check-in require hotel approval."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4">
                 <Button 
                   onClick={handleDownloadPDF}
@@ -464,6 +558,16 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
                 </Button>
+                {booking.status !== 'cancelled' && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setShowCancelDialog(true)}
+                    className="flex-1"
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                )}
                 <Button variant="outline" onClick={handleClose} className="flex-1">
                   Close
                 </Button>
@@ -472,6 +576,37 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
           )}
         </div>
       </DialogContent>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {canCancelForFree() ? (
+                <>
+                  This booking is eligible for free cancellation as it's more than 14 days before check-in.
+                  Your booking will be cancelled immediately with no charges.
+                </>
+              ) : (
+                <>
+                  This cancellation request is within 14 days of check-in and will require hotel approval.
+                  The hotel will review your request and contact you.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelBooking}
+              disabled={cancelling}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {cancelling ? "Cancelling..." : "Confirm Cancellation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
