@@ -70,20 +70,31 @@ const SuperAdminDashboard = () => {
       const activeHotels = hotelsData?.filter(h => h.status === 'active').length || 0;
       const pendingHotels = hotelsData?.filter(h => h.status === 'pending').length || 0;
 
-      // Calculate total revenue from active subscriptions
+      // Calculate total revenue from active subscriptions (not expired)
+      const today = new Date().toISOString();
       const { data: subscriptionsData, error: subsError } = await supabase
         .from('subscriptions')
-        .select('status, subscription_plans(price)')
-        .eq('status', 'completed')
-        .gte('end_date', new Date().toISOString());
+        .select(`
+          status,
+          end_date,
+          subscription_plans (
+            price
+          )
+        `)
+        .gte('end_date', today);
 
       if (subsError) {
         console.error('Error fetching subscriptions:', subsError);
       }
 
-      const totalRevenue = subscriptionsData?.reduce((sum, sub) => {
-        return sum + (sub.subscription_plans?.price || 0);
+      // Calculate monthly revenue from all active (not expired) subscriptions
+      const totalRevenue = subscriptionsData?.reduce((sum, sub: any) => {
+        const price = sub.subscription_plans?.price || 0;
+        return sum + price;
       }, 0) || 0;
+
+      console.log('Active subscriptions:', subscriptionsData);
+      console.log('Total monthly revenue:', totalRevenue);
 
       setStats({
         totalHotels,
