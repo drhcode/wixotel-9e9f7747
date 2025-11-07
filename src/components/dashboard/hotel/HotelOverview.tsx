@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt } from "lucide-react";
+import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, startOfDay, endOfDay, startOfMonth } from "date-fns";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const isMobileSafari =
   typeof navigator !== "undefined" &&
@@ -29,11 +30,16 @@ interface AnalyticsSummary {
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 const HotelOverview = ({ hotelId }: Props) => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalRooms: 0,
     totalBookings: 0,
     totalGuests: 0,
     totalRevenue: 0
+  });
+  const [unpaidInvoices, setUnpaidInvoices] = useState({
+    count: 0,
+    totalAmount: 0
   });
   const [monthlyCommission, setMonthlyCommission] = useState(0);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -41,6 +47,7 @@ const HotelOverview = ({ hotelId }: Props) => {
 
   useEffect(() => {
     fetchStats();
+    fetchUnpaidInvoices();
     fetchCommission();
     fetchAnalytics();
   }, [hotelId, dateRange]);
@@ -83,6 +90,25 @@ const HotelOverview = ({ hotelId }: Props) => {
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchUnpaidInvoices = async () => {
+    try {
+      const { data: invoicesData, error } = await supabase
+        .from('invoices')
+        .select('total_amount')
+        .eq('hotel_id', hotelId)
+        .in('status', ['pending', 'overdue']);
+
+      if (error) throw error;
+
+      const count = invoicesData?.length || 0;
+      const totalAmount = invoicesData?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+
+      setUnpaidInvoices({ count, totalAmount });
+    } catch (error) {
+      console.error("Error fetching unpaid invoices:", error);
     }
   };
 
@@ -178,7 +204,7 @@ const HotelOverview = ({ hotelId }: Props) => {
       </div>
 
       {/* Main Stats */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Rooms</CardTitle>
@@ -209,6 +235,22 @@ const HotelOverview = ({ hotelId }: Props) => {
           <CardContent>
             <div className="text-3xl font-bold">{stats.totalGuests}</div>
             <p className="text-xs text-muted-foreground mt-1">Registered guests</p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:shadow-lg transition-shadow border-destructive/50 bg-destructive/5"
+          onClick={() => navigate('/dashboard?section=invoices')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Unpaid Invoices</CardTitle>
+            <FileText className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-destructive">{unpaidInvoices.count}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total: €{unpaidInvoices.totalAmount.toFixed(2)}
+            </p>
           </CardContent>
         </Card>
       </div>
