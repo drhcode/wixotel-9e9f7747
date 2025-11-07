@@ -72,12 +72,16 @@ const InvoicesManagement = () => {
       const sub = subscriptions.find(s => s.id === formData.subscription_id);
       if (sub) {
         setSelectedSubscription(sub);
+        // Format dates to YYYY-MM-DD for the date inputs
+        const startDate = new Date(sub.start_date).toISOString().split('T')[0];
+        const endDate = new Date(sub.end_date).toISOString().split('T')[0];
+        
         setFormData(prev => ({
           ...prev,
           hotel_id: sub.hotel_id,
           amount: sub.subscription_plans.price.toString(),
-          billing_period_start: sub.start_date,
-          billing_period_end: sub.end_date
+          billing_period_start: startDate,
+          billing_period_end: endDate
         }));
         // Tax will be auto-calculated by the amount useEffect
       }
