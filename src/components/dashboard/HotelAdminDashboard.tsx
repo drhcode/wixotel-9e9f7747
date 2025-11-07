@@ -41,6 +41,7 @@ const HotelAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
+  const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
 
   // Read section from URL query params
   useEffect(() => {
@@ -58,6 +59,7 @@ const HotelAdminDashboard = () => {
   useEffect(() => {
     if (hotel?.id) {
       fetchLeadsCount();
+      fetchUnpaidInvoicesCount();
       
       // Subscribe to leads changes
       const leadsChannel = supabase
@@ -79,8 +81,28 @@ const HotelAdminDashboard = () => {
         )
         .subscribe();
 
+      // Subscribe to invoices changes
+      const invoicesChannel = supabase
+        .channel(`invoices-count-horizontal-${hotel.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'invoices',
+            filter: `hotel_id=eq.${hotel.id}`,
+          },
+          () => {
+            setTimeout(() => {
+              fetchUnpaidInvoicesCount();
+            }, 100);
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(leadsChannel);
+        supabase.removeChannel(invoicesChannel);
       };
     }
   }, [hotel?.id]);
@@ -128,6 +150,23 @@ const HotelAdminDashboard = () => {
       setLeadsCount(count || 0);
     } catch (error) {
       console.error("Error fetching leads count:", error);
+    }
+  };
+
+  const fetchUnpaidInvoicesCount = async () => {
+    if (!hotel?.id) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("hotel_id", hotel.id)
+        .in("status", ["pending", "overdue"]);
+
+      if (error) throw error;
+      setUnpaidInvoicesCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching unpaid invoices count:", error);
     }
   };
 
@@ -379,6 +418,14 @@ const HotelAdminDashboard = () => {
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                       >
                         {leadsCount}
+                      </Badge>
+                    )}
+                    {tab.id === "invoices" && unpaidInvoicesCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {unpaidInvoicesCount}
                       </Badge>
                     )}
                   </Button>

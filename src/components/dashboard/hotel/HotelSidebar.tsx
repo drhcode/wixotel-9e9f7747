@@ -40,10 +40,12 @@ const menuItems = [
 export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar();
   const [leadsCount, setLeadsCount] = useState(0);
+  const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
 
   useEffect(() => {
     if (hotelId) {
       fetchLeadsCount();
+      fetchUnpaidInvoicesCount();
       
       // Subscribe to leads changes with a unique channel name
       const leadsChannel = supabase
@@ -96,11 +98,32 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
         )
         .subscribe();
 
+      // Subscribe to invoices changes
+      const invoicesChannel = supabase
+        .channel(`invoices-count-${hotelId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'invoices',
+            filter: `hotel_id=eq.${hotelId}`,
+          },
+          (payload) => {
+            console.log('Invoices change detected in sidebar:', payload);
+            setTimeout(() => {
+              fetchUnpaidInvoicesCount();
+            }, 100);
+          }
+        )
+        .subscribe();
+
       return () => {
         console.log('Cleaning up leads subscriptions');
         supabase.removeChannel(leadsChannel);
         supabase.removeChannel(broadcastChannel);
         supabase.removeChannel(notificationsChannel);
+        supabase.removeChannel(invoicesChannel);
       };
     }
   }, [hotelId]);
@@ -121,6 +144,23 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
       setLeadsCount(count || 0);
     } catch (error) {
       console.error("Error fetching leads count:", error);
+    }
+  };
+
+  const fetchUnpaidInvoicesCount = async () => {
+    if (!hotelId) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("hotel_id", hotelId)
+        .in("status", ["pending", "overdue"]);
+
+      if (error) throw error;
+      setUnpaidInvoicesCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching unpaid invoices count:", error);
     }
   };
 
@@ -165,6 +205,14 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
                         className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
                       >
                         {leadsCount}
+                      </Badge>
+                    )}
+                    {item.id === "invoices" && unpaidInvoicesCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {unpaidInvoicesCount}
                       </Badge>
                     )}
                   </SidebarMenuButton>
