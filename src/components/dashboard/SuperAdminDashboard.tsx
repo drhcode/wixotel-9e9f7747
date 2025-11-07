@@ -411,10 +411,12 @@ const SuperAdminDashboard = () => {
 
           <div className="flex-1 overflow-auto">
             <div className="container mx-auto px-4 lg:px-6 py-6 lg:py-8">
-              <div className="mb-6 lg:mb-8">
-                <h1 className="text-2xl lg:text-3xl font-bold mb-2">Platform Overview</h1>
-                <p className="text-sm lg:text-base text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
-              </div>
+              {activeTab === "overview" && (
+                <div className="mb-6 lg:mb-8">
+                  <h1 className="text-2xl lg:text-3xl font-bold mb-2">Platform Overview</h1>
+                  <p className="text-sm lg:text-base text-muted-foreground">Manage hotels, subscriptions, and monitor platform performance</p>
+                </div>
+              )}
 
               <div className="space-y-4 lg:space-y-6">
                 {renderContent()}
