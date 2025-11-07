@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays, startOfDay, endOfDay, startOfMonth } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, startOfMonth, differenceInDays } from "date-fns";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 
@@ -39,7 +39,8 @@ const HotelOverview = ({ hotelId }: Props) => {
   });
   const [unpaidInvoices, setUnpaidInvoices] = useState({
     count: 0,
-    totalAmount: 0
+    totalAmount: 0,
+    daysRemaining: null as number | null
   });
   const [monthlyCommission, setMonthlyCommission] = useState(0);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -97,7 +98,7 @@ const HotelOverview = ({ hotelId }: Props) => {
     try {
       const { data: invoicesData, error } = await supabase
         .from('invoices')
-        .select('total_amount')
+        .select('total_amount, due_date')
         .eq('hotel_id', hotelId)
         .in('status', ['pending', 'overdue']);
 
@@ -106,7 +107,20 @@ const HotelOverview = ({ hotelId }: Props) => {
       const count = invoicesData?.length || 0;
       const totalAmount = invoicesData?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
 
-      setUnpaidInvoices({ count, totalAmount });
+      // Calculate days remaining for the nearest due date
+      let daysRemaining = null;
+      if (invoicesData && invoicesData.length > 0) {
+        const today = new Date();
+        const dueDates = invoicesData
+          .map(invoice => new Date(invoice.due_date))
+          .sort((a, b) => a.getTime() - b.getTime());
+        
+        if (dueDates.length > 0) {
+          daysRemaining = differenceInDays(dueDates[0], today);
+        }
+      }
+
+      setUnpaidInvoices({ count, totalAmount, daysRemaining });
     } catch (error) {
       console.error("Error fetching unpaid invoices:", error);
     }
@@ -251,6 +265,19 @@ const HotelOverview = ({ hotelId }: Props) => {
             <p className="text-xs text-muted-foreground mt-1">
               Total: €{unpaidInvoices.totalAmount.toFixed(2)}
             </p>
+            {unpaidInvoices.daysRemaining !== null && (
+              <div className="mt-2">
+                <Badge 
+                  variant={unpaidInvoices.daysRemaining < 0 ? "destructive" : unpaidInvoices.daysRemaining <= 7 ? "outline" : "secondary"}
+                  className={`text-xs ${unpaidInvoices.daysRemaining <= 7 && unpaidInvoices.daysRemaining >= 0 ? 'border-warning text-warning' : ''}`}
+                >
+                  {unpaidInvoices.daysRemaining < 0 
+                    ? `Overdue by ${Math.abs(unpaidInvoices.daysRemaining)} days`
+                    : `${unpaidInvoices.daysRemaining} days remaining`
+                  }
+                </Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
