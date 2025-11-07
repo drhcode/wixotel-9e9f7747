@@ -539,10 +539,10 @@ const Landing = () => {
             </div>
 
             {/* Hotels Grid with Map */}
-            <div className="grid lg:grid-cols-[1fr,550px] gap-8 mb-12">
-              {/* Hotels List - 2 per row */}
+            <div className="grid lg:grid-cols-[1fr,550px] gap-8">
+              {/* Hotels List - 2 per row, 4 total */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
-              {filteredHotels.slice(0, 6).map((hotel) => (
+              {filteredHotels.slice(0, 4).map((hotel) => (
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
                   <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-video relative overflow-hidden bg-accent">
@@ -610,9 +610,9 @@ const Landing = () => {
               ))}
               </div>
 
-              {/* Map - Sticky on desktop */}
+              {/* Map - Fixed height to match 4 hotels (2 rows) */}
               <div className="hidden lg:block">
-                <div className="sticky top-24 h-[600px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+                <div className="h-[720px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
                   <HotelsLeafletMap 
                     hotels={filteredHotels}
                     onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
@@ -621,19 +621,18 @@ const Landing = () => {
               </div>
             </div>
 
-            {filteredHotels.length > 6 && (
-              <div className="col-span-full text-center mt-8">
-                <Link to="/hotels">
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="border-2 hover:border-primary hover:bg-primary/5 transition-all"
-                  >
-                    View All Hotels
-                  </Button>
-                </Link>
-              </div>
-            )}
+            {/* View All Hotels Button */}
+            <div className="text-center mt-8">
+              <Link to="/hotels">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-primary hover:opacity-90 transition-all"
+                >
+                  View All Hotels
+                </Button>
+              </Link>
+            </div>
+
 
             {filteredHotels.length === 0 && (
               <div className="text-center py-12">
