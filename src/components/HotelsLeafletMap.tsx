@@ -18,6 +18,8 @@ interface Hotel {
   longitude: number | null;
   city: string | null;
   country: string | null;
+  avgRating?: number;
+  reviewCount?: number;
 }
 
 interface HotelsLeafletMapProps {
@@ -85,9 +87,16 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
         white-space: nowrap;
         box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         margin-top: 2px;
-        max-width: 100px;
+        max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .hotel-rating-badge {
+        color: #f59e0b;
+        font-size: 9px;
       }
     `;
     document.head.appendChild(style);
@@ -97,17 +106,25 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
     hotelsWithCoords.forEach((hotel) => {
       if (!hotel.latitude || !hotel.longitude) return;
 
+      // Create label with rating if available
+      const ratingBadge = hotel.avgRating 
+        ? `<span class="hotel-rating-badge">${hotel.avgRating.toFixed(1)}★</span>` 
+        : '';
+
       // Create custom marker with hotel name
       const customIcon = L.divIcon({
         className: 'custom-hotel-marker',
         html: `
           <div class="hotel-marker-container">
             <div class="hotel-marker-pin"></div>
-            <div class="hotel-marker-label">${hotel.name}</div>
+            <div class="hotel-marker-label">
+              <span>${hotel.name}</span>
+              ${ratingBadge}
+            </div>
           </div>
         `,
-        iconSize: [100, 40],
-        iconAnchor: [50, 20],
+        iconSize: [140, 40],
+        iconAnchor: [70, 20],
       });
 
       const marker = L.marker([Number(hotel.latitude), Number(hotel.longitude)], {
