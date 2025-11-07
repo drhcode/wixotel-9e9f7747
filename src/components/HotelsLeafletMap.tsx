@@ -35,9 +35,9 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
     // Filter hotels with valid coordinates
     const hotelsWithCoords = hotels.filter(h => h.latitude && h.longitude);
 
-    // Calculate center
+    // Calculate center - prioritize user location
     let center: [number, number] = [41.3275, 19.8187]; // Default center (Tirana, Albania)
-    let zoom = 8;
+    let zoom = 13; // Closer zoom level
 
     if (hotelsWithCoords.length > 0) {
       const avgLat = hotelsWithCoords.reduce((sum, h) => sum + Number(h.latitude), 0) / hotelsWithCoords.length;
@@ -45,7 +45,7 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
       center = [avgLat, avgLng];
     }
 
-    // Initialize map
+    // Initialize map with closer zoom
     map.current = L.map(mapContainer.current).setView(center, zoom);
 
     // Add OpenStreetMap tile layer (free)

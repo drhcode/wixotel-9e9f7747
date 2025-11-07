@@ -41,6 +41,8 @@ interface Hotel {
   google_business_url: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const ProfileSettings = () => {
@@ -60,6 +62,8 @@ const ProfileSettings = () => {
   const [googleBusinessUrl, setGoogleBusinessUrl] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
   
   const [currentPassword, setCurrentPassword] = useState("");
@@ -99,6 +103,8 @@ const ProfileSettings = () => {
       setGoogleBusinessUrl(hotelData.google_business_url || "");
       setSeoTitle(hotelData.seo_title || "");
       setSeoDescription(hotelData.seo_description || "");
+      setLatitude(hotelData.latitude?.toString() || "");
+      setLongitude(hotelData.longitude?.toString() || "");
     }
   };
 
@@ -184,7 +190,9 @@ const ProfileSettings = () => {
         instagram_url: instagramUrl || null,
         google_business_url: googleBusinessUrl || null,
         seo_title: seoTitle || null,
-        seo_description: seoDescription || null
+        seo_description: seoDescription || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null
       })
       .eq('id', hotel.id);
 
@@ -344,6 +352,37 @@ const ProfileSettings = () => {
                 onChange={(e) => setHotelCity(e.target.value)}
                 placeholder="Enter city"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                type="number"
+                step="any"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                placeholder="41.3275"
+              />
+              <p className="text-xs text-muted-foreground">
+                Used for map location display
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                type="number"
+                step="any"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                placeholder="19.8187"
+              />
+              <p className="text-xs text-muted-foreground">
+                Find coordinates on Google Maps
+              </p>
             </div>
           </div>
 
