@@ -38,7 +38,7 @@ interface Subscription {
   start_date: string;
   end_date: string;
   hotels: { name: string };
-  subscription_plans: { name: string; price: number };
+  subscription_plans: { name: string; price: number; billing_period: string };
 }
 
 const InvoicesManagement = () => {
@@ -72,9 +72,28 @@ const InvoicesManagement = () => {
       const sub = subscriptions.find(s => s.id === formData.subscription_id);
       if (sub) {
         setSelectedSubscription(sub);
-        // Format dates to YYYY-MM-DD for the date inputs
-        const startDate = new Date(sub.start_date).toISOString().split('T')[0];
-        const endDate = new Date(sub.end_date).toISOString().split('T')[0];
+        
+        // Calculate billing period based on the plan's billing_period
+        const today = new Date();
+        let startDate = today.toISOString().split('T')[0];
+        let endDate: string;
+        
+        if (sub.subscription_plans.billing_period === 'monthly') {
+          // Add 1 month
+          const nextMonth = new Date(today);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          endDate = nextMonth.toISOString().split('T')[0];
+        } else if (sub.subscription_plans.billing_period === 'yearly') {
+          // Add 1 year
+          const nextYear = new Date(today);
+          nextYear.setFullYear(nextYear.getFullYear() + 1);
+          endDate = nextYear.toISOString().split('T')[0];
+        } else {
+          // Default to 1 month
+          const nextMonth = new Date(today);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          endDate = nextMonth.toISOString().split('T')[0];
+        }
         
         setFormData(prev => ({
           ...prev,
@@ -118,7 +137,7 @@ const InvoicesManagement = () => {
   const fetchSubscriptions = async () => {
     const { data } = await supabase
       .from('subscriptions')
-      .select('*, hotels(name), subscription_plans(name, price)')
+      .select('*, hotels(name), subscription_plans(name, price, billing_period)')
       .order('created_at', { ascending: false });
     setSubscriptions(data || []);
   };
