@@ -357,7 +357,7 @@ const Landing = () => {
                 className="flex items-center gap-2"
               >
                 <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">Find Booking</span>
+                Find Booking
               </Button>
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
@@ -368,11 +368,15 @@ const Landing = () => {
 
             {/* Mobile Navigation */}
             <div className="flex md:hidden items-center gap-3">
-              <Link to="/register-hotel">
-                <Button size="sm" variant="outline">
-                  Register Hotel
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBookingLookupOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Find Booking</span>
+              </Button>
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-2">
@@ -395,17 +399,15 @@ const Landing = () => {
                     >
                       About Us
                     </Link>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setBookingLookupOpen(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="justify-start"
+                    <Link 
+                      to="/register-hotel"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Search className="h-4 w-4 mr-2" />
-                      Find Booking
-                    </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Hotel className="h-4 w-4 mr-2" />
+                        Register Hotel
+                      </Button>
+                    </Link>
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                       <Button className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant">
                         Login
