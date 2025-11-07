@@ -79,9 +79,29 @@ const InvoicesManagement = () => {
           billing_period_start: sub.start_date,
           billing_period_end: sub.end_date
         }));
+        // Tax will be auto-calculated by the amount useEffect
       }
     }
   }, [formData.subscription_id, subscriptions]);
+
+  // Auto-calculate 20% tax when amount changes
+  useEffect(() => {
+    if (formData.amount) {
+      const amount = parseFloat(formData.amount);
+      if (!isNaN(amount) && amount > 0) {
+        const taxAmount = amount * 0.20; // 20% tax
+        setFormData(prev => ({
+          ...prev,
+          tax_amount: taxAmount.toFixed(2)
+        }));
+      } else if (amount === 0 || formData.amount === "") {
+        setFormData(prev => ({
+          ...prev,
+          tax_amount: "0"
+        }));
+      }
+    }
+  }, [formData.amount]);
 
   const fetchHotels = async () => {
     const { data } = await supabase
@@ -360,12 +380,14 @@ const InvoicesManagement = () => {
                   />
                 </div>
                 <div>
-                  <Label>Tax Amount</Label>
+                  <Label>Tax Amount (20% auto-calculated)</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={formData.tax_amount}
-                    onChange={(e) => setFormData({ ...formData, tax_amount: e.target.value })}
+                    readOnly
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
               </div>
