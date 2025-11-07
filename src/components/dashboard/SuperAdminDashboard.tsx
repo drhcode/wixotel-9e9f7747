@@ -81,6 +81,7 @@ const SuperAdminDashboard = () => {
             price
           )
         `)
+        .eq('status', 'completed')
         .gte('end_date', today);
 
       if (subsError) {
