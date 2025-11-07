@@ -62,7 +62,6 @@ interface Hotel {
   description: string | null;
   about_us: string | null;
   about_us_image: string | null;
-  logo_url: string | null;
   facebook_url: string | null;
   instagram_url: string | null;
   google_business_url: string | null;
@@ -521,16 +520,11 @@ const HotelPublicView = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              {hotel?.logo_url ? (
-                <img src={hotel.logo_url} alt={hotel.name} className="h-10 w-10 object-contain rounded-lg" />
-              ) : (
-                <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" />
-              )}
+              <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" />
               <div className="hidden sm:flex flex-col items-start leading-none">
                 <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
                 <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>

@@ -30,7 +30,6 @@ interface HotelData {
   name: string;
   status: string;
   subscription_plan: string;
-  logo_url: string | null;
   slug: string | null;
 }
 
@@ -209,13 +208,6 @@ const HotelAdminDashboard = () => {
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {hotel.logo_url && (
-                  <img 
-                    src={hotel.logo_url} 
-                    alt={hotel.name}
-                    className="h-10 w-10 object-contain rounded-lg"
-                  />
-                )}
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
                     {hotel.name}
@@ -268,13 +260,6 @@ const HotelAdminDashboard = () => {
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {hotel.logo_url && (
-                  <img 
-                    src={hotel.logo_url} 
-                    alt={hotel.name}
-                    className="h-10 w-10 object-contain rounded-lg"
-                  />
-                )}
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
                     {hotel.name}
@@ -351,13 +336,6 @@ const HotelAdminDashboard = () => {
                   <SidebarTrigger>
                     <Menu className="h-5 w-5" />
                   </SidebarTrigger>
-                  {hotel.logo_url && (
-                    <img 
-                      src={hotel.logo_url} 
-                      alt={hotel.name}
-                      className="h-10 w-10 object-contain rounded-lg"
-                    />
-                  )}
                   <div className="flex flex-col items-start leading-none">
                     <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
                       {hotel.name}

@@ -36,7 +36,6 @@ interface Hotel {
   description: string | null;
   about_us: string | null;
   about_us_image: string | null;
-  logo_url: string | null;
   facebook_url: string | null;
   instagram_url: string | null;
   google_business_url: string | null;
@@ -59,10 +58,8 @@ const ProfileSettings = () => {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [googleBusinessUrl, setGoogleBusinessUrl] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
   
   const [currentPassword, setCurrentPassword] = useState("");
@@ -100,54 +97,11 @@ const ProfileSettings = () => {
       setFacebookUrl(hotelData.facebook_url || "");
       setInstagramUrl(hotelData.instagram_url || "");
       setGoogleBusinessUrl(hotelData.google_business_url || "");
-      setLogoUrl(hotelData.logo_url || "");
       setSeoTitle(hotelData.seo_title || "");
       setSeoDescription(hotelData.seo_description || "");
     }
   };
 
-
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setUploading(true);
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image must be less than 5MB");
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !hotel) return;
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `hotel-logos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('hotel-assets')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('hotel-assets')
-        .getPublicUrl(filePath);
-
-      setLogoUrl(publicUrl);
-      toast.success("Logo uploaded successfully");
-    } catch (error: any) {
-      toast.error("Failed to upload logo");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleAboutUsImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -229,7 +183,6 @@ const ProfileSettings = () => {
         facebook_url: facebookUrl || null,
         instagram_url: instagramUrl || null,
         google_business_url: googleBusinessUrl || null,
-        logo_url: logoUrl || null,
         seo_title: seoTitle || null,
         seo_description: seoDescription || null
       })
@@ -540,40 +493,6 @@ const ProfileSettings = () => {
                 </Button>
                 <p className="text-xs text-muted-foreground mt-1">
                   This image will appear in the About Us section. Max size: 5MB
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Hotel Logo</Label>
-            <div className="flex items-center gap-4">
-              {logoUrl && (
-                <img
-                  src={logoUrl}
-                  alt="Hotel logo"
-                  className="h-20 w-20 object-cover rounded-lg border"
-                />
-              )}
-              <div className="flex-1">
-                <Input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('logo-upload')?.click()}
-                  disabled={uploading}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {uploading ? "Uploading..." : logoUrl ? "Change Logo" : "Upload Logo"}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Max size: 5MB. Supported formats: JPG, PNG, WEBP
                 </p>
               </div>
             </div>

@@ -24,7 +24,6 @@ interface PublicHotel {
   city: string | null;
   country: string | null;
   description: string | null;
-  logo_url: string | null;
   images: string[] | null;
   about_us_image: string | null;
   latitude: number | null;
@@ -78,7 +77,7 @@ const Hotels = () => {
   const fetchHotels = async () => {
     const { data } = await supabase
       .from('hotels')
-      .select('id, name, slug, address, city, country, description, logo_url, images, about_us_image, latitude, longitude')
+      .select('id, name, slug, address, city, country, description, images, about_us_image, latitude, longitude')
       .eq('status', 'active')
       .eq('show_on_landing', true);
     
@@ -343,14 +342,6 @@ const Hotels = () => {
                             alt={hotel.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
-                        ) : hotel.logo_url ? (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <img 
-                              src={hotel.logo_url} 
-                              alt={hotel.name}
-                              className="max-w-[60%] max-h-[60%] object-contain"
-                            />
-                          </div>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Hotel className="h-16 w-16 text-muted-foreground" />
