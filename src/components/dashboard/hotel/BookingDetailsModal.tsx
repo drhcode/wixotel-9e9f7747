@@ -98,6 +98,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
     return isToday(new Date(booking.check_out));
   };
 
+  const hasCheckedIn = () => {
+    const checkInDate = new Date(booking.check_in);
+    const today = new Date();
+    checkInDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return today >= checkInDate;
+  };
+
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
     if (newStatus === 'checked_in' && !canCheckIn()) {
       toast.error("Check-in can only be done on the reservation date");
@@ -553,8 +561,14 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     size="sm" 
                     variant="destructive" 
                     onClick={handleDeleteAttempt}
-                    disabled={booking.status === 'checked_out'}
-                    title={booking.status === 'checked_out' ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' : 'Delete this booking'}
+                    disabled={booking.status === 'checked_out' || hasCheckedIn()}
+                    title={
+                      booking.status === 'checked_out' 
+                        ? 'Checked-out bookings cannot be deleted. Contact support for assistance.' 
+                        : hasCheckedIn()
+                        ? 'Cannot delete bookings after check-in date has passed'
+                        : 'Delete this booking'
+                    }
                   >
                     Delete
                   </Button>
