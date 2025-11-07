@@ -107,11 +107,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   };
 
   const handleStatusUpdate = async (newStatus: BookingStatus) => {
-    if (newStatus === 'checked_in' && !canCheckIn()) {
-      toast.error("Check-in can only be done on the reservation date");
-      return;
-    }
-
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })
