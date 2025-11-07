@@ -23,6 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { mapDatabaseError } from "@/lib/errorUtils";
 
@@ -316,32 +322,40 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
 
       {/* Export Section */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Export Your Calendars
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Copy these URLs and add them to Booking.com, Airbnb, or other platforms to block your availability
-        </p>
-        <div className="space-y-3">
-          {rooms.map((room) => (
-            <div key={room.id} className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1">
-                <p className="font-medium">{room.name}</p>
-                <p className="text-xs text-muted-foreground font-mono break-all">
-                  {getICalUrl(room.id)}
-                </p>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="export" className="border-none">
+            <AccordionTrigger className="hover:no-underline py-0">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Export Your Calendars
+              </h3>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Copy these URLs and add them to Booking.com, Airbnb, or other platforms to block your availability
+              </p>
+              <div className="space-y-3">
+                {rooms.map((room) => (
+                  <div key={room.id} className="flex items-center gap-2 p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium">{room.name}</p>
+                      <p className="text-xs text-muted-foreground font-mono break-all">
+                        {getICalUrl(room.id)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(getICalUrl(room.id))}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(getICalUrl(room.id))}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
 
       {/* Import Section */}
