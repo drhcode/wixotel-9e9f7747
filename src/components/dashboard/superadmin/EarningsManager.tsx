@@ -44,6 +44,8 @@ const EarningsManager = () => {
   const [selectedHotel, setSelectedHotel] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchHotels();
@@ -52,6 +54,7 @@ const EarningsManager = () => {
 
   useEffect(() => {
     fetchEarnings();
+    setCurrentPage(1); // Reset to first page when filters change
   }, [selectedHotel, selectedMonth, selectedStatus]);
 
   const fetchHotels = async () => {
@@ -141,6 +144,16 @@ const EarningsManager = () => {
   };
 
   const hasActiveFilters = selectedHotel !== "all" || selectedMonth !== "all" || selectedStatus !== "all";
+
+  // Pagination logic
+  const totalPages = Math.ceil(earnings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedEarnings = earnings.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
 
   // Generate month options (last 12 months)
   const generateMonthOptions = () => {
@@ -300,14 +313,14 @@ const EarningsManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {earnings.length === 0 ? (
+                {paginatedEarnings.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       No earnings data yet. Earnings will appear when guests submit booking requests.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  earnings.map((earning) => (
+                  paginatedEarnings.map((earning) => (
                     <TableRow key={earning.id}>
                       <TableCell className="font-medium whitespace-nowrap">
                         {earning.hotels?.name || "Unknown Hotel"}
@@ -331,6 +344,64 @@ const EarningsManager = () => {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4 mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, earnings.length)} of {earnings.length} results
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      // Show first page, last page, current page, and adjacent pages
+                      return page === 1 || 
+                             page === totalPages || 
+                             Math.abs(page - currentPage) <= 1;
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis if there's a gap
+                      const showEllipsis = index > 0 && page - array[index - 1] > 1;
+                      return (
+                        <>
+                          {showEllipsis && (
+                            <span key={`ellipsis-${page}`} className="px-2">
+                              ...
+                            </span>
+                          )}
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(page)}
+                            className="w-8"
+                          >
+                            {page}
+                          </Button>
+                        </>
+                      );
+                    })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

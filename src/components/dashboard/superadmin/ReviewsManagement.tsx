@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Star, Trash2, Check, X, Image as ImageIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Star, Trash2, Check, X, Image as ImageIcon, Filter } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -41,21 +42,55 @@ export default function ReviewsManagement() {
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [hotels, setHotels] = useState<{ id: string; name: string }[]>([]);
+  
+  // Filters
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedHotel, setSelectedHotel] = useState<string>("all");
+  const [selectedRating, setSelectedRating] = useState<string>("all");
 
   useEffect(() => {
+    fetchHotels();
     fetchReviews();
-  }, []);
+  }, [selectedStatus, selectedHotel, selectedRating]);
+
+  const fetchHotels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("hotels")
+        .select("id, name")
+        .order("name");
+      if (error) throw error;
+      setHotels(data || []);
+    } catch (error: any) {
+      console.error("Error fetching hotels:", error);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("reviews")
         .select(`
           *,
           hotels(name)
-        `)
-        .order("created_at", { ascending: false });
+        `);
+
+      // Apply filters
+      if (selectedStatus !== "all") {
+        query = query.eq("status", selectedStatus);
+      }
+      
+      if (selectedHotel !== "all") {
+        query = query.eq("hotel_id", selectedHotel);
+      }
+      
+      if (selectedRating !== "all") {
+        query = query.eq("rating", parseInt(selectedRating));
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       setReviews(data || []);
@@ -66,6 +101,14 @@ export default function ReviewsManagement() {
       setLoading(false);
     }
   };
+
+  const clearFilters = () => {
+    setSelectedStatus("all");
+    setSelectedHotel("all");
+    setSelectedRating("all");
+  };
+
+  const hasActiveFilters = selectedStatus !== "all" || selectedHotel !== "all" || selectedRating !== "all";
 
   const handleStatusChange = async (reviewId: string, newStatus: string) => {
     try {
@@ -135,6 +178,76 @@ export default function ReviewsManagement() {
         <h2 className="text-3xl font-bold tracking-tight">Reviews Management</h2>
         <p className="text-muted-foreground">Manage and moderate hotel reviews</p>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <CardTitle className="text-lg">Filters</CardTitle>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Hotel</label>
+              <Select value={selectedHotel} onValueChange={setSelectedHotel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Hotels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Hotels</SelectItem>
+                  {hotels.map((hotel) => (
+                    <SelectItem key={hotel.id} value={hotel.id}>
+                      {hotel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Rating</label>
+              <Select value={selectedRating} onValueChange={setSelectedRating}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Ratings" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="5">5 Stars</SelectItem>
+                  <SelectItem value="4">4 Stars</SelectItem>
+                  <SelectItem value="3">3 Stars</SelectItem>
+                  <SelectItem value="2">2 Stars</SelectItem>
+                  <SelectItem value="1">1 Star</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {reviews.length === 0 ? (
         <Card>
