@@ -37,7 +37,7 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
 
     // Calculate center - prioritize user location
     let center: [number, number] = [41.3275, 19.8187]; // Default center (Tirana, Albania)
-    let zoom = 13; // Closer zoom level
+    let zoom = 15; // Much closer zoom level
 
     if (hotelsWithCoords.length > 0) {
       const avgLat = hotelsWithCoords.reduce((sum, h) => sum + Number(h.latitude), 0) / hotelsWithCoords.length;
@@ -45,7 +45,7 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
       center = [avgLat, avgLng];
     }
 
-    // Initialize map with closer zoom
+    // Initialize map with much closer zoom
     map.current = L.map(mapContainer.current).setView(center, zoom);
 
     // Add OpenStreetMap tile layer (free)
@@ -54,26 +54,61 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
       maxZoom: 19,
     }).addTo(map.current);
 
-    // Custom marker icon
-    const customIcon = L.divIcon({
-      className: 'custom-marker',
-      html: `<div style="
+    // Add custom CSS for markers with labels
+    const style = document.createElement('style');
+    style.textContent = `
+      .hotel-marker-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .hotel-marker-pin {
         background: hsl(var(--primary));
-        width: 32px;
-        height: 32px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         cursor: pointer;
-      "></div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-    });
+        transition: all 0.2s;
+      }
+      .hotel-marker-pin:hover {
+        transform: scale(1.3);
+        z-index: 1000;
+      }
+      .hotel-marker-label {
+        background: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        margin-top: 2px;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    `;
+    document.head.appendChild(style);
 
-    // Add markers for each hotel
+    // Add markers for each hotel with names
     const markers: L.Marker[] = [];
     hotelsWithCoords.forEach((hotel) => {
       if (!hotel.latitude || !hotel.longitude) return;
+
+      // Create custom marker with hotel name
+      const customIcon = L.divIcon({
+        className: 'custom-hotel-marker',
+        html: `
+          <div class="hotel-marker-container">
+            <div class="hotel-marker-pin"></div>
+            <div class="hotel-marker-label">${hotel.name}</div>
+          </div>
+        `,
+        iconSize: [100, 40],
+        iconAnchor: [50, 20],
+      });
 
       const marker = L.marker([Number(hotel.latitude), Number(hotel.longitude)], {
         icon: customIcon,
@@ -95,17 +130,25 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
       markers.push(marker);
     });
 
-    // Fit bounds to show all hotels
+    // Fit bounds to show all hotels if multiple exist in area
     if (hotelsWithCoords.length > 1) {
       const bounds = L.latLngBounds(
         hotelsWithCoords.map(h => [Number(h.latitude), Number(h.longitude)] as [number, number])
       );
-      map.current.fitBounds(bounds, { padding: [50, 50] });
+      map.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
     }
 
     // Cleanup
     return () => {
+      markers.forEach(marker => marker.remove());
       map.current?.remove();
+      // Remove custom styles
+      const styles = document.querySelectorAll('style');
+      styles.forEach(s => {
+        if (s.textContent?.includes('hotel-marker-container')) {
+          s.remove();
+        }
+      });
     };
   }, [hotels, onHotelClick]);
 
