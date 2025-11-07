@@ -21,6 +21,7 @@ interface Subscription {
   start_date: string;
   end_date: string;
   hotels: { name: string };
+  subscription_plans: { name: string; price: number };
 }
 
 interface SubscriptionPlan {
@@ -75,7 +76,7 @@ const SubscriptionsManagement = () => {
   const fetchSubscriptions = async () => {
     const { data } = await supabase
       .from('subscriptions')
-      .select('*, hotels(name)')
+      .select('*, hotels(name), subscription_plans(name, price)')
       .order('created_at', { ascending: false });
     setSubscriptions(data || []);
   };
@@ -282,7 +283,9 @@ const SubscriptionsManagement = () => {
                 <TableRow key={subscription.id}>
                   <TableCell className="font-medium">{subscription.hotels?.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{subscription.plan}</Badge>
+                    <Badge variant="outline">
+                      {subscription.subscription_plans?.name || subscription.plan || 'N/A'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={subscription.status === 'paid' ? 'default' : 'secondary'}>
