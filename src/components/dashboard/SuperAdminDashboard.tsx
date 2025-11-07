@@ -70,11 +70,26 @@ const SuperAdminDashboard = () => {
       const activeHotels = hotelsData?.filter(h => h.status === 'active').length || 0;
       const pendingHotels = hotelsData?.filter(h => h.status === 'pending').length || 0;
 
+      // Calculate total revenue from active subscriptions
+      const { data: subscriptionsData, error: subsError } = await supabase
+        .from('subscriptions')
+        .select('status, subscription_plans(price)')
+        .eq('status', 'completed')
+        .gte('end_date', new Date().toISOString());
+
+      if (subsError) {
+        console.error('Error fetching subscriptions:', subsError);
+      }
+
+      const totalRevenue = subscriptionsData?.reduce((sum, sub) => {
+        return sum + (sub.subscription_plans?.price || 0);
+      }, 0) || 0;
+
       setStats({
         totalHotels,
         activeHotels,
         pendingHotels,
-        totalRevenue: activeHotels * 99 // Mock revenue calculation
+        totalRevenue
       });
     } catch (error: any) {
       toast.error("Failed to load data");
