@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, MapPin, Star, Navigation, Search } from "lucide-react";
+import { Hotel, MapPin, Star, Navigation, Search, Menu } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { BookingLookup } from "@/components/BookingLookup";
 import {
   Pagination,
   PaginationContent,
@@ -46,6 +48,8 @@ const Hotels = () => {
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [bookingLookupOpen, setBookingLookupOpen] = useState(false);
 
   useEffect(() => {
     fetchHotels();
@@ -221,7 +225,9 @@ const Hotels = () => {
             <Link to="/" className="flex items-center gap-2">
               <span className="text-3xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
             </Link>
-            <div className="flex items-center gap-6">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
               <Link to="/hotels" className="text-sm font-medium hover:text-primary transition-colors">
                 Hotels
               </Link>
@@ -233,15 +239,81 @@ const Hotels = () => {
                   Register Hotel
                 </Button>
               </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBookingLookupOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Find My Booking
+              </Button>
               <Link to="/auth">
-                <Button className="bg-gradient-primary hover:opacity-90 transition-all" size="sm">
+                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
                   Login
                 </Button>
               </Link>
             </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex md:hidden items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBookingLookupOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Find My Booking</span>
+              </Button>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px]">
+                  <div className="flex flex-col gap-6 mt-8">
+                    <Link 
+                      to="/hotels" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Hotels
+                    </Link>
+                    <Link 
+                      to="/about" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      About Us
+                    </Link>
+                    <Link 
+                      to="/register-hotel"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button variant="outline" className="w-full justify-start">
+                        <Hotel className="h-4 w-4 mr-2" />
+                        Register Hotel
+                      </Button>
+                    </Link>
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant">
+                        Login
+                      </Button>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </nav>
+
+      <BookingLookup 
+        open={bookingLookupOpen} 
+        onOpenChange={setBookingLookupOpen}
+      />
 
       {/* Header */}
       <section className="pt-32 pb-16 px-4 md:px-6 bg-gradient-to-b from-primary/5 to-background">
