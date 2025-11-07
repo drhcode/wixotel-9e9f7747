@@ -67,7 +67,7 @@ const InvoicesManagement = () => {
   }, []);
 
   useEffect(() => {
-    if (formData.subscription_id) {
+    if (formData.subscription_id && formData.subscription_id !== "manual") {
       const sub = subscriptions.find(s => s.id === formData.subscription_id);
       if (sub) {
         setSelectedSubscription(sub);
@@ -282,14 +282,14 @@ const InvoicesManagement = () => {
               <div>
                 <Label>From Subscription (Optional)</Label>
                 <Select 
-                  value={formData.subscription_id} 
-                  onValueChange={(value) => setFormData({ ...formData, subscription_id: value })}
+                  value={formData.subscription_id || "manual"} 
+                  onValueChange={(value) => setFormData({ ...formData, subscription_id: value === "manual" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select subscription (or create manually)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None - Create manually</SelectItem>
+                    <SelectItem value="manual">None - Create manually</SelectItem>
                     {subscriptions.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.hotels.name} - {sub.subscription_plans.name}
@@ -304,7 +304,7 @@ const InvoicesManagement = () => {
                 <Select 
                   value={formData.hotel_id} 
                   onValueChange={(value) => setFormData({ ...formData, hotel_id: value })}
-                  disabled={!!formData.subscription_id}
+                  disabled={formData.subscription_id !== "" && formData.subscription_id !== "manual"}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select hotel" />
@@ -328,7 +328,7 @@ const InvoicesManagement = () => {
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     required
-                    disabled={!!formData.subscription_id}
+                    disabled={formData.subscription_id !== "" && formData.subscription_id !== "manual"}
                   />
                 </div>
                 <div>
@@ -354,7 +354,7 @@ const InvoicesManagement = () => {
                     value={formData.billing_period_start}
                     onChange={(e) => setFormData({ ...formData, billing_period_start: e.target.value })}
                     required
-                    disabled={!!formData.subscription_id}
+                    disabled={formData.subscription_id !== "" && formData.subscription_id !== "manual"}
                   />
                 </div>
                 <div>
@@ -364,7 +364,7 @@ const InvoicesManagement = () => {
                     value={formData.billing_period_end}
                     onChange={(e) => setFormData({ ...formData, billing_period_end: e.target.value })}
                     required
-                    disabled={!!formData.subscription_id}
+                    disabled={formData.subscription_id !== "" && formData.subscription_id !== "manual"}
                   />
                 </div>
               </div>
