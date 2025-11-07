@@ -1482,17 +1482,6 @@ const HotelPublicView = () => {
                           />
                         </div>
 
-                        <div className="text-sm text-muted-foreground bg-muted/50 px-4 py-3 rounded-md border border-border/50 flex items-start gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                          </svg>
-                          <p>
-                            Bookings have a 14-day free cancellation policy.
-                          </p>
-                        </div>
-
                         <div className="flex gap-3 pt-4">
                           <Button
                             type="button"

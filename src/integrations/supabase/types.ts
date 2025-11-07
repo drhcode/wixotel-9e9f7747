@@ -106,7 +106,7 @@ export type Database = {
           hotel_id: string
           id: string
           reason: string | null
-          requested_by: string | null
+          requested_by: string
           reviewed_by: string | null
           status: string
           updated_at: string | null
@@ -117,7 +117,7 @@ export type Database = {
           hotel_id: string
           id?: string
           reason?: string | null
-          requested_by?: string | null
+          requested_by: string
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
@@ -128,7 +128,7 @@ export type Database = {
           hotel_id?: string
           id?: string
           reason?: string | null
-          requested_by?: string | null
+          requested_by?: string
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null

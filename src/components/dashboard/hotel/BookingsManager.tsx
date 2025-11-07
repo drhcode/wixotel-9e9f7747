@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Search, Trash2, Upload, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
-import CancellationRequestsManager from "./CancellationRequestsManager";
 import {
   Pagination,
   PaginationContent,
@@ -255,8 +254,6 @@ const BookingsManager = ({ hotelId }: Props) => {
 
   return (
     <div className="space-y-6">
-      <CancellationRequestsManager hotelId={hotelId} />
-      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-2">Bookings Management</h2>

@@ -2,30 +2,18 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, MapPin, Users, CreditCard, ArrowLeft, Download, XCircle } from "lucide-react";
+import { Calendar, MapPin, Users, CreditCard, ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
 import jsPDF from "jspdf";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 export default function BookingDetails() {
   const { confirmationNumber } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -335,44 +323,6 @@ export default function BookingDetails() {
     toast.success("Booking details downloaded successfully");
   };
 
-  const canCancelForFree = () => {
-    if (!booking) return false;
-    const daysUntilCheckIn = differenceInDays(new Date(booking.check_in), new Date());
-    return daysUntilCheckIn >= 14;
-  };
-
-  const handleCancelBooking = async () => {
-    if (!booking) return;
-    
-    setCancelling(true);
-    try {
-      const { error } = await supabase
-        .from('cancellation_requests')
-        .insert({
-          booking_id: booking.id,
-          hotel_id: booking.hotel_id,
-          
-          status: 'pending',
-          reason: canCancelForFree() 
-            ? 'Free cancellation within 14-day policy window' 
-            : 'Cancellation request outside free cancellation window'
-        });
-
-      if (error) throw error;
-
-      toast.success("Cancellation request submitted. The hotel will review your request.");
-
-      setShowCancelDialog(false);
-      // Refresh page to show updated status
-      window.location.reload();
-    } catch (error: any) {
-      console.error('Cancellation error:', error);
-      toast.error("Failed to submit cancellation request");
-    } finally {
-      setCancelling(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
@@ -500,25 +450,6 @@ export default function BookingDetails() {
             )}
           </div>
 
-          {booking.status !== 'cancelled' && (
-            <div className="text-sm text-muted-foreground bg-muted/50 px-4 py-3 rounded-md border border-border/50 flex items-start gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <div>
-                <p className="font-medium mb-1">Cancellation Policy</p>
-                <p>
-                  Free cancellation up to 14 days before check-in. 
-                  {canCancelForFree() 
-                    ? " You can cancel this booking for free." 
-                    : " Cancellations within 14 days of check-in require hotel approval."}
-                </p>
-              </div>
-            </div>
-          )}
-
           <div className="flex gap-3 pt-4">
             <Button 
               onClick={handleDownloadPDF}
@@ -527,16 +458,6 @@ export default function BookingDetails() {
               <Download className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
-            {booking.status !== 'cancelled' && (
-              <Button 
-                variant="destructive" 
-                onClick={() => setShowCancelDialog(true)}
-                className="flex-1"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Cancel Booking
-              </Button>
-            )}
             <Button 
               variant="outline" 
               onClick={() => navigate("/")}
@@ -547,37 +468,6 @@ export default function BookingDetails() {
           </div>
         </Card>
       </div>
-
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Booking?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {canCancelForFree() ? (
-                <>
-                  This booking is eligible for free cancellation as it's more than 14 days before check-in.
-                  Your booking will be cancelled immediately with no charges.
-                </>
-              ) : (
-                <>
-                  This cancellation request is within 14 days of check-in and will require hotel approval.
-                  The hotel will review your request and contact you.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={cancelling}>Keep Booking</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelBooking}
-              disabled={cancelling}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {cancelling ? "Cancelling..." : "Confirm Cancellation"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
