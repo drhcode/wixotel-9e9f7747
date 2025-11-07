@@ -579,7 +579,7 @@ const HotelPublicView = () => {
                 className="flex items-center gap-2"
               >
                 <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">Find Booking</span>
+                <span className="text-xs sm:text-sm">Find Booking</span>
               </Button>
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
