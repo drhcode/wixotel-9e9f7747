@@ -360,6 +360,7 @@ const SuperAdminDashboard = () => {
                   { id: "earnings", label: "Earnings" },
                   { id: "plans", label: "Plans" },
                   { id: "subscriptions", label: "Subscriptions" },
+                  { id: "invoices", label: "Invoices" },
                   { id: "reservations", label: "Reservations" },
                   { id: "guests", label: "Guests" },
                   { id: "cancellations", label: "Cancellations" },
@@ -394,7 +395,7 @@ const SuperAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "hotels", "earnings", "plans", "subscriptions", "reservations", "guests", "cancellations", "support", "reviews", "smtp", "settings"].map((tab) => (
+                {["overview", "hotels", "earnings", "plans", "subscriptions", "invoices", "reservations", "guests", "cancellations", "support", "reviews", "smtp", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
