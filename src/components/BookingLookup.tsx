@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
+import { QRCodeCanvas } from "qrcode.react";
 
 interface BookingLookupProps {
   open: boolean;
@@ -71,6 +72,11 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
 
   const handleDownloadPDF = () => {
     if (!booking) return;
+
+    // Generate QR code
+    const bookingUrl = `${window.location.origin}/booking/${booking.confirmation_number}`;
+    const qrCanvas = document.getElementById('qr-code-canvas') as HTMLCanvasElement;
+    const qrDataUrl = qrCanvas?.toDataURL('image/png');
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -197,6 +203,20 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
       doc.text(splitNotes, 20, yPosition);
     }
 
+    // Add QR Code if available
+    if (qrDataUrl) {
+      yPosition += 15;
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Scan QR Code to View Booking", 20, yPosition);
+      yPosition += 10;
+      
+      // Add QR code image centered
+      const qrSize = 50;
+      const qrX = (pageWidth - qrSize) / 2;
+      doc.addImage(qrDataUrl, 'PNG', qrX, yPosition, qrSize, qrSize);
+    }
+
     // Footer
     yPosition = doc.internal.pageSize.getHeight() - 20;
     doc.setFontSize(10);
@@ -248,6 +268,15 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
 
           {booking && (
             <div className="space-y-4 border-t pt-6">
+              {/* Hidden QR Code for PDF generation */}
+              <div className="hidden">
+                <QRCodeCanvas
+                  id="qr-code-canvas"
+                  value={`${window.location.origin}/booking/${booking.confirmation_number}`}
+                  size={256}
+                  level="H"
+                />
+              </div>
               <div className="bg-gradient-primary p-4 rounded-lg text-white">
                 <div className="flex items-center justify-between mb-3">
                   <div>
