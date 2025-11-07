@@ -76,7 +76,8 @@ const EarningsManager = () => {
         .select(`
           *,
           hotels:hotel_id (name)
-        `);
+        `)
+        .not('lead_id', 'is', null); // Only show earnings from leads (not manual reservations)
 
       // Apply hotel filter
       if (selectedHotel !== "all") {
@@ -279,7 +280,7 @@ const EarningsManager = () => {
         <CardHeader>
           <CardTitle className="text-lg lg:text-xl">Commission Breakdown</CardTitle>
           <CardDescription className="text-sm">
-            8% commission from all booking requests - transparent for hotels
+            8% commission from lead-based bookings only (manual reservations excluded)
           </CardDescription>
         </CardHeader>
         <CardContent>
