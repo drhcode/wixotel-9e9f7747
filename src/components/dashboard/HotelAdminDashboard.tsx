@@ -42,6 +42,15 @@ const HotelAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
 
+  // Read section from URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get('section');
+    if (section) {
+      setActiveTab(section);
+    }
+  }, []);
+
   useEffect(() => {
     fetchHotelData();
   }, []);
@@ -352,6 +361,7 @@ const HotelAdminDashboard = () => {
                   { id: "guests", label: "Guests" },
                   { id: "leads", label: "Leads" },
                   { id: "earnings", label: "Earnings" },
+                  { id: "invoices", label: "Invoices" },
                   { id: "support", label: "Support" },
                   { id: "settings", label: "Settings" },
                 ].map((tab) => (
@@ -389,7 +399,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "notifications", "calendar", "ical", "conflicts", "rooms", "bookings", "guests", "leads", "earnings", "support", "settings"].map((tab) => (
+                {["overview", "notifications", "calendar", "ical", "conflicts", "rooms", "bookings", "guests", "leads", "earnings", "invoices", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
