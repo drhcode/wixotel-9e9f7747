@@ -48,6 +48,7 @@ import "react-phone-number-input/style.css";
 import { cn } from "@/lib/utils";
 import { ReviewModal } from "@/components/hotel/ReviewModal";
 import { BookingLookup } from "@/components/BookingLookup";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
 import wixotelLogo from "@/assets/wixotel-logo.png";
@@ -1481,6 +1482,13 @@ const HotelPublicView = () => {
                             required
                           />
                         </div>
+
+                        <Alert className="bg-primary/5 border-primary/20">
+                          <AlertDescription className="text-sm">
+                            <strong className="font-semibold">Free Cancellation Policy:</strong> Cancel free of charge up to 14 days before check-in. 
+                            For cancellations, contact the hotel directly or email <a href="mailto:cancel@wixotel.com" className="underline hover:text-primary">cancel@wixotel.com</a> with your confirmation number.
+                          </AlertDescription>
+                        </Alert>
 
                         <div className="flex gap-3 pt-4">
                           <Button
