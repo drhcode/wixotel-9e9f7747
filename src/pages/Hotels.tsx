@@ -15,7 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import HotelsMap from "@/components/HotelsMap";
+import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 
 interface PublicHotel {
   id: string;
@@ -401,7 +401,7 @@ const Hotels = () => {
                 {/* Map - Sticky */}
                 <div className="hidden lg:block">
                   <div className="sticky top-24 h-[calc(100vh-200px)] rounded-lg overflow-hidden shadow-elegant border border-border/50">
-                    <HotelsMap 
+                    <HotelsLeafletMap 
                       hotels={filteredHotels}
                       onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
                     />

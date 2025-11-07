@@ -10,6 +10,7 @@ import heroImage from "@/assets/hotel-hero.jpg";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 
 
 interface PublicHotel {
@@ -537,8 +538,10 @@ const Landing = () => {
               </Button>
             </div>
 
-            {/* Hotels Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {/* Hotels Grid with Map */}
+            <div className="grid lg:grid-cols-[1fr,550px] gap-8 mb-12">
+              {/* Hotels List - 2 per row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
               {filteredHotels.slice(0, 6).map((hotel) => (
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
                   <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
@@ -605,6 +608,17 @@ const Landing = () => {
                   </Card>
                 </Link>
               ))}
+              </div>
+
+              {/* Map - Sticky on desktop */}
+              <div className="hidden lg:block">
+                <div className="sticky top-24 h-[600px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+                  <HotelsLeafletMap 
+                    hotels={filteredHotels}
+                    onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
+                  />
+                </div>
+              </div>
             </div>
 
             {filteredHotels.length > 6 && (
