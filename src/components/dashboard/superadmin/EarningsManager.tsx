@@ -75,9 +75,9 @@ const EarningsManager = () => {
         .from("earnings")
         .select(`
           *,
-          hotels:hotel_id (name)
+          hotels:hotel_id (name),
+          bookings:booking_id (source)
         `)
-        .not('lead_id', 'is', null); // Only show earnings from leads (not manual reservations)
 
       // Apply hotel filter
       if (selectedHotel !== "all") {
@@ -101,18 +101,21 @@ const EarningsManager = () => {
 
       if (error) throw error;
 
-      setEarnings(data || []);
+      // Filter to only show earnings from lead-based bookings (source='lead')
+      const leadEarnings = data?.filter(e => e.bookings?.source === 'lead') || [];
 
-      // Calculate stats
-      const totalEarnings = data?.reduce((sum, e) => sum + Number(e.commission_amount), 0) || 0;
-      const pendingEarnings = data?.filter(e => e.status === 'pending').reduce((sum, e) => sum + Number(e.commission_amount), 0) || 0;
-      const completedEarnings = data?.filter(e => e.status === 'completed').reduce((sum, e) => sum + Number(e.commission_amount), 0) || 0;
+      setEarnings(leadEarnings);
+
+      // Calculate stats from lead-based earnings only
+      const totalEarnings = leadEarnings.reduce((sum, e) => sum + Number(e.commission_amount), 0);
+      const pendingEarnings = leadEarnings.filter(e => e.status === 'pending').reduce((sum, e) => sum + Number(e.commission_amount), 0);
+      const completedEarnings = leadEarnings.filter(e => e.status === 'completed').reduce((sum, e) => sum + Number(e.commission_amount), 0);
       
       setStats({
         totalEarnings,
         pendingEarnings,
         completedEarnings,
-        totalBookings: data?.length || 0,
+        totalBookings: leadEarnings.length,
       });
     } catch (error: any) {
       toast.error("Failed to load earnings");
