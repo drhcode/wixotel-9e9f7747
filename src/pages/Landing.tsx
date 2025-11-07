@@ -610,9 +610,9 @@ const Landing = () => {
               ))}
               </div>
 
-              {/* Map - Fixed height to match 4 hotels (2 rows) */}
-              <div className="hidden lg:block">
-                <div className="h-[720px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+              {/* Map - Visible on all devices */}
+              <div className="w-full">
+                <div className="h-[400px] lg:h-[720px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
                   <HotelsLeafletMap 
                     hotels={filteredHotels}
                     onHotelClick={(slug) => navigate(`/hotel/${slug}`)}

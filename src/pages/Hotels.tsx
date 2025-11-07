@@ -398,9 +398,9 @@ const Hotels = () => {
                 ))}
                 </div>
 
-                {/* Map - Sticky */}
-                <div className="hidden lg:block">
-                  <div className="sticky top-24 h-[calc(100vh-200px)] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+                {/* Map - Visible on all devices, sticky on desktop */}
+                <div className="w-full">
+                  <div className="h-[400px] lg:h-[calc(100vh-200px)] lg:sticky lg:top-24 rounded-lg overflow-hidden shadow-elegant border border-border/50">
                     <HotelsLeafletMap 
                       hotels={filteredHotels}
                       onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
