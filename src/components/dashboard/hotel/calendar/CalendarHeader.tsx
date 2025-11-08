@@ -34,12 +34,10 @@ export const CalendarHeader = ({ onNewReservation, onSyncIcal, isSyncing }: Cale
           className="w-full sm:w-auto justify-center whitespace-nowrap gap-1.5"
         >
           <RefreshCw className={`h-4 w-4 flex-shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">Sync</span>
-          <span className="sm:hidden">Sync iCal</span>
-          <span className="mx-1 hidden sm:inline">-</span>
-          <div className="flex items-center gap-1">
-            <AirbnbIcon />
+          <span>Sync Booking & Airbnb</span>
+          <div className="flex items-center gap-1 ml-1">
             <BookingIcon />
+            <AirbnbIcon />
           </div>
         </Button>
         <Button onClick={onNewReservation} className="w-full sm:w-auto whitespace-nowrap">
