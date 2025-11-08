@@ -22,6 +22,8 @@ export default {
     },
     extend: {
       fontFamily: {
+        'sans': ['Poppins', 'sans-serif'],
+        'poppins': ['Poppins', 'sans-serif'],
         'playfair': ['Playfair Display', 'serif'],
         'batangas': ['Batangas', 'sans-serif'],
       },
