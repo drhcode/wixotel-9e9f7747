@@ -49,7 +49,7 @@ const HotelAdminDashboard = () => {
     if (section) {
       setActiveTab(section);
     }
-  }, []);
+  }, [window.location.search]);
 
   useEffect(() => {
     fetchHotelData();
@@ -291,7 +291,7 @@ const HotelAdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return <HotelOverview key={refreshKey} hotelId={hotel.id} />;
+        return <HotelOverview key={refreshKey} hotelId={hotel.id} onNavigateToSection={setActiveTab} />;
       case "calendar":
         return <CalendarManager key={refreshKey} hotelId={hotel.id} />;
       case "ical":

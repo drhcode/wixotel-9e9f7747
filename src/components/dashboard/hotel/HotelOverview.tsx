@@ -16,6 +16,7 @@ const isMobileSafari =
 
 interface Props {
   hotelId: string;
+  onNavigateToSection?: (section: string) => void;
 }
 
 interface AnalyticsSummary {
@@ -29,7 +30,7 @@ interface AnalyticsSummary {
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
-const HotelOverview = ({ hotelId }: Props) => {
+const HotelOverview = ({ hotelId, onNavigateToSection }: Props) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalRooms: 0,
@@ -287,7 +288,7 @@ const HotelOverview = ({ hotelId }: Props) => {
 
         <Card 
           className="cursor-pointer hover:shadow-lg transition-shadow border-destructive/50 bg-destructive/5"
-          onClick={() => navigate('/dashboard?section=invoices')}
+          onClick={() => onNavigateToSection?.('invoices')}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Unpaid Invoices</CardTitle>
