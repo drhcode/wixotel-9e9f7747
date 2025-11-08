@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText, CreditCard, Check } from "lucide-react";
+import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText, CreditCard, Check, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, startOfDay, endOfDay, startOfMonth, differenceInDays } from "date-fns";
@@ -291,7 +291,7 @@ const HotelOverview = ({ hotelId }: Props) => {
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Unpaid Invoices</CardTitle>
-            <FileText className="h-4 w-4 text-destructive" />
+            <Download className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-destructive">{unpaidInvoices.count}</div>
