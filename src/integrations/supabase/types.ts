@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      backup_logs: {
+        Row: {
+          backup_type: string
+          created_at: string
+          created_by: string
+          file_path: string
+          file_size: number | null
+          id: string
+          notes: string | null
+          status: string
+          tables_included: string[]
+        }
+        Insert: {
+          backup_type?: string
+          created_at?: string
+          created_by: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tables_included: string[]
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string
+          created_by?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tables_included?: string[]
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           check_in: string

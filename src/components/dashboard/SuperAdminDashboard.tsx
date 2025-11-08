@@ -22,6 +22,7 @@ import ReviewsManagement from "./superadmin/ReviewsManagement";
 import EarningsManager from "./superadmin/EarningsManager";
 import CancellationRequests from "./superadmin/CancellationRequests";
 import { SuperAdminSettings } from "./superadmin/SuperAdminSettings";
+import { BackupManager } from "./superadmin/BackupManager";
 
 interface Hotel {
   id: string;
@@ -349,6 +350,8 @@ const SuperAdminDashboard = () => {
         return <ReviewsManagement key={refreshKey} />;
       case "smtp":
         return <SmtpSettings key={refreshKey} />;
+      case "backups":
+        return <BackupManager key={refreshKey} />;
       case "settings":
         return <SuperAdminSettings key={refreshKey} />;
       default:
@@ -399,6 +402,7 @@ const SuperAdminDashboard = () => {
                   { id: "support", label: "Support" },
                   { id: "reviews", label: "Reviews" },
                   { id: "smtp", label: "Email Settings" },
+                  { id: "backups", label: "Backups" },
                   { id: "settings", label: "Settings" },
                 ].map((tab) => (
                   <Button
