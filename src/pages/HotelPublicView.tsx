@@ -1469,10 +1469,13 @@ const HotelPublicView = () => {
 
       {/* Room Details Dialog */}
       <Dialog open={!!selectedRoom} onOpenChange={(open) => !open && setSelectedRoom(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95vw] sm:w-full">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedRoom && (
             <>
-              <div className="space-y-6 px-4 sm:px-6">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{cleanRoomName(selectedRoom.name)}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
                 {((selectedRoom.images && selectedRoom.images.length > 0) || selectedRoom.main_photo_url) && (
                   <div className="relative rounded-lg overflow-hidden">
                     {selectedRoom.images && selectedRoom.images.length > 0 ? (
@@ -1515,55 +1518,60 @@ const HotelPublicView = () => {
                   </div>
                 )}
 
-                <div className="text-center space-y-3">
-                  {selectedRoom.room_type && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-1">Room Type</h4>
-                      <p className="text-lg">{selectedRoom.room_type}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-center">
-                  <Card className="border-border/50 bg-accent/50 w-full max-w-md">
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="flex items-center justify-center gap-3">
-                        <Users className="h-5 w-5 text-primary" />
-                        <div className="text-center">
-                          <div className="text-sm text-muted-foreground">Capacity</div>
-                          <div className="font-medium">Up to {selectedRoom.capacity} guests</div>
-                        </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    {selectedRoom.room_type && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-muted-foreground mb-1">Room Type</h4>
+                        <p className="text-lg">{selectedRoom.room_type}</p>
                       </div>
-                      {selectedRoom.square_meters && (
-                        <div className="flex items-center justify-center gap-3">
-                          <Home className="h-5 w-5 text-primary" />
-                          <div className="text-center">
-                            <div className="text-sm text-muted-foreground">Room Size</div>
-                            <div className="font-medium">{selectedRoom.square_meters} m²</div>
+                    )}
+                    {selectedRoom.description && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-muted-foreground mb-1">Description</h4>
+                        <p className="text-muted-foreground leading-relaxed">{selectedRoom.description}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <Card className="border-border/50 bg-accent/50">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Users className="h-5 w-5 text-primary" />
+                            <div>
+                              <div className="text-sm text-muted-foreground">Capacity</div>
+                              <div className="font-medium">Up to {selectedRoom.capacity} guests</div>
+                            </div>
                           </div>
                         </div>
-                      )}
-                      <div className="pt-4 border-t text-center">
-                        <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                          €{selectedRoom.price}
+                        {selectedRoom.square_meters && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Home className="h-5 w-5 text-primary" />
+                              <div>
+                                <div className="text-sm text-muted-foreground">Room Size</div>
+                                <div className="font-medium">{selectedRoom.square_meters} m²</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="pt-4 border-t">
+                          <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                            €{selectedRoom.price}
+                          </div>
+                          <div className="text-sm text-muted-foreground">per night</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">per night</div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
 
-                {selectedRoom.description && (
-                  <div className="text-center max-w-2xl mx-auto">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">Description</h4>
-                    <p className="text-muted-foreground leading-relaxed">{selectedRoom.description}</p>
-                  </div>
-                )}
-
                 {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
-                  <div className="text-center">
+                  <div>
                     <h4 className="font-semibold mb-3">Room Amenities</h4>
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <div className="flex flex-wrap gap-2">
                       {selectedRoom.amenities.map((amenity, index) => (
                         <Badge key={index} variant="secondary" className="text-sm">
                           {amenity}
@@ -1574,12 +1582,12 @@ const HotelPublicView = () => {
                 )}
 
                 {!bookingRequestMode ? (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
-                    <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1 sm:max-w-xs">
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1">
                       Close
                     </Button>
                     <Button
-                      className="flex-1 sm:max-w-xs bg-gradient-primary hover:opacity-90 shadow-elegant"
+                      className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
                       onClick={() => {
                         setBookingRequestMode(true);
                         setIsRoomAvailable(true);
@@ -1601,13 +1609,13 @@ const HotelPublicView = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Card className="border-primary/20 bg-primary/5 max-w-2xl mx-auto" data-booking-form>
-                    <CardContent className="pt-6 px-3 sm:px-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
-                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <Card className="border-primary/20 bg-primary/5" data-booking-form>
+                    <CardContent className="pt-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-primary" />
                         Booking Request
                       </h4>
-                      <form onSubmit={handleBookingRequest} className="space-y-4 max-w-full overflow-hidden">
+                      <form onSubmit={handleBookingRequest} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckIn" className="text-sm sm:text-base">Check-in Date *</Label>
@@ -1751,16 +1759,14 @@ const HotelPublicView = () => {
 
                         <div className="space-y-2">
                           <Label htmlFor="bookingPhone" className="text-sm sm:text-base">Phone *</Label>
-                          <div className="w-full max-w-full">
-                            <PhoneInput
-                              international
-                              defaultCountry={userCountry as any}
-                              value={bookingRequest.phone}
-                              onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
-                              className="flex h-10 w-full max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              required
-                            />
-                          </div>
+                          <PhoneInput
+                            international
+                            defaultCountry={userCountry as any}
+                            value={bookingRequest.phone}
+                            onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            required
+                          />
                         </div>
 
                         <div className="space-y-2">
@@ -1832,32 +1838,30 @@ const HotelPublicView = () => {
                         </div>
 
                         {otpStep === "otp" && (
-                          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg overflow-hidden">
-                            <CardContent className="pt-4 sm:pt-6 space-y-4 px-2 sm:px-6">
+                          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg">
+                            <CardContent className="pt-4 sm:pt-6 space-y-4">
                               <div className="space-y-3 text-center">
                                 <Label className="text-base sm:text-lg font-semibold">Enter Verification Code</Label>
-                                <p className="text-xs sm:text-sm text-muted-foreground px-2 break-words">
-                                  We sent a 6-digit code to<br className="sm:hidden" /> <span className="font-medium text-foreground break-all">{bookingRequest.email}</span>
+                                <p className="text-xs sm:text-sm text-muted-foreground px-2">
+                                  We sent a 6-digit code to<br className="sm:hidden" /> <span className="font-medium text-foreground">{bookingRequest.email}</span>
                                 </p>
                               </div>
-                              <div className="flex justify-center py-2 overflow-x-auto">
-                                <div className="inline-flex">
-                                  <InputOTP
-                                    maxLength={6}
-                                    value={otpCode}
-                                    onChange={(value) => setOtpCode(value)}
-                                    className="gap-1 sm:gap-2"
-                                  >
-                                    <InputOTPGroup className="gap-1 sm:gap-2">
-                                      <InputOTPSlot index={0} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                      <InputOTPSlot index={1} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                      <InputOTPSlot index={2} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                      <InputOTPSlot index={3} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                      <InputOTPSlot index={4} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                      <InputOTPSlot index={5} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    </InputOTPGroup>
-                                  </InputOTP>
-                                </div>
+                              <div className="flex justify-center py-2">
+                                <InputOTP
+                                  maxLength={6}
+                                  value={otpCode}
+                                  onChange={(value) => setOtpCode(value)}
+                                  className="gap-2 sm:gap-3"
+                                >
+                                  <InputOTPGroup className="gap-2 sm:gap-3">
+                                    <InputOTPSlot index={0} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={1} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={2} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={3} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={4} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={5} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                  </InputOTPGroup>
+                                </InputOTP>
                               </div>
                               <div className="flex flex-col sm:flex-row gap-2">
                                 <Button
