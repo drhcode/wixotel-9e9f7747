@@ -109,25 +109,7 @@ serve(async (req) => {
     }
 
     // Build email content
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Verify Your Booking Request</h2>
-        <p>Hello,</p>
-        <p>You requested to book at <strong>${hotel.name}</strong>. Please use the verification code below to complete your booking request:</p>
-        
-        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin: 25px 0; text-align: center;">
-          <p style="margin: 0 0 8px 0; font-weight: 600;">Your Verification Code</p>
-          <p style="margin: 0; font-size: 32px; font-weight: 700; font-family: monospace; letter-spacing: 8px;">${otpCode}</p>
-          <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">This code expires in 10 minutes</p>
-        </div>
-        
-        <p>If you didn't request this code, please ignore this email.</p>
-        
-        <p style="color: #666; font-size: 12px; margin-top: 30px;">
-          This is an automated message from ${hotel.name}. Please do not reply to this email.
-        </p>
-      </div>
-    `;
+    const htmlContent = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><h2 style="color: #333;">Verify Your Booking Request</h2><p>Hello,</p><p>You requested to book at <strong>${hotel.name}</strong>. Please use the verification code below to complete your booking request:</p><div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin: 25px 0; text-align: center;"><p style="margin: 0 0 8px 0; font-weight: 600;">Your Verification Code</p><p style="margin: 0; font-size: 32px; font-weight: 700; font-family: monospace; letter-spacing: 8px;">${otpCode}</p><p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">This code expires in 10 minutes</p></div><p>If you didn't request this code, please ignore this email.</p><p style="color: #666; font-size: 12px; margin-top: 30px;">This is an automated message from ${hotel.name}. Please do not reply to this email.</p></div>`;
 
     // Initialize SMTP client
     const useTLS = smtpSettings.port === 465;
