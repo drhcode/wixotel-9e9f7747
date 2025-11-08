@@ -1472,9 +1472,6 @@ const HotelPublicView = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95vw] sm:w-full">
           {selectedRoom && (
             <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl">{cleanRoomName(selectedRoom.name)}</DialogTitle>
-              </DialogHeader>
               <div className="space-y-6">
                 {((selectedRoom.images && selectedRoom.images.length > 0) || selectedRoom.main_photo_url) && (
                   <div className="relative rounded-lg overflow-hidden">
@@ -1519,7 +1516,7 @@ const HotelPublicView = () => {
                 )}
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-center md:text-left">
                     {selectedRoom.room_type && (
                       <div>
                         <h4 className="text-sm font-semibold text-muted-foreground mb-1">Room Type</h4>
@@ -1534,8 +1531,8 @@ const HotelPublicView = () => {
                     )}
                   </div>
 
-                  <div className="space-y-4">
-                    <Card className="border-border/50 bg-accent/50">
+                  <div className="space-y-4 flex justify-center md:justify-end">
+                    <Card className="border-border/50 bg-accent/50 w-full">
                       <CardContent className="pt-6 space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -1569,9 +1566,9 @@ const HotelPublicView = () => {
                 </div>
 
                 {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
-                  <div>
+                  <div className="text-center md:text-left">
                     <h4 className="font-semibold mb-3">Room Amenities</h4>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                       {selectedRoom.amenities.map((amenity, index) => (
                         <Badge key={index} variant="secondary" className="text-sm">
                           {amenity}
@@ -1582,12 +1579,12 @@ const HotelPublicView = () => {
                 )}
 
                 {!bookingRequestMode ? (
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
+                    <Button variant="outline" onClick={() => setSelectedRoom(null)} className="flex-1 sm:max-w-xs">
                       Close
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
+                      className="flex-1 sm:max-w-xs bg-gradient-primary hover:opacity-90 shadow-elegant"
                       onClick={() => {
                         setBookingRequestMode(true);
                         setIsRoomAvailable(true);
