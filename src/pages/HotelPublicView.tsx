@@ -153,6 +153,12 @@ const HotelPublicView = () => {
     message: z.string().max(1000).optional(),
   });
 
+  // Helper function to remove room number prefix from room name
+  const cleanRoomName = (name: string) => {
+    // Remove pattern like "105 - " or "A1 - " from the beginning
+    return name.replace(/^[A-Z0-9]+\s*-\s*/i, "").trim();
+  };
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -692,7 +698,7 @@ const HotelPublicView = () => {
                     {room.main_photo_url ? (
                       <img
                         src={room.main_photo_url}
-                        alt={room.name}
+                        alt={cleanRoomName(room.name)}
                         className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
@@ -707,7 +713,9 @@ const HotelPublicView = () => {
                     )}
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{room.name}</CardTitle>
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      {cleanRoomName(room.name)}
+                    </CardTitle>
                     {room.room_type && <CardDescription className="text-base">{room.room_type}</CardDescription>}
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col">
@@ -1305,7 +1313,7 @@ const HotelPublicView = () => {
           {selectedRoom && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedRoom.name}</DialogTitle>
+                <DialogTitle className="text-2xl">{cleanRoomName(selectedRoom.name)}</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
                 {((selectedRoom.images && selectedRoom.images.length > 0) || selectedRoom.main_photo_url) && (
@@ -1318,7 +1326,7 @@ const HotelPublicView = () => {
                               <div className="relative">
                                 <img
                                   src={image}
-                                  alt={`${selectedRoom.name} - Image ${index + 1}`}
+                                  alt={`${cleanRoomName(selectedRoom.name)} - Image ${index + 1}`}
                                   className="w-full h-72 object-cover"
                                 />
                                 {selectedRoom.room_number && index === 0 && (
@@ -1337,7 +1345,7 @@ const HotelPublicView = () => {
                       <div className="relative">
                         <img
                           src={selectedRoom.main_photo_url!}
-                          alt={selectedRoom.name}
+                          alt={cleanRoomName(selectedRoom.name)}
                           className="w-full h-72 object-cover"
                         />
                         {selectedRoom.room_number && (
