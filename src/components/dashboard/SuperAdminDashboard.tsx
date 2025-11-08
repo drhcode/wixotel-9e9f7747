@@ -33,6 +33,7 @@ interface Hotel {
   subscription_plan: string;
   created_at: string;
   allow_data_clear: boolean;
+  subscription_plans?: { name: string; price: number };
 }
 
 interface Stats {
@@ -58,8 +59,8 @@ const SuperAdminDashboard = () => {
     try {
       const { data: hotelsData, error: hotelsError } = await supabase
         .from('hotels')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*, subscription_plans(name, price)')
+        .order('created_at', { ascending: false});
 
       if (hotelsError) throw hotelsError;
 
@@ -257,7 +258,11 @@ const SuperAdminDashboard = () => {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(hotel.status)}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{getPlanBadge(hotel.subscription_plan)}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <Badge variant="outline">
+                            {hotel.subscription_plans?.name || hotel.subscription_plan}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="hidden xl:table-cell">
                           <div className="flex items-center gap-2">
                             <Switch

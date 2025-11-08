@@ -126,14 +126,19 @@ const RoomsManager = ({ hotelId }: Props) => {
     try {
       const { data, error } = await supabase
         .from('hotels')
-        .select('subscription_plan')
+        .select('plan_id, subscription_plans(name)')
         .eq('id', hotelId)
         .single();
 
       if (error) throw error;
-      setHotelPlan(data.subscription_plan);
+      
+      // Get the plan name from the joined subscription_plans table
+      const planName = data?.subscription_plans?.name?.toLowerCase() || 'basic';
+      setHotelPlan(planName);
     } catch (error: any) {
       console.error(error);
+      // Default to basic if there's an error
+      setHotelPlan('basic');
     }
   };
 
