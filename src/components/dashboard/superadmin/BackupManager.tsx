@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Database, Loader2, Trash2, FileJson } from "lucide-react";
+import { Download, Database, Loader2, Trash2, FileJson, Upload, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +56,11 @@ export const BackupManager = () => {
   const [selectedTables, setSelectedTables] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [selectAll, setSelectAll] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [restoreMode, setRestoreMode] = useState<"merge" | "replace">("merge");
+  const [restoreTables, setRestoreTables] = useState<string[]>([]);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch backup logs
   const { data: backupLogs, isLoading: logsLoading } = useQuery({
@@ -107,6 +114,54 @@ export const BackupManager = () => {
     onError: (error: Error) => {
       toast({
         title: "Backup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Restore backup mutation
+  const restoreBackupMutation = useMutation({
+    mutationFn: async ({ backupData, selectedTables, mode }: { 
+      backupData: any; 
+      selectedTables: string[]; 
+      mode: "merge" | "replace" 
+    }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/restore-backup`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ backupData, selectedTables, mode }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to restore backup");
+      }
+
+      return response.json();
+    },
+    onSuccess: (result) => {
+      toast({
+        title: "Restore Completed",
+        description: result.message,
+      });
+      setShowRestoreDialog(false);
+      setRestoreFile(null);
+      setRestoreTables([]);
+      queryClient.invalidateQueries({ queryKey: ["backup-logs"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Restore Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -196,6 +251,61 @@ export const BackupManager = () => {
     }
   };
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".json")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select a JSON backup file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRestoreFile(file);
+    
+    // Parse file to get available tables
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (data.data) {
+        setRestoreTables(Object.keys(data.data));
+        setShowRestoreDialog(true);
+      }
+    } catch (error) {
+      toast({
+        title: "Invalid Backup File",
+        description: "Could not parse backup file",
+        variant: "destructive",
+      });
+      setRestoreFile(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoreFile) return;
+
+    try {
+      const text = await restoreFile.text();
+      const backupData = JSON.parse(text);
+      
+      restoreBackupMutation.mutate({
+        backupData,
+        selectedTables: restoreTables,
+        mode: restoreMode,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to read backup file",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -206,6 +316,155 @@ export const BackupManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Restore from Backup Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Restore from Backup
+          </CardTitle>
+          <CardDescription>
+            Upload a JSON backup file to restore your database. You can restore all tables or select specific ones.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={restoreBackupMutation.isPending}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Select Backup File
+            </Button>
+            {restoreFile && (
+              <span className="text-sm text-muted-foreground">
+                Selected: {restoreFile.name}
+              </span>
+            )}
+          </div>
+
+          {restoreFile && (
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+              <div className="flex items-start gap-2 text-warning">
+                <AlertTriangle className="h-5 w-5 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Warning: This will modify your database</p>
+                  <p className="text-xs text-muted-foreground">
+                    Make sure you have a recent backup before proceeding. This action cannot be easily undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Restore Dialog */}
+      <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Database from Backup</AlertDialogTitle>
+            <AlertDialogDescription>
+              Configure restore options for: {restoreFile?.name}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Restore Mode</Label>
+              <RadioGroup value={restoreMode} onValueChange={(v) => setRestoreMode(v as "merge" | "replace")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="merge" id="merge" />
+                  <Label htmlFor="merge" className="font-normal cursor-pointer">
+                    <div>
+                      <div className="font-medium">Merge (Recommended)</div>
+                      <div className="text-xs text-muted-foreground">
+                        Add new records without deleting existing data. May cause conflicts if IDs already exist.
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="replace" id="replace" />
+                  <Label htmlFor="replace" className="font-normal cursor-pointer">
+                    <div>
+                      <div className="font-medium text-destructive">Replace (Dangerous)</div>
+                      <div className="text-xs text-muted-foreground">
+                        Delete all existing data in selected tables before restoring. This cannot be undone!
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tables to Restore ({restoreTables.length} available)</Label>
+              <ScrollArea className="h-[200px] border rounded-md p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {restoreTables.map((table) => (
+                    <div key={table} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`restore-${table}`}
+                        checked={true}
+                        disabled
+                      />
+                      <Label htmlFor={`restore-${table}`} className="text-sm">
+                        {table}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground">
+                All tables from the backup will be restored. Future updates may allow selective restore.
+              </p>
+            </div>
+
+            {restoreBackupMutation.isPending && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Restoring...</span>
+                  <span>Please wait</span>
+                </div>
+                <Progress value={undefined} className="w-full" />
+              </div>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={restoreBackupMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestore}
+              disabled={restoreBackupMutation.isPending}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {restoreBackupMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Restoring...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2 h-4 w-4" />
+                  Restore Backup
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
