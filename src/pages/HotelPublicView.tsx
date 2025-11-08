@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -147,6 +148,12 @@ const HotelPublicView = () => {
   });
   const [bookingCheckInOpen, setBookingCheckInOpen] = useState(false);
   const [bookingCheckOutOpen, setBookingCheckOutOpen] = useState(false);
+  
+  // OTP verification state
+  const [otpStep, setOtpStep] = useState<"form" | "otp" | "verified">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const leadSchema = z.object({
     fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -285,9 +292,86 @@ const HotelPublicView = () => {
     }
   };
 
+  const sendOtpCode = async () => {
+    if (!hotel || !bookingRequest.email) {
+      toast.error("Please enter your email first");
+      return;
+    }
+
+    try {
+      setSendingOtp(true);
+
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: {
+          email: bookingRequest.email,
+          hotel_id: hotel.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success("Verification code sent to your email!");
+      setOtpStep("otp");
+    } catch (error: any) {
+      console.error("Error sending OTP:", error);
+      toast.error("Failed to send verification code. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const verifyOtpCode = async () => {
+    if (!hotel || !bookingRequest.email || otpCode.length !== 6) {
+      toast.error("Please enter the 6-digit code");
+      return;
+    }
+
+    try {
+      setVerifyingOtp(true);
+
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: {
+          email: bookingRequest.email,
+          hotel_id: hotel.id,
+          otp_code: otpCode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast.error(data.error);
+        setOtpCode("");
+        return;
+      }
+
+      if (data?.verified) {
+        toast.success("Email verified successfully!");
+        setOtpStep("verified");
+      }
+    } catch (error: any) {
+      console.error("Error verifying OTP:", error);
+      toast.error("Failed to verify code. Please try again.");
+      setOtpCode("");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const handleBookingRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hotel || !selectedRoom) return;
+
+    // Check if email is verified
+    if (otpStep !== "verified") {
+      toast.error("Please verify your email first");
+      return;
+    }
 
     try {
       setSubmittingLead(true);
@@ -406,6 +490,8 @@ const HotelPublicView = () => {
       setBookingRequest({ checkIn: undefined, checkOut: undefined, fullName: "", email: "", phone: "", guests: 1 });
       setBookingRequestMode(false);
       setSelectedRoom(null);
+      setOtpStep("form");
+      setOtpCode("");
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
@@ -1696,15 +1782,115 @@ const HotelPublicView = () => {
 
                         <div className="space-y-2">
                           <Label htmlFor="bookingEmail">Email *</Label>
-                          <Input
-                            id="bookingEmail"
-                            type="email"
-                            value={bookingRequest.email}
-                            onChange={(e) => setBookingRequest({ ...bookingRequest, email: e.target.value })}
-                            placeholder="Enter your email"
-                            required
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              id="bookingEmail"
+                              type="email"
+                              value={bookingRequest.email}
+                              onChange={(e) => {
+                                setBookingRequest({ ...bookingRequest, email: e.target.value });
+                                // Reset verification if email changes
+                                if (otpStep !== "form") {
+                                  setOtpStep("form");
+                                  setOtpCode("");
+                                }
+                              }}
+                              placeholder="Enter your email"
+                              required
+                              disabled={otpStep === "verified"}
+                            />
+                            {otpStep === "form" && (
+                              <Button
+                                type="button"
+                                onClick={sendOtpCode}
+                                disabled={!bookingRequest.email || sendingOtp}
+                                variant="outline"
+                                className="whitespace-nowrap"
+                              >
+                                {sendingOtp ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Sending...
+                                  </>
+                                ) : (
+                                  "Verify Email"
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                          {otpStep === "verified" && (
+                            <p className="text-xs text-primary flex items-center gap-1">
+                              ✓ Email verified
+                            </p>
+                          )}
                         </div>
+
+                        {otpStep === "otp" && (
+                          <Card className="border-primary/30 bg-primary/5">
+                            <CardContent className="pt-6 space-y-4">
+                              <div className="space-y-2">
+                                <Label>Enter Verification Code</Label>
+                                <p className="text-xs text-muted-foreground">
+                                  We sent a 6-digit code to {bookingRequest.email}
+                                </p>
+                                <div className="flex justify-center">
+                                  <InputOTP
+                                    maxLength={6}
+                                    value={otpCode}
+                                    onChange={(value) => setOtpCode(value)}
+                                  >
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={0} />
+                                      <InputOTPSlot index={1} />
+                                      <InputOTPSlot index={2} />
+                                      <InputOTPSlot index={3} />
+                                      <InputOTPSlot index={4} />
+                                      <InputOTPSlot index={5} />
+                                    </InputOTPGroup>
+                                  </InputOTP>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setOtpStep("form");
+                                    setOtpCode("");
+                                  }}
+                                  className="flex-1"
+                                >
+                                  Change Email
+                                </Button>
+                                <Button
+                                  type="button"
+                                  onClick={verifyOtpCode}
+                                  disabled={otpCode.length !== 6 || verifyingOtp}
+                                  className="flex-1 bg-gradient-primary"
+                                >
+                                  {verifyingOtp ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Verifying...
+                                    </>
+                                  ) : (
+                                    "Verify Code"
+                                  )}
+                                </Button>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={sendOtpCode}
+                                disabled={sendingOtp}
+                                className="w-full text-xs"
+                              >
+                                {sendingOtp ? "Sending..." : "Resend Code"}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
 
                         <Alert className="bg-primary/5 border-primary/20">
                           <AlertDescription className="text-sm">
@@ -1728,6 +1914,8 @@ const HotelPublicView = () => {
                                 phone: "",
                                 guests: 1,
                               });
+                              setOtpStep("form");
+                              setOtpCode("");
                             }}
                             className="flex-1"
                           >
@@ -1736,7 +1924,7 @@ const HotelPublicView = () => {
                           <Button
                             type="submit"
                             className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
-                            disabled={submittingLead || !isRoomAvailable || loadingAvailability}
+                            disabled={submittingLead || !isRoomAvailable || loadingAvailability || otpStep !== "verified"}
                           >
                             {submittingLead ? (
                               <>

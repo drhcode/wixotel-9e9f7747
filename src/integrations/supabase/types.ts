@@ -50,6 +50,44 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_otps: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          hotel_id: string
+          id: string
+          otp_code: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          hotel_id: string
+          id?: string
+          otp_code: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          hotel_id?: string
+          id?: string
+          otp_code?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_otps_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           check_in: string
@@ -1333,6 +1371,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_expired_otps: { Args: never; Returns: undefined }
       create_review_with_validation: {
         Args: {
           p_confirmation_number: string
