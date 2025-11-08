@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText } from "lucide-react";
+import { DoorOpen, Calendar, Users, Euro, Eye, Monitor, Globe, TrendingUp, Smartphone, BarChart, Receipt, FileText, CreditCard, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, startOfDay, endOfDay, startOfMonth, differenceInDays } from "date-fns";
@@ -45,12 +45,19 @@ const HotelOverview = ({ hotelId }: Props) => {
   const [monthlyCommission, setMonthlyCommission] = useState(0);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [dateRange, setDateRange] = useState<string>("30");
+  const [subscriptionPlan, setSubscriptionPlan] = useState<{
+    name: string;
+    price: number;
+    billing_period: string;
+    features: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetchStats();
     fetchUnpaidInvoices();
     fetchCommission();
     fetchAnalytics();
+    fetchSubscriptionPlan();
   }, [hotelId, dateRange]);
 
   const fetchStats = async () => {
@@ -144,6 +151,31 @@ const HotelOverview = ({ hotelId }: Props) => {
       setMonthlyCommission(total);
     } catch (error) {
       console.error("Error fetching commission:", error);
+    }
+  };
+
+  const fetchSubscriptionPlan = async () => {
+    try {
+      const { data: hotelData } = await supabase
+        .from('hotels')
+        .select('plan_id')
+        .eq('id', hotelId)
+        .single();
+
+      if (hotelData?.plan_id) {
+        const { data: planData, error } = await supabase
+          .from('subscription_plans')
+          .select('name, price, billing_period, features')
+          .eq('id', hotelData.plan_id)
+          .single();
+
+        if (error) throw error;
+        if (planData) {
+          setSubscriptionPlan(planData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching subscription plan:', error);
     }
   };
 
@@ -283,28 +315,81 @@ const HotelOverview = ({ hotelId }: Props) => {
         </Card>
       </div>
 
-      {/* Platform Commission Widget */}
-      <Card className="border-warning/50 bg-warning/5">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div className="space-y-1">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-warning" />
-              Platform Commission (This Month)
-            </CardTitle>
-            <CardDescription className="text-xs">
-              8% service fee, valid from check-in (pending + completed)
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-baseline gap-2">
-            <div className="text-3xl font-bold text-warning">€{monthlyCommission.toFixed(2)}</div>
-            <Badge variant="outline" className="border-warning/50 text-warning">
-              {format(new Date(), 'MMMM yyyy')}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Subscription Plan & Commission */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Subscription Plan Widget */}
+        {subscriptionPlan && (
+          <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    Current Subscription Plan
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Your active plan details
+                  </CardDescription>
+                </div>
+                <Badge className="bg-primary/20 text-primary border-primary/30">
+                  Active
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-primary">{subscriptionPlan.name}</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">€{subscriptionPlan.price}</span>
+                  <span className="text-sm text-muted-foreground">/{subscriptionPlan.billing_period}</span>
+                </div>
+              </div>
+              
+              {subscriptionPlan.features && subscriptionPlan.features.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Features</p>
+                  <div className="space-y-1.5">
+                    {subscriptionPlan.features.slice(0, 3).map((feature, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-foreground/90">{feature}</span>
+                      </div>
+                    ))}
+                    {subscriptionPlan.features.length > 3 && (
+                      <p className="text-xs text-muted-foreground pl-6">
+                        +{subscriptionPlan.features.length - 3} more features
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Platform Commission Widget */}
+        <Card className="border-warning/50 bg-warning/5">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-warning" />
+                Platform Commission (This Month)
+              </CardTitle>
+              <CardDescription className="text-xs">
+                8% service fee, valid from check-in (pending + completed)
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <div className="text-3xl font-bold text-warning">€{monthlyCommission.toFixed(2)}</div>
+              <Badge variant="outline" className="border-warning/50 text-warning">
+                {format(new Date(), 'MMMM yyyy')}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Visitor Analytics Section - Always Visible */}
       <div className="space-y-4">
