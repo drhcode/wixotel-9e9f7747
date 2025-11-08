@@ -1469,7 +1469,7 @@ const HotelPublicView = () => {
 
       {/* Room Details Dialog */}
       <Dialog open={!!selectedRoom} onOpenChange={(open) => !open && setSelectedRoom(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95vw] sm:w-full">
           {selectedRoom && (
             <>
               <DialogHeader>
@@ -1610,12 +1610,12 @@ const HotelPublicView = () => {
                   </div>
                 ) : (
                   <Card className="border-primary/20 bg-primary/5" data-booking-form>
-                    <CardContent className="pt-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
+                    <CardContent className="pt-6 px-3 sm:px-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         Booking Request
                       </h4>
-                      <form onSubmit={handleBookingRequest} className="space-y-4">
+                      <form onSubmit={handleBookingRequest} className="space-y-4 max-w-full overflow-hidden">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="bookingCheckIn" className="text-sm sm:text-base">Check-in Date *</Label>
@@ -1759,14 +1759,16 @@ const HotelPublicView = () => {
 
                         <div className="space-y-2">
                           <Label htmlFor="bookingPhone" className="text-sm sm:text-base">Phone *</Label>
-                          <PhoneInput
-                            international
-                            defaultCountry={userCountry as any}
-                            value={bookingRequest.phone}
-                            onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            required
-                          />
+                          <div className="w-full max-w-full">
+                            <PhoneInput
+                              international
+                              defaultCountry={userCountry as any}
+                              value={bookingRequest.phone}
+                              onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
+                              className="flex h-10 w-full max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              required
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -1838,30 +1840,32 @@ const HotelPublicView = () => {
                         </div>
 
                         {otpStep === "otp" && (
-                          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg">
-                            <CardContent className="pt-4 sm:pt-6 space-y-4">
+                          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg overflow-hidden">
+                            <CardContent className="pt-4 sm:pt-6 space-y-4 px-2 sm:px-6">
                               <div className="space-y-3 text-center">
                                 <Label className="text-base sm:text-lg font-semibold">Enter Verification Code</Label>
-                                <p className="text-xs sm:text-sm text-muted-foreground px-2">
-                                  We sent a 6-digit code to<br className="sm:hidden" /> <span className="font-medium text-foreground">{bookingRequest.email}</span>
+                                <p className="text-xs sm:text-sm text-muted-foreground px-2 break-words">
+                                  We sent a 6-digit code to<br className="sm:hidden" /> <span className="font-medium text-foreground break-all">{bookingRequest.email}</span>
                                 </p>
                               </div>
-                              <div className="flex justify-center py-2">
-                                <InputOTP
-                                  maxLength={6}
-                                  value={otpCode}
-                                  onChange={(value) => setOtpCode(value)}
-                                  className="gap-2 sm:gap-3"
-                                >
-                                  <InputOTPGroup className="gap-2 sm:gap-3">
-                                    <InputOTPSlot index={0} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    <InputOTPSlot index={1} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    <InputOTPSlot index={2} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    <InputOTPSlot index={3} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    <InputOTPSlot index={4} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                    <InputOTPSlot index={5} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
-                                  </InputOTPGroup>
-                                </InputOTP>
+                              <div className="flex justify-center py-2 overflow-x-auto">
+                                <div className="inline-flex">
+                                  <InputOTP
+                                    maxLength={6}
+                                    value={otpCode}
+                                    onChange={(value) => setOtpCode(value)}
+                                    className="gap-1 sm:gap-2"
+                                  >
+                                    <InputOTPGroup className="gap-1 sm:gap-2">
+                                      <InputOTPSlot index={0} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                      <InputOTPSlot index={1} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                      <InputOTPSlot index={2} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                      <InputOTPSlot index={3} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                      <InputOTPSlot index={4} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                      <InputOTPSlot index={5} className="w-9 h-11 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    </InputOTPGroup>
+                                  </InputOTP>
+                                </div>
                               </div>
                               <div className="flex flex-col sm:flex-row gap-2">
                                 <Button
