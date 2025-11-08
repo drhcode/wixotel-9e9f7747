@@ -1472,7 +1472,7 @@ const HotelPublicView = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden w-[95vw] sm:w-full">
           {selectedRoom && (
             <>
-              <div className="space-y-6">
+              <div className="space-y-6 px-4 sm:px-6">
                 {((selectedRoom.images && selectedRoom.images.length > 0) || selectedRoom.main_photo_url) && (
                   <div className="relative rounded-lg overflow-hidden">
                     {selectedRoom.images && selectedRoom.images.length > 0 ? (
@@ -1515,60 +1515,55 @@ const HotelPublicView = () => {
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4 text-center md:text-left">
-                    {selectedRoom.room_type && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-muted-foreground mb-1">Room Type</h4>
-                        <p className="text-lg">{selectedRoom.room_type}</p>
-                      </div>
-                    )}
-                    {selectedRoom.description && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-muted-foreground mb-1">Description</h4>
-                        <p className="text-muted-foreground leading-relaxed">{selectedRoom.description}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-4 flex justify-center md:justify-end">
-                    <Card className="border-border/50 bg-accent/50 w-full">
-                      <CardContent className="pt-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Users className="h-5 w-5 text-primary" />
-                            <div>
-                              <div className="text-sm text-muted-foreground">Capacity</div>
-                              <div className="font-medium">Up to {selectedRoom.capacity} guests</div>
-                            </div>
-                          </div>
-                        </div>
-                        {selectedRoom.square_meters && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Home className="h-5 w-5 text-primary" />
-                              <div>
-                                <div className="text-sm text-muted-foreground">Room Size</div>
-                                <div className="font-medium">{selectedRoom.square_meters} m²</div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="pt-4 border-t">
-                          <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                            €{selectedRoom.price}
-                          </div>
-                          <div className="text-sm text-muted-foreground">per night</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                <div className="text-center space-y-3">
+                  {selectedRoom.room_type && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-muted-foreground mb-1">Room Type</h4>
+                      <p className="text-lg">{selectedRoom.room_type}</p>
+                    </div>
+                  )}
                 </div>
 
+                <div className="flex justify-center">
+                  <Card className="border-border/50 bg-accent/50 w-full max-w-md">
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <Users className="h-5 w-5 text-primary" />
+                        <div className="text-center">
+                          <div className="text-sm text-muted-foreground">Capacity</div>
+                          <div className="font-medium">Up to {selectedRoom.capacity} guests</div>
+                        </div>
+                      </div>
+                      {selectedRoom.square_meters && (
+                        <div className="flex items-center justify-center gap-3">
+                          <Home className="h-5 w-5 text-primary" />
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Room Size</div>
+                            <div className="font-medium">{selectedRoom.square_meters} m²</div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="pt-4 border-t text-center">
+                        <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                          €{selectedRoom.price}
+                        </div>
+                        <div className="text-sm text-muted-foreground">per night</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {selectedRoom.description && (
+                  <div className="text-center max-w-2xl mx-auto">
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">Description</h4>
+                    <p className="text-muted-foreground leading-relaxed">{selectedRoom.description}</p>
+                  </div>
+                )}
+
                 {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
-                  <div className="text-center md:text-left">
+                  <div className="text-center">
                     <h4 className="font-semibold mb-3">Room Amenities</h4>
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    <div className="flex flex-wrap gap-2 justify-center">
                       {selectedRoom.amenities.map((amenity, index) => (
                         <Badge key={index} variant="secondary" className="text-sm">
                           {amenity}
@@ -1606,7 +1601,7 @@ const HotelPublicView = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Card className="border-primary/20 bg-primary/5" data-booking-form>
+                  <Card className="border-primary/20 bg-primary/5 max-w-2xl mx-auto" data-booking-form>
                     <CardContent className="pt-6 px-3 sm:px-6">
                       <h4 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
                         <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
