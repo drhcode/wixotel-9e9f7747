@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
+import QRCode from "qrcode";
 
 interface Invoice {
   id: string;
@@ -84,9 +85,15 @@ const InvoicesViewer = () => {
     }
   };
 
-  const handleDownloadPDF = (invoice: Invoice) => {
+  const handleDownloadPDF = async (invoice: Invoice) => {
     try {
       const doc = new jsPDF();
+      
+      // Generate QR code for PayPal link
+      const qrCodeDataUrl = await QRCode.toDataURL("https://www.paypal.me/DorjanCocka", {
+        width: 80,
+        margin: 1,
+      });
       
       // Header with brand color
       doc.setFillColor(59, 130, 246); // Blue background
@@ -192,18 +199,28 @@ const InvoicesViewer = () => {
       yPos += 5;
       doc.text("SWIFT: FEFAALTRXXX", 25, yPos + 2);
       
-      // PayPal
+      // PayPal with QR code
       yPos += 10;
       doc.setFillColor(249, 250, 251);
-      doc.rect(20, yPos - 3, 170, 15, 'F');
+      doc.rect(20, yPos - 3, 170, 28, 'F');
       
       doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
       doc.text("PayPal", 25, yPos + 2);
       
       doc.setFont(undefined, 'normal');
       doc.setTextColor(59, 130, 246);
       yPos += 5;
       doc.text("https://www.paypal.me/DorjanCocka", 25, yPos + 2);
+      
+      // Add QR code
+      doc.addImage(qrCodeDataUrl, 'PNG', 160, yPos - 8, 25, 25);
+      
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(7);
+      doc.text("Scan to pay", 172.5, yPos + 20, { align: 'center' });
+      
+      yPos += 5;
       
       // Notes if any
       if (invoice.notes) {
