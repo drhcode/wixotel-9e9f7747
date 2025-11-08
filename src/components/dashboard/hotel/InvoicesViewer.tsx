@@ -88,44 +88,146 @@ const InvoicesViewer = () => {
     try {
       const doc = new jsPDF();
       
-      // Header
-      doc.setFontSize(20);
-      doc.text("INVOICE", 105, 20, { align: "center" });
+      // Header with brand color
+      doc.setFillColor(59, 130, 246); // Blue background
+      doc.rect(0, 0, 210, 40, 'F');
       
-      // Invoice Details
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.setFont(undefined, 'bold');
+      doc.text("WIXOTEL", 105, 18, { align: "center" });
+      
       doc.setFontSize(10);
-      doc.text(`Invoice #: ${invoice.invoice_number}`, 20, 40);
-      doc.text(`Issue Date: ${format(new Date(invoice.issue_date), 'MMM dd, yyyy')}`, 20, 47);
-      doc.text(`Due Date: ${format(new Date(invoice.due_date), 'MMM dd, yyyy')}`, 20, 54);
-      doc.text(`Status: ${invoice.status.toUpperCase()}`, 20, 61);
+      doc.setFont(undefined, 'normal');
+      doc.text("Invoice", 105, 28, { align: "center" });
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Invoice number and status box
+      doc.setFillColor(249, 250, 251);
+      doc.rect(20, 50, 170, 25, 'F');
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Invoice #${invoice.invoice_number}`, 25, 60);
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Status: ${invoice.status.toUpperCase()}`, 25, 68);
+      
+      // Invoice details - two columns
+      const leftCol = 25;
+      const rightCol = 110;
+      let yPos = 90;
+      
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Issue Date:", leftCol, yPos);
+      doc.text("Due Date:", rightCol, yPos);
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      yPos += 6;
+      doc.text(format(new Date(invoice.issue_date), 'MMM dd, yyyy'), leftCol, yPos);
+      doc.text(format(new Date(invoice.due_date), 'MMM dd, yyyy'), rightCol, yPos);
       
       // Billing Period
-      doc.text("Billing Period:", 20, 75);
-      doc.text(`${format(new Date(invoice.billing_period_start), 'MMMM dd, yyyy')} - ${format(new Date(invoice.billing_period_end), 'MMMM dd, yyyy')}`, 20, 82);
+      yPos += 15;
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text("Billing Period:", leftCol, yPos);
       
-      // Amount Details
-      doc.text("Amount Details:", 20, 96);
-      doc.text(`Subtotal: €${invoice.amount.toFixed(2)}`, 20, 103);
-      doc.text(`Tax: €${invoice.tax_amount.toFixed(2)}`, 20, 110);
-      doc.setFontSize(12);
-      doc.text(`Total: €${invoice.total_amount.toFixed(2)}`, 20, 120);
+      doc.setTextColor(0, 0, 0);
+      yPos += 6;
+      doc.text(`${format(new Date(invoice.billing_period_start), 'MMM dd, yyyy')} - ${format(new Date(invoice.billing_period_end), 'MMM dd, yyyy')}`, leftCol, yPos);
       
-      // Payment Details
+      // Amount details box
+      yPos += 20;
+      doc.setFillColor(249, 250, 251);
+      doc.rect(20, yPos - 5, 170, 35, 'F');
+      
       doc.setFontSize(10);
-      doc.text("Payment Details:", 20, 140);
-      doc.text("Bank Transfer:", 20, 150);
-      doc.text("Bank Name: Pro Credit Bank Albania", 25, 157);
-      doc.text("Account Name: DORJAN COCKA", 25, 164);
-      doc.text("IBAN: AL25209110810000081072760202", 25, 171);
-      doc.text("SWIFT: FEFAALTRXXX", 25, 178);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Subtotal:", 25, yPos + 5);
+      doc.text(`€${invoice.amount.toFixed(2)}`, 165, yPos + 5, { align: 'right' });
       
-      doc.text("PayPal:", 20, 192);
-      doc.text("https://www.paypal.me/DorjanCocka", 25, 199);
+      yPos += 8;
+      doc.text("Tax:", 25, yPos + 5);
+      doc.text(`€${invoice.tax_amount.toFixed(2)}`, 165, yPos + 5, { align: 'right' });
       
+      // Total with highlight
+      yPos += 12;
+      doc.setFillColor(59, 130, 246);
+      doc.rect(20, yPos, 170, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(12);
+      doc.text("TOTAL:", 25, yPos + 7);
+      doc.text(`€${invoice.total_amount.toFixed(2)}`, 165, yPos + 7, { align: 'right' });
+      
+      // Payment Details Section
+      yPos += 20;
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text("Payment Details", 25, yPos);
+      
+      // Bank Transfer
+      yPos += 8;
+      doc.setFillColor(249, 250, 251);
+      doc.rect(20, yPos - 3, 170, 32, 'F');
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'bold');
+      doc.text("Bank Transfer", 25, yPos + 2);
+      
+      doc.setFont(undefined, 'normal');
+      yPos += 7;
+      doc.text("Bank Name: Pro Credit Bank Albania", 25, yPos + 2);
+      yPos += 5;
+      doc.text("Account Name: DORJAN COCKA", 25, yPos + 2);
+      yPos += 5;
+      doc.text("IBAN: AL25209110810000081072760202", 25, yPos + 2);
+      yPos += 5;
+      doc.text("SWIFT: FEFAALTRXXX", 25, yPos + 2);
+      
+      // PayPal
+      yPos += 10;
+      doc.setFillColor(249, 250, 251);
+      doc.rect(20, yPos - 3, 170, 15, 'F');
+      
+      doc.setFont(undefined, 'bold');
+      doc.text("PayPal", 25, yPos + 2);
+      
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(59, 130, 246);
+      yPos += 5;
+      doc.text("https://www.paypal.me/DorjanCocka", 25, yPos + 2);
+      
+      // Notes if any
       if (invoice.notes) {
-        doc.text("Notes:", 20, 215);
-        doc.text(invoice.notes, 20, 222, { maxWidth: 170 });
+        yPos += 12;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text("Notes:", 25, yPos);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+        yPos += 5;
+        doc.text(invoice.notes, 25, yPos, { maxWidth: 160 });
       }
+      
+      // Footer with support email
+      doc.setFillColor(249, 250, 251);
+      doc.rect(0, 270, 210, 27, 'F');
+      
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(9);
+      doc.text("For any questions or support, please contact us at:", 105, 280, { align: "center" });
+      
+      doc.setTextColor(59, 130, 246);
+      doc.setFont(undefined, 'bold');
+      doc.text("support@wixotel.com", 105, 286, { align: "center" });
       
       doc.save(`invoice-${invoice.invoice_number}.pdf`);
       toast.success("Invoice downloaded successfully");
