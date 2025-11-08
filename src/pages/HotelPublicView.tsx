@@ -41,6 +41,7 @@ import {
   MessageSquare,
   Search,
   ArrowLeft,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -1615,24 +1616,26 @@ const HotelPublicView = () => {
                         Booking Request
                       </h4>
                       <form onSubmit={handleBookingRequest} className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="bookingCheckIn">Check-in Date *</Label>
+                            <Label htmlFor="bookingCheckIn" className="text-sm sm:text-base">Check-in Date *</Label>
                             <Popover open={bookingCheckInOpen} onOpenChange={setBookingCheckInOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal text-sm sm:text-base",
                                     !bookingRequest.checkIn && "text-muted-foreground",
                                   )}
                                 >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {bookingRequest.checkIn ? (
-                                    format(bookingRequest.checkIn, "MMM dd, yyyy")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
+                                  <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {bookingRequest.checkIn ? (
+                                      format(bookingRequest.checkIn, "MMM dd, yyyy")
+                                    ) : (
+                                      "Pick a date"
+                                    )}
+                                  </span>
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
@@ -1641,8 +1644,12 @@ const HotelPublicView = () => {
                                   selected={bookingRequest.checkIn}
                                   onSelect={(date) => {
                                     setBookingRequest({ ...bookingRequest, checkIn: date });
-                                    if (date && bookingRequest.checkOut) {
-                                      checkRoomAvailability(date, bookingRequest.checkOut);
+                                    if (date) {
+                                      // Auto-set checkout to next day
+                                      const nextDay = new Date(date);
+                                      nextDay.setDate(nextDay.getDate() + 1);
+                                      setBookingRequest(prev => ({ ...prev, checkIn: date, checkOut: nextDay }));
+                                      checkRoomAvailability(date, nextDay);
                                     } else {
                                       setIsRoomAvailable(true);
                                     }
@@ -1656,22 +1663,24 @@ const HotelPublicView = () => {
                             </Popover>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="bookingCheckOut">Check-out Date *</Label>
+                            <Label htmlFor="bookingCheckOut" className="text-sm sm:text-base">Check-out Date *</Label>
                             <Popover open={bookingCheckOutOpen} onOpenChange={setBookingCheckOutOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal text-sm sm:text-base",
                                     !bookingRequest.checkOut && "text-muted-foreground",
                                   )}
                                 >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {bookingRequest.checkOut ? (
-                                    format(bookingRequest.checkOut, "MMM dd, yyyy")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
+                                  <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {bookingRequest.checkOut ? (
+                                      format(bookingRequest.checkOut, "MMM dd, yyyy")
+                                    ) : (
+                                      "Pick a date"
+                                    )}
+                                  </span>
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
@@ -1737,30 +1746,31 @@ const HotelPublicView = () => {
                           )}
 
                         <div className="space-y-2">
-                          <Label htmlFor="bookingName">Full Name *</Label>
+                          <Label htmlFor="bookingName" className="text-sm sm:text-base">Full Name *</Label>
                           <Input
                             id="bookingName"
                             value={bookingRequest.fullName}
                             onChange={(e) => setBookingRequest({ ...bookingRequest, fullName: e.target.value })}
                             placeholder="Enter your full name"
                             required
+                            className="text-sm sm:text-base"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="bookingPhone">Phone *</Label>
+                          <Label htmlFor="bookingPhone" className="text-sm sm:text-base">Phone *</Label>
                           <PhoneInput
                             international
                             defaultCountry={userCountry as any}
                             value={bookingRequest.phone}
                             onChange={(value) => setBookingRequest({ ...bookingRequest, phone: value || "" })}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             required
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="bookingGuests">Number of Guests *</Label>
+                          <Label htmlFor="bookingGuests" className="text-sm sm:text-base">Number of Guests *</Label>
                           <Input
                             id="bookingGuests"
                             type="number"
@@ -1774,15 +1784,16 @@ const HotelPublicView = () => {
                               }
                             }}
                             required
+                            className="text-sm sm:text-base"
                           />
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             Maximum capacity: {selectedRoom.capacity} guests
                           </p>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="bookingEmail">Email *</Label>
-                          <div className="flex gap-2">
+                          <Label htmlFor="bookingEmail" className="text-sm sm:text-base">Email *</Label>
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Input
                               id="bookingEmail"
                               type="email"
@@ -1798,6 +1809,7 @@ const HotelPublicView = () => {
                               placeholder="Enter your email"
                               required
                               disabled={otpStep === "verified"}
+                              className="flex-1 text-sm sm:text-base"
                             />
                             {otpStep === "form" && (
                               <Button
@@ -1805,7 +1817,7 @@ const HotelPublicView = () => {
                                 onClick={sendOtpCode}
                                 disabled={!bookingRequest.email || sendingOtp}
                                 variant="outline"
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap w-full sm:w-auto text-sm sm:text-base"
                               >
                                 {sendingOtp ? (
                                   <>
@@ -1819,38 +1831,39 @@ const HotelPublicView = () => {
                             )}
                           </div>
                           {otpStep === "verified" && (
-                            <p className="text-xs text-primary flex items-center gap-1">
-                              ✓ Email verified
+                            <p className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-2 rounded-md flex items-center gap-2 font-medium border-2 border-green-200">
+                              <span className="text-green-600 text-lg">✓</span> Email verified successfully
                             </p>
                           )}
                         </div>
 
                         {otpStep === "otp" && (
-                          <Card className="border-primary/30 bg-primary/5">
-                            <CardContent className="pt-6 space-y-4">
-                              <div className="space-y-2">
-                                <Label>Enter Verification Code</Label>
-                                <p className="text-xs text-muted-foreground">
-                                  We sent a 6-digit code to {bookingRequest.email}
+                          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg">
+                            <CardContent className="pt-4 sm:pt-6 space-y-4">
+                              <div className="space-y-3 text-center">
+                                <Label className="text-base sm:text-lg font-semibold">Enter Verification Code</Label>
+                                <p className="text-xs sm:text-sm text-muted-foreground px-2">
+                                  We sent a 6-digit code to<br className="sm:hidden" /> <span className="font-medium text-foreground">{bookingRequest.email}</span>
                                 </p>
-                                <div className="flex justify-center">
-                                  <InputOTP
-                                    maxLength={6}
-                                    value={otpCode}
-                                    onChange={(value) => setOtpCode(value)}
-                                  >
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={0} />
-                                      <InputOTPSlot index={1} />
-                                      <InputOTPSlot index={2} />
-                                      <InputOTPSlot index={3} />
-                                      <InputOTPSlot index={4} />
-                                      <InputOTPSlot index={5} />
-                                    </InputOTPGroup>
-                                  </InputOTP>
-                                </div>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex justify-center py-2">
+                                <InputOTP
+                                  maxLength={6}
+                                  value={otpCode}
+                                  onChange={(value) => setOtpCode(value)}
+                                  className="gap-2 sm:gap-3"
+                                >
+                                  <InputOTPGroup className="gap-2 sm:gap-3">
+                                    <InputOTPSlot index={0} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={1} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={2} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={3} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={4} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                    <InputOTPSlot index={5} className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl font-bold border-2 rounded-lg shadow-sm" />
+                                  </InputOTPGroup>
+                                </InputOTP>
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-2">
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -1858,7 +1871,7 @@ const HotelPublicView = () => {
                                     setOtpStep("form");
                                     setOtpCode("");
                                   }}
-                                  className="flex-1"
+                                  className="flex-1 text-sm sm:text-base"
                                 >
                                   Change Email
                                 </Button>
@@ -1866,7 +1879,7 @@ const HotelPublicView = () => {
                                   type="button"
                                   onClick={verifyOtpCode}
                                   disabled={otpCode.length !== 6 || verifyingOtp}
-                                  className="flex-1 bg-gradient-primary"
+                                  className="flex-1 bg-gradient-primary text-sm sm:text-base h-10 sm:h-11"
                                 >
                                   {verifyingOtp ? (
                                     <>
@@ -1884,22 +1897,22 @@ const HotelPublicView = () => {
                                 size="sm"
                                 onClick={sendOtpCode}
                                 disabled={sendingOtp}
-                                className="w-full text-xs"
+                                className="w-full text-xs sm:text-sm"
                               >
-                                {sendingOtp ? "Sending..." : "Resend Code"}
+                                {sendingOtp ? "Sending..." : "Didn't receive the code? Resend"}
                               </Button>
                             </CardContent>
                           </Card>
                         )}
 
                         <Alert className="bg-primary/5 border-primary/20">
-                          <AlertDescription className="text-sm">
+                          <AlertDescription className="text-xs sm:text-sm">
                             <strong className="font-semibold">Free Cancellation Policy:</strong> Cancel free of charge up to 14 days before check-in. 
                             For cancellations, contact the hotel directly or email <a href="mailto:cancel@wixotel.com" className="underline hover:text-primary">cancel@wixotel.com</a> with your confirmation number.
                           </AlertDescription>
                         </Alert>
 
-                        <div className="flex gap-3 pt-4">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                           <Button
                             type="button"
                             variant="outline"
@@ -1917,13 +1930,13 @@ const HotelPublicView = () => {
                               setOtpStep("form");
                               setOtpCode("");
                             }}
-                            className="flex-1"
+                            className="flex-1 text-sm sm:text-base h-10 sm:h-11"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="submit"
-                            className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant"
+                            className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant text-sm sm:text-base h-10 sm:h-11"
                             disabled={submittingLead || !isRoomAvailable || loadingAvailability || otpStep !== "verified"}
                           >
                             {submittingLead ? (
