@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -13,6 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { QRCodeSVG } from "qrcode.react";
+import jsPDF from "jspdf";
 
 interface Invoice {
   id: string;
@@ -82,6 +84,57 @@ const InvoicesViewer = () => {
     }
   };
 
+  const handleDownloadPDF = (invoice: Invoice) => {
+    try {
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text("INVOICE", 105, 20, { align: "center" });
+      
+      // Invoice Details
+      doc.setFontSize(10);
+      doc.text(`Invoice #: ${invoice.invoice_number}`, 20, 40);
+      doc.text(`Issue Date: ${format(new Date(invoice.issue_date), 'MMM dd, yyyy')}`, 20, 47);
+      doc.text(`Due Date: ${format(new Date(invoice.due_date), 'MMM dd, yyyy')}`, 20, 54);
+      doc.text(`Status: ${invoice.status.toUpperCase()}`, 20, 61);
+      
+      // Billing Period
+      doc.text("Billing Period:", 20, 75);
+      doc.text(`${format(new Date(invoice.billing_period_start), 'MMMM dd, yyyy')} - ${format(new Date(invoice.billing_period_end), 'MMMM dd, yyyy')}`, 20, 82);
+      
+      // Amount Details
+      doc.text("Amount Details:", 20, 96);
+      doc.text(`Subtotal: €${invoice.amount.toFixed(2)}`, 20, 103);
+      doc.text(`Tax: €${invoice.tax_amount.toFixed(2)}`, 20, 110);
+      doc.setFontSize(12);
+      doc.text(`Total: €${invoice.total_amount.toFixed(2)}`, 20, 120);
+      
+      // Payment Details
+      doc.setFontSize(10);
+      doc.text("Payment Details:", 20, 140);
+      doc.text("Bank Transfer:", 20, 150);
+      doc.text("Bank Name: Pro Credit Bank Albania", 25, 157);
+      doc.text("Account Name: DORJAN COCKA", 25, 164);
+      doc.text("IBAN: AL25209110810000081072760202", 25, 171);
+      doc.text("SWIFT: FEFAALTRXXX", 25, 178);
+      
+      doc.text("PayPal:", 20, 192);
+      doc.text("https://www.paypal.me/DorjanCocka", 25, 199);
+      
+      if (invoice.notes) {
+        doc.text("Notes:", 20, 215);
+        doc.text(invoice.notes, 20, 222, { maxWidth: 170 });
+      }
+      
+      doc.save(`invoice-${invoice.invoice_number}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to download invoice");
+    }
+  };
+
   if (loading) {
     return <div>Loading invoices...</div>;
   }
@@ -147,9 +200,21 @@ const InvoicesViewer = () => {
       </Card>
 
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invoice Details</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Invoice Details</DialogTitle>
+              {selectedInvoice && (
+                <Button 
+                  onClick={() => handleDownloadPDF(selectedInvoice)}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           {selectedInvoice && (
             <div className="space-y-6">
@@ -205,6 +270,71 @@ const InvoicesViewer = () => {
                     <p className="font-semibold">{format(new Date(selectedInvoice.payment_date), 'MMM dd, yyyy')}</p>
                   </div>
                 )}
+              </div>
+
+              {/* Payment Details Section */}
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-4">Payment Details</h3>
+                <div className="space-y-6">
+                  {/* Bank Transfer */}
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <p className="font-medium text-sm">Bank Transfer</p>
+                    <div className="grid grid-cols-1 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bank Name:</span>
+                        <span className="font-medium">Pro Credit Bank Albania</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Account Name:</span>
+                        <span className="font-medium">DORJAN COCKA</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">IBAN:</span>
+                        <span className="font-mono text-xs">AL25209110810000081072760202</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">SWIFT:</span>
+                        <span className="font-medium">FEFAALTRXXX</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PayPal Section */}
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <p className="font-medium text-sm mb-3">PayPal Payment</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex-1">
+                        <a 
+                          href="https://www.paypal.me/DorjanCocka" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-primary hover:underline text-sm"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          paypal.me/DorjanCocka
+                        </a>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="mt-3 w-full"
+                          onClick={() => window.open('https://www.paypal.me/DorjanCocka', '_blank')}
+                        >
+                          Pay with PayPal
+                        </Button>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="bg-white p-2 rounded-lg border">
+                          <QRCodeSVG 
+                            value="https://www.paypal.me/DorjanCocka" 
+                            size={120}
+                            level="M"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">Scan to pay</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {selectedInvoice.notes && (
