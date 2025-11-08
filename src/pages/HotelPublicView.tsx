@@ -52,6 +52,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
 import wixotelLogo from "@/assets/wixotel-logo.png";
+import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 
 interface Hotel {
   id: string;
@@ -67,6 +68,10 @@ interface Hotel {
   instagram_url: string | null;
   google_business_url: string | null;
   amenities: string[] | null;
+  latitude: number | null;
+  longitude: number | null;
+  city: string | null;
+  country: string | null;
 }
 
 interface Room {
@@ -913,15 +918,31 @@ const HotelPublicView = () => {
 
               {/* Map - Right */}
               <Card className="border-border/50 overflow-hidden h-full min-h-[400px]">
-                <CardContent className="p-0 h-full">
-                  <iframe
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || "")}&output=embed`}
-                    className="w-full h-full min-h-[400px]"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
+                <CardContent className="p-0 h-full min-h-[400px]">
+                  {hotel?.latitude && hotel?.longitude ? (
+                    <HotelsLeafletMap
+                      hotels={[
+                        {
+                          id: hotel.id,
+                          name: hotel.name,
+                          slug: hotel.slug,
+                          latitude: hotel.latitude,
+                          longitude: hotel.longitude,
+                          city: hotel.city,
+                          country: hotel.country,
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <iframe
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || "")}&output=embed`}
+                      className="w-full h-full min-h-[400px]"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                  )}
                 </CardContent>
               </Card>
             </div>
