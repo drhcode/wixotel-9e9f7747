@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Slider } from "@/components/ui/slider";
 import {
   Loader2,
   MapPin,
@@ -112,6 +113,10 @@ const HotelPublicView = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [bookingLookupOpen, setBookingLookupOpen] = useState(false);
+  
+  // Room filter state
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [selectedCapacity, setSelectedCapacity] = useState<string>("all");
 
   // Track page analytics
   useAnalyticsTracking(hotel?.id, `/hotel/${hotelSlug}`);
@@ -221,6 +226,14 @@ const HotelPublicView = () => {
 
       if (roomsError) throw roomsError;
       setRooms(roomsData || []);
+      
+      // Set initial price range based on rooms
+      if (roomsData && roomsData.length > 0) {
+        const prices = roomsData.map(r => r.price);
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        setPriceRange([min, max]);
+      }
     } catch (error: any) {
       console.error("Error fetching hotel data:", error);
       toast.error("Failed to load hotel information");
@@ -682,6 +695,53 @@ const HotelPublicView = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Discover comfort and luxury in every room</p>
           </div>
 
+          {/* Filters */}
+          {rooms.length > 0 && (
+            <Card className="mb-8 border-border/50 shadow-md">
+              <CardContent className="pt-6">
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {/* Price Range Filter */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Price Range</Label>
+                      <span className="text-sm text-muted-foreground">
+                        €{priceRange[0]} - €{priceRange[1]}
+                      </span>
+                    </div>
+                    <Slider
+                      min={Math.min(...rooms.map(r => r.price))}
+                      max={Math.max(...rooms.map(r => r.price))}
+                      step={10}
+                      value={priceRange}
+                      onValueChange={(value) => setPriceRange(value as [number, number])}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Guest Capacity Filter */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Guest Capacity</Label>
+                    <Select value={selectedCapacity} onValueChange={setSelectedCapacity}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Any capacity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Any capacity</SelectItem>
+                        {Array.from(new Set(rooms.map(r => r.capacity)))
+                          .sort((a, b) => a - b)
+                          .map(capacity => (
+                            <SelectItem key={capacity} value={capacity.toString()}>
+                              {capacity} {capacity === 1 ? 'guest' : 'guests'}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {rooms.length === 0 ? (
             <Card className="border-border/50">
               <CardContent className="py-12 text-center text-muted-foreground">
@@ -690,7 +750,17 @@ const HotelPublicView = () => {
             </Card>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {rooms.map((room, index) => (
+              {rooms
+                .filter(room => {
+                  // Filter by price range
+                  const inPriceRange = room.price >= priceRange[0] && room.price <= priceRange[1];
+                  
+                  // Filter by capacity
+                  const matchesCapacity = selectedCapacity === "all" || room.capacity === parseInt(selectedCapacity);
+                  
+                  return inPriceRange && matchesCapacity;
+                })
+                .map((room, index) => (
                 <Card
                   key={room.id}
                   className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in flex flex-col"
