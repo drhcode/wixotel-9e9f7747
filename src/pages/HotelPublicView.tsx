@@ -1427,6 +1427,27 @@ const HotelPublicView = () => {
                             </div>
                           )}
 
+                        {!loadingAvailability &&
+                          isRoomAvailable &&
+                          bookingRequest.checkIn &&
+                          bookingRequest.checkOut && (
+                            <Alert className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-elegant animate-in fade-in-50 duration-500">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                  <Calendar className="h-5 w-5 text-primary animate-pulse" />
+                                </div>
+                                <div className="flex-1">
+                                  <AlertDescription className="text-sm space-y-1">
+                                    <p className="font-semibold text-primary text-base">🎉 Great News - Room Available!</p>
+                                    <p className="text-foreground/90">
+                                      This room is free for your selected dates. Book now to secure your reservation!
+                                    </p>
+                                  </AlertDescription>
+                                </div>
+                              </div>
+                            </Alert>
+                          )}
+
                         <div className="space-y-2">
                           <Label htmlFor="bookingName">Full Name *</Label>
                           <Input
