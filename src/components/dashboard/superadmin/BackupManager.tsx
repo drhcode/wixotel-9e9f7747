@@ -168,6 +168,63 @@ export const BackupManager = () => {
     },
   });
 
+  // Restore from storage mutation
+  const restoreFromStorageMutation = useMutation({
+    mutationFn: async ({ filePath, mode }: { filePath: string; mode: "merge" | "replace" }) => {
+      // Download backup from storage
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from("database-backups")
+        .download(filePath);
+
+      if (downloadError) throw downloadError;
+
+      // Parse the backup
+      const text = await fileData.text();
+      const backupData = JSON.parse(text);
+
+      // Restore it
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/restore-backup`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ 
+            backupData, 
+            selectedTables: Object.keys(backupData.data || {}), 
+            mode 
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to restore backup");
+      }
+
+      return response.json();
+    },
+    onSuccess: (result) => {
+      toast({
+        title: "Restore Completed",
+        description: result.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["backup-logs"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Restore Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete backup mutation
   const deleteBackupMutation = useMutation({
     mutationFn: async (backup: any) => {
@@ -249,6 +306,22 @@ export const BackupManager = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const [restoreDialogBackup, setRestoreDialogBackup] = useState<any>(null);
+  const [restoreModeForStorage, setRestoreModeForStorage] = useState<"merge" | "replace">("merge");
+
+  const handleRestoreFromStorage = (backup: any) => {
+    setRestoreDialogBackup(backup);
+  };
+
+  const confirmRestoreFromStorage = () => {
+    if (!restoreDialogBackup) return;
+    restoreFromStorageMutation.mutate({
+      filePath: restoreDialogBackup.file_path,
+      mode: restoreModeForStorage,
+    });
+    setRestoreDialogBackup(null);
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -590,13 +663,23 @@ export const BackupManager = () => {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleRestoreFromStorage(backup)}
+                            disabled={restoreFromStorageMutation.isPending}
+                            title="Restore this backup"
+                          >
+                            <Database className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleDownload(backup)}
+                            title="Download backup"
                           >
                             <Download className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline">
+                              <Button size="sm" variant="outline" title="Delete backup">
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
@@ -629,6 +712,89 @@ export const BackupManager = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Restore from Storage Dialog */}
+      <AlertDialog open={!!restoreDialogBackup} onOpenChange={(open) => !open && setRestoreDialogBackup(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Backup from Storage</AlertDialogTitle>
+            <AlertDialogDescription>
+              Restore: {restoreDialogBackup?.file_path.split("/").pop()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-2 p-3 border rounded-lg bg-warning/10 text-warning-foreground">
+              <AlertTriangle className="h-5 w-5 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Warning</p>
+                <p className="text-xs">
+                  This will modify your database. Make sure you have a recent backup.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Restore Mode</Label>
+              <RadioGroup value={restoreModeForStorage} onValueChange={(v) => setRestoreModeForStorage(v as "merge" | "replace")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="merge" id="storage-merge" />
+                  <Label htmlFor="storage-merge" className="font-normal cursor-pointer">
+                    <div>
+                      <div className="font-medium">Merge (Recommended)</div>
+                      <div className="text-xs text-muted-foreground">
+                        Add records without deleting existing data
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="replace" id="storage-replace" />
+                  <Label htmlFor="storage-replace" className="font-normal cursor-pointer">
+                    <div>
+                      <div className="font-medium text-destructive">Replace (Dangerous)</div>
+                      <div className="text-xs text-muted-foreground">
+                        Delete all data before restoring
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {restoreDialogBackup && (
+              <div className="text-sm space-y-1 p-3 border rounded-lg bg-muted/50">
+                <p><strong>Created:</strong> {new Date(restoreDialogBackup.created_at).toLocaleString()}</p>
+                <p><strong>Size:</strong> {formatFileSize(restoreDialogBackup.file_size || 0)}</p>
+                <p><strong>Tables:</strong> {restoreDialogBackup.tables_included?.length || 0}</p>
+              </div>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={restoreFromStorageMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRestoreFromStorage}
+              disabled={restoreFromStorageMutation.isPending}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {restoreFromStorageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Restoring...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2 h-4 w-4" />
+                  Restore Now
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
