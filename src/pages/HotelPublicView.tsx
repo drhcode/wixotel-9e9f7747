@@ -628,18 +628,37 @@ const HotelPublicView = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <div className="container mx-auto text-center space-y-6 animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          {hotel?.about_us_image ? (
+            <>
+              <img
+                src={hotel.about_us_image}
+                alt={hotel.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-accent/30" />
+          )}
+        </div>
+
+        {/* Hero Content */}
+        <div className="container mx-auto px-4 relative z-10 text-center space-y-8 animate-fade-in">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground drop-shadow-lg">
             Welcome to <span className="bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
           </h1>
           {hotel?.description && (
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">{hotel.description}</p>
+            <p className="text-xl md:text-2xl text-foreground/90 max-w-3xl mx-auto leading-relaxed drop-shadow">
+              {hotel.description}
+            </p>
           )}
           <Button
             size="lg"
             onClick={() => scrollToSection("rooms")}
-            className="bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow hover:scale-105 transition-all"
+            className="bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow hover:scale-105 transition-all text-lg px-8 py-6"
           >
             Explore Our Rooms
           </Button>
@@ -729,66 +748,71 @@ const HotelPublicView = () => {
       </section>
 
       {/* About Us Section */}
-      <section id="about" className="py-16 px-4 bg-accent/50 scroll-mt-16">
+      <section id="about" className="relative py-20 px-4 scroll-mt-16 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-accent/20 -z-10" />
+        
         <div className="container mx-auto">
-          <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+          <div className="max-w-7xl mx-auto space-y-12 animate-fade-in">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl font-bold tracking-tight">About Us</h2>
+              <h2 className="text-5xl font-bold tracking-tight">About Us</h2>
               <p className="text-xl text-muted-foreground">Experience exceptional hospitality</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              {/* About Us Text */}
-              <div>
-                {hotel?.about_us ? (
-                  <Card className="border-border/50">
-                    <CardContent className="pt-6">
-                      <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{hotel.about_us}</p>
-                    </CardContent>
-                  </Card>
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* About Us Image - Left */}
+              <div className="order-2 lg:order-1">
+                {hotel?.about_us_image ? (
+                  <div className="relative rounded-2xl overflow-hidden shadow-elegant group">
+                    <img
+                      src={hotel.about_us_image}
+                      alt={`${hotel.name} - About Us`}
+                      className="w-full h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+                  </div>
                 ) : (
-                  <Card className="border-border/50">
-                    <CardContent className="pt-6 text-center text-muted-foreground">
-                      <p>Learn more about our exceptional hospitality and services.</p>
-                    </CardContent>
-                  </Card>
+                  <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 h-[500px] flex items-center justify-center">
+                    <Hotel className="h-32 w-32 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+
+              {/* About Us Text - Right */}
+              <div className="order-1 lg:order-2 space-y-6">
+                {hotel?.about_us ? (
+                  <div className="space-y-6">
+                    <p className="text-lg text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                      {hotel.about_us}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center lg:text-left">
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                      Learn more about our exceptional hospitality and services.
+                    </p>
+                  </div>
                 )}
 
                 {hotel?.amenities && hotel.amenities.length > 0 && (
-                  <Card className="border-border/50 mt-6">
+                  <Card className="border-border/50 shadow-md bg-card/50 backdrop-blur">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Coffee className="h-5 w-5 text-primary" />
+                      <CardTitle className="flex items-center gap-2 text-xl">
+                        <Coffee className="h-6 w-6 text-primary" />
                         Hotel Amenities
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         {hotel.amenities.map((amenity, index) => (
-                          <Badge key={index} variant="secondary" className="text-sm">
-                            {amenity}
-                          </Badge>
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <span className="text-sm font-medium">{amenity}</span>
+                          </div>
                         ))}
                       </div>
                     </CardContent>
                   </Card>
-                )}
-              </div>
-
-              {/* About Us Image */}
-              <div>
-                {hotel?.about_us_image ? (
-                  <div className="relative rounded-lg overflow-hidden shadow-elegant">
-                    <img
-                      src={hotel.about_us_image}
-                      alt={`${hotel.name} - About Us`}
-                      className="w-full h-[400px] object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 h-[400px] flex items-center justify-center">
-                    <Hotel className="h-24 w-24 text-muted-foreground/30" />
-                  </div>
                 )}
               </div>
             </div>
@@ -953,166 +977,242 @@ const HotelPublicView = () => {
       {/* Lead Inquiry Form Section */}
       <section
         id="inquiry"
-        className="py-16 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10 scroll-mt-16"
+        className="py-20 px-4 bg-gradient-to-br from-primary/5 via-background to-accent/10 scroll-mt-16"
       >
         <div className="container mx-auto">
-          <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+          <div className="max-w-7xl mx-auto space-y-12 animate-fade-in">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl font-bold tracking-tight">Plan Your Stay</h2>
-              <p className="text-xl text-muted-foreground">Send us your inquiry and we'll get back to you shortly</p>
+              <h2 className="text-5xl font-bold tracking-tight">Plan Your Stay</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Send us your inquiry and we'll get back to you shortly
+              </p>
             </div>
 
-            <Card className="border-border/50 shadow-elegant">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5 text-primary" />
-                  Inquiry Form
-                </CardTitle>
-                <CardDescription>Fill out the form below and our team will contact you</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLeadSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name *</Label>
-                      <Input
-                        id="fullName"
-                        value={leadForm.fullName}
-                        onChange={(e) => setLeadForm({ ...leadForm, fullName: e.target.value })}
-                        placeholder="John Doe"
-                        required
-                        maxLength={100}
-                      />
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              {/* Left Column - Information */}
+              <div className="space-y-8">
+                <Card className="border-border/50 shadow-lg bg-gradient-card">
+                  <CardHeader>
+                    <CardTitle className="text-2xl">Why Choose Us?</CardTitle>
+                    <CardDescription className="text-base">
+                      Experience the perfect blend of comfort, luxury, and hospitality
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                        <Hotel className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Prime Location</h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Conveniently located with easy access to major attractions and amenities.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                        <Wifi className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Modern Amenities</h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Enjoy complimentary Wi-Fi, room service, and all the comforts of home.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                        <Users className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Exceptional Service</h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Our dedicated team is here to ensure your stay is memorable and comfortable.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50 shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Quick Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Check-in Time</span>
+                      <span className="font-semibold">2:00 PM</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Check-out Time</span>
+                      <span className="font-semibold">12:00 PM</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-muted-foreground">Response Time</span>
+                      <span className="font-semibold">Within 24 hours</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Form */}
+              <Card className="border-border/50 shadow-elegant sticky top-20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <Send className="h-6 w-6 text-primary" />
+                    Inquiry Form
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Fill out the form below and our team will contact you
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleLeadSubmit} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName">Full Name *</Label>
+                        <Input
+                          id="fullName"
+                          value={leadForm.fullName}
+                          onChange={(e) => setLeadForm({ ...leadForm, fullName: e.target.value })}
+                          placeholder="John Doe"
+                          required
+                          maxLength={100}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={leadForm.email}
+                          onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                          placeholder="john@example.com"
+                          required
+                          maxLength={255}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={leadForm.email}
-                        onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                        placeholder="john@example.com"
-                        required
-                        maxLength={255}
-                      />
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={leadForm.phonePrefix}
+                          onValueChange={(value) => setLeadForm({ ...leadForm, phonePrefix: value })}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="+1">+1 (US/CA)</SelectItem>
+                            <SelectItem value="+44">+44 (UK)</SelectItem>
+                            <SelectItem value="+33">+33 (FR)</SelectItem>
+                            <SelectItem value="+49">+49 (DE)</SelectItem>
+                            <SelectItem value="+34">+34 (ES)</SelectItem>
+                            <SelectItem value="+39">+39 (IT)</SelectItem>
+                            <SelectItem value="+61">+61 (AU)</SelectItem>
+                            <SelectItem value="+81">+81 (JP)</SelectItem>
+                            <SelectItem value="+86">+86 (CN)</SelectItem>
+                            <SelectItem value="+91">+91 (IN)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={leadForm.phone}
+                          onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value.replace(/[^0-9]/g, "") })}
+                          placeholder="1234567890"
+                          required
+                          className="flex-1"
+                          maxLength={20}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <div className="flex gap-2">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="checkIn">Check-in Date *</Label>
+                        <Input
+                          id="checkIn"
+                          type="date"
+                          value={leadForm.checkIn}
+                          onChange={(e) => setLeadForm({ ...leadForm, checkIn: e.target.value })}
+                          min={format(new Date(), "yyyy-MM-dd")}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="checkOut">Check-out Date *</Label>
+                        <Input
+                          id="checkOut"
+                          type="date"
+                          value={leadForm.checkOut}
+                          onChange={(e) => setLeadForm({ ...leadForm, checkOut: e.target.value })}
+                          min={leadForm.checkIn || format(new Date(), "yyyy-MM-dd")}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="guests">Number of Guests *</Label>
                       <Select
-                        value={leadForm.phonePrefix}
-                        onValueChange={(value) => setLeadForm({ ...leadForm, phonePrefix: value })}
+                        value={leadForm.guests}
+                        onValueChange={(value) => setLeadForm({ ...leadForm, guests: value })}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="+1">+1 (US/CA)</SelectItem>
-                          <SelectItem value="+44">+44 (UK)</SelectItem>
-                          <SelectItem value="+33">+33 (FR)</SelectItem>
-                          <SelectItem value="+49">+49 (DE)</SelectItem>
-                          <SelectItem value="+34">+34 (ES)</SelectItem>
-                          <SelectItem value="+39">+39 (IT)</SelectItem>
-                          <SelectItem value="+61">+61 (AU)</SelectItem>
-                          <SelectItem value="+81">+81 (JP)</SelectItem>
-                          <SelectItem value="+86">+86 (CN)</SelectItem>
-                          <SelectItem value="+91">+91 (IN)</SelectItem>
+                          {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} {num === 1 ? "Guest" : "Guests"}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={leadForm.phone}
-                        onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value.replace(/[^0-9]/g, "") })}
-                        placeholder="1234567890"
-                        required
-                        className="flex-1"
-                        maxLength={20}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="checkIn">Check-in Date *</Label>
-                      <Input
-                        id="checkIn"
-                        type="date"
-                        value={leadForm.checkIn}
-                        onChange={(e) => setLeadForm({ ...leadForm, checkIn: e.target.value })}
-                        min={format(new Date(), "yyyy-MM-dd")}
-                        required
-                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="checkOut">Check-out Date *</Label>
-                      <Input
-                        id="checkOut"
-                        type="date"
-                        value={leadForm.checkOut}
-                        onChange={(e) => setLeadForm({ ...leadForm, checkOut: e.target.value })}
-                        min={leadForm.checkIn || format(new Date(), "yyyy-MM-dd")}
-                        required
+                      <Label htmlFor="message">Message (Optional)</Label>
+                      <Textarea
+                        id="message"
+                        value={leadForm.message}
+                        onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
+                        placeholder="Any special requests or questions..."
+                        rows={4}
+                        maxLength={1000}
                       />
+                      <p className="text-xs text-muted-foreground">{leadForm.message.length}/1000 characters</p>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="guests">Number of Guests *</Label>
-                    <Select
-                      value={leadForm.guests}
-                      onValueChange={(value) => setLeadForm({ ...leadForm, guests: value })}
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow transition-all"
+                      disabled={submittingLead}
                     >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} {num === 1 ? "Guest" : "Guests"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message (Optional)</Label>
-                    <Textarea
-                      id="message"
-                      value={leadForm.message}
-                      onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
-                      placeholder="Any special requests or questions..."
-                      rows={4}
-                      maxLength={1000}
-                    />
-                    <p className="text-xs text-muted-foreground">{leadForm.message.length}/1000 characters</p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow transition-all"
-                    disabled={submittingLead}
-                  >
-                    {submittingLead ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Submit Inquiry
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                      {submittingLead ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Submit Inquiry
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
