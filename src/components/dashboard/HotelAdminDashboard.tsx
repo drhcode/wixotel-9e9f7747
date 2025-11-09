@@ -296,8 +296,6 @@ const HotelAdminDashboard = () => {
         return <CalendarManager key={refreshKey} hotelId={hotel.id} />;
       case "ical":
         return <ICalManager key={refreshKey} hotelId={hotel.id} />;
-      case "conflicts":
-        return <ConflictsManager key={refreshKey} hotelId={hotel.id} />;
       case "rooms":
         return <RoomsManager key={refreshKey} hotelId={hotel.id} />;
       case "bookings":
@@ -369,16 +367,15 @@ const HotelAdminDashboard = () => {
               <div className="flex px-4 py-2 gap-1 items-center overflow-x-auto">
                 {[
                   { id: "overview", label: "Overview" },
-                  { id: "notifications", label: "Notifications" },
                   { id: "calendar", label: "Calendar" },
-                  { id: "ical", label: "Sync" },
-                  { id: "conflicts", label: "Conflicts" },
-                  { id: "rooms", label: "Rooms" },
                   { id: "bookings", label: "Bookings" },
+                  { id: "rooms", label: "Rooms" },
                   { id: "guests", label: "Guests" },
                   { id: "leads", label: "Leads" },
                   { id: "earnings", label: "Earnings" },
                   { id: "invoices", label: "Invoices" },
+                  { id: "ical", label: "Sync" },
+                  { id: "notifications", label: "Notifications" },
                   { id: "support", label: "Support" },
                   { id: "settings", label: "Settings" },
                 ].map((tab) => (
@@ -424,7 +421,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "notifications", "calendar", "ical", "conflicts", "rooms", "bookings", "guests", "leads", "earnings", "invoices", "support", "settings"].map((tab) => (
+                {["overview", "calendar", "bookings", "rooms", "guests", "leads", "earnings", "invoices", "ical", "notifications", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}

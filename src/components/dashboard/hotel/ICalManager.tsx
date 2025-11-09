@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, Copy, Trash2, Plus, ExternalLink, Calendar } from "lucide-react";
+import ConflictsManager from "./ConflictsManager";
 import {
   Select,
   SelectContent,
@@ -306,6 +307,9 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
 
   return (
     <div className="space-y-6">
+      {/* Conflicts Section at Top */}
+      <ConflictsManager hotelId={hotelId} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

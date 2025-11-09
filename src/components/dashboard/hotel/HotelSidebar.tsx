@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, Bell, BarChart3, MessageSquare, Link2, AlertCircle, Receipt } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, Bell, BarChart3, MessageSquare, Link2, Receipt } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,16 +23,15 @@ interface HotelSidebarProps {
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "calendar", label: "Calendar", icon: Calendar },
-  { id: "ical", label: "Calendar Sync", icon: Link2 },
-  { id: "conflicts", label: "Sync Conflicts", icon: AlertCircle },
-  { id: "rooms", label: "Rooms", icon: DoorOpen },
   { id: "bookings", label: "Bookings", icon: BookOpen },
+  { id: "rooms", label: "Rooms", icon: DoorOpen },
   { id: "guests", label: "Guests", icon: Users },
   { id: "leads", label: "Leads", icon: UserPlus },
   { id: "earnings", label: "Earnings", icon: BarChart3 },
   { id: "invoices", label: "Invoices", icon: Receipt },
+  { id: "ical", label: "Sync", icon: Link2 },
+  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "support", label: "Support", icon: MessageSquare },
   { id: "settings", label: "Settings", icon: Settings },
 ];
