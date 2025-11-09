@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star, Search, Menu } from "lucide-react";
+import { Hotel, Calendar, Users, TrendingUp, Shield, Zap, MapPin, Navigation, CheckCircle2, DollarSign, Clock, Star, Search, Menu, Lock } from "lucide-react";
 import { DemoModal } from "@/components/DemoModal";
 import { BookingLookup } from "@/components/BookingLookup";
 import heroImage from "@/assets/hotel-hero.jpg";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
+import { TypingAnimation } from "@/components/TypingAnimation";
 
 
 interface PublicHotel {
@@ -434,15 +435,32 @@ const Landing = () => {
                 <Zap className="h-4 w-4 text-primary animate-pulse" />
                 <span className="text-foreground">AI-Powered Hotel Management</span>
               </div>
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight">
-                Elevate Your{" "}
-                <span className="bg-gradient-primary bg-clip-text text-transparent animate-fade-in">
-                  Hotel Experience
-                </span>
+              <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight min-h-[180px] lg:min-h-[240px]">
+                <TypingAnimation 
+                  text="Elevate Your Hotel Experience" 
+                  className="bg-gradient-primary bg-clip-text text-transparent"
+                  speed={80}
+                />
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
                 The ultimate platform for modern hospitality. Seamlessly manage rooms, bookings, guests, and revenue with intelligent automation.
               </p>
+              
+              {/* Feature Highlights */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-primary/20 shadow-sm">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Fast & Secure Booking</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-primary/20 shadow-sm">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Instant Confirmations</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-primary/20 shadow-sm">
+                  <Lock className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Bank-Level Security</span>
+                </div>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link to="/register-hotel">
                   <Button 
