@@ -13,6 +13,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 const HotelPublicView = lazy(() => import("./pages/HotelPublicView"));
 const HotelRegistration = lazy(() => import("./pages/HotelRegistration"));
 const RegistrationSuccess = lazy(() => import("./pages/RegistrationSuccess"));
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />
               <Route path="/booking/:confirmationNumber" element={<BookingDetails />} />
               <Route path="/hotel-registration" element={<HotelRegistration />} />
