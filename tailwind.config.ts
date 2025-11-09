@@ -66,6 +66,11 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        star: {
+          filled: "hsl(var(--star-filled))",
+          half: "hsl(var(--star-half))",
+          empty: "hsl(var(--star-empty))",
+        },
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -85,6 +90,8 @@ export default {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-hero": "var(--gradient-hero)",
         "gradient-card": "var(--gradient-card)",
+        "gradient-footer": "var(--gradient-footer)",
+        "gradient-nav": "var(--gradient-nav)",
       },
       boxShadow: {
         "sm": "var(--shadow-sm)",
@@ -92,6 +99,8 @@ export default {
         "lg": "var(--shadow-lg)",
         "glow": "var(--shadow-glow)",
         "elegant": "var(--shadow-elegant)",
+        "card": "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
       },
       transitionTimingFunction: {
         "smooth": "var(--transition-smooth)",

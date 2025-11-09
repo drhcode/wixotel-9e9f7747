@@ -330,7 +330,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 z-50 shadow-sm">
+      <nav className="fixed top-0 w-full bg-gradient-nav backdrop-blur-2xl border-b border-border/40 z-50 shadow-md">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
@@ -360,7 +360,7 @@ const Landing = () => {
                 Find My Booking
               </Button>
               <Link to="/auth">
-                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105" size="sm">
+                <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105 hover:shadow-glow" size="sm">
                   Login
                 </Button>
               </Link>
@@ -409,7 +409,7 @@ const Landing = () => {
                       </Button>
                     </Link>
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant">
+                      <Button className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow">
                         Login
                       </Button>
                     </Link>
@@ -423,7 +423,10 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 px-4 md:px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 pointer-events-none">
+          <div className="absolute top-40 right-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-40 left-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
         <div className="container mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8 animate-fade-in">
@@ -433,18 +436,18 @@ const Landing = () => {
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight">
                 Elevate Your{" "}
-                <span className="bg-gradient-primary bg-clip-text text-transparent">
+                <span className="bg-gradient-primary bg-clip-text text-transparent animate-fade-in">
                   Hotel Experience
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground leading-relaxed">
+              <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
                 The ultimate platform for modern hospitality. Seamlessly manage rooms, bookings, guests, and revenue with intelligent automation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link to="/register-hotel">
                   <Button 
                     size="lg" 
-                    className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow hover:scale-105"
+                    className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow hover:scale-[1.02] font-semibold"
                   >
                     <Hotel className="mr-2 h-5 w-5" />
                     Register Your Hotel
@@ -453,7 +456,7 @@ const Landing = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-2 hover:border-primary hover:bg-primary/5 transition-all"
+                  className="border-2 hover:border-primary hover:bg-primary/5 transition-all hover:shadow-md hover:scale-[1.02]"
                   onClick={() => setIsDemoOpen(true)}
                 >
                   <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
@@ -463,19 +466,19 @@ const Landing = () => {
                 </Button>
               </div>
               <div className="flex items-center gap-12 pt-8">
-                <div className="group">
-                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">30+</div>
-                  <div className="text-sm text-muted-foreground mt-1">Active Hotels</div>
+                <div className="group cursor-pointer">
+                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-all duration-300">30+</div>
+                  <div className="text-sm text-muted-foreground mt-1 group-hover:text-foreground transition-colors">Active Hotels</div>
                 </div>
-                <div className="group">
-                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform">99.9%</div>
-                  <div className="text-sm text-muted-foreground mt-1">Uptime</div>
+                <div className="group cursor-pointer">
+                  <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-all duration-300">99.9%</div>
+                  <div className="text-sm text-muted-foreground mt-1 group-hover:text-foreground transition-colors">Uptime</div>
                 </div>
               </div>
             </div>
             <div className="relative animate-scale-in">
               <div className="absolute -inset-4 bg-gradient-primary opacity-20 blur-3xl rounded-full animate-pulse"></div>
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/50 hover:shadow-glow transition-shadow duration-500">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/40 hover:shadow-glow transition-all duration-500 hover:scale-[1.02]">
                 <img 
                   src={heroImage} 
                   alt="Modern hotel management dashboard interface" 
@@ -494,12 +497,13 @@ const Landing = () => {
       {hotels.length > 0 && (
         <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background to-accent/30">
           <div className="container mx-auto">
-            <div className="text-center mb-16 space-y-4">
-              <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-                DISCOVER HOTELS
+            <div className="text-center mb-16 space-y-4 animate-fade-in">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
+                <Hotel className="h-4 w-4" />
+                <span>DISCOVER HOTELS</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Find Your Perfect Stay</h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Explore our collection of premium hotels powered by Wixotel
               </p>
             </div>
@@ -546,7 +550,7 @@ const Landing = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
               {filteredHotels.slice(0, 4).map((hotel) => (
                 <Link key={hotel.id} to={`/hotel/${hotel.slug}`} className="h-full">
-                  <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                  <Card className="h-full flex flex-col group overflow-hidden bg-gradient-card border-border/50 shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-video relative overflow-hidden bg-accent">
                       {hotel.about_us_image ? (
                         <img 
@@ -575,12 +579,12 @@ const Landing = () => {
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-4 w-4 ${
+                                className={`h-4 w-4 transition-all ${
                                   i < Math.floor(hotel.avgRating!)
-                                    ? "fill-yellow-400 text-yellow-400"
+                                    ? "fill-star-filled text-star-filled"
                                     : i < hotel.avgRating!
-                                    ? "fill-yellow-400/50 text-yellow-400"
-                                    : "text-muted-foreground"
+                                    ? "fill-star-half text-star-half opacity-50"
+                                    : "text-star-empty"
                                 }`}
                               />
                             ))}
@@ -614,7 +618,7 @@ const Landing = () => {
 
               {/* Map - Visible on all devices */}
               <div className="w-full">
-                <div className="h-[400px] lg:h-[720px] rounded-lg overflow-hidden shadow-elegant border border-border/50">
+                <div className="h-[400px] lg:h-[720px] rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-border/40">
                   <HotelsLeafletMap 
                     hotels={filteredHotels}
                     onHotelClick={(slug) => navigate(`/hotel/${slug}`)}
@@ -624,13 +628,16 @@ const Landing = () => {
             </div>
 
             {/* View All Hotels Button */}
-            <div className="text-center mt-8">
+            <div className="text-center mt-12 animate-fade-in">
               <Link to="/hotels">
                 <Button 
                   size="lg" 
-                  className="bg-gradient-primary hover:opacity-90 transition-all"
+                  className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow hover:scale-[1.02] font-semibold"
                 >
                   View All Hotels
+                  <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Button>
               </Link>
             </div>
@@ -647,61 +654,63 @@ const Landing = () => {
       )}
 
       {/* Why Book Through Wixotel Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-              WHY WIXOTEL
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+        <div className="container mx-auto relative">
+          <div className="text-center mb-16 space-y-4 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>WHY WIXOTEL</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Why Book Through Wixotel?</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Experience seamless booking with unmatched benefits
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+            <Card className="group border-border/50 bg-gradient-card shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                  <DollarSign className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-lg">Best Price Guarantee</CardTitle>
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">Best Price Guarantee</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   We guarantee the lowest rates. Find a better price and we'll match it plus give you 10% off.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+            <Card className="group border-border/50 bg-gradient-card shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                  <CheckCircle2 className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-lg">Instant Confirmation</CardTitle>
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">Instant Confirmation</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   Get immediate booking confirmation and access to your reservation details 24/7.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+            <Card className="group border-border/50 bg-gradient-card shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                  <Clock className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-lg">Free Cancellation</CardTitle>
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">Free Cancellation</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   Flexible cancellation policies on most rooms. Plans change? No worries, we've got you covered.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-border/50 bg-card hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+            <Card className="group border-border/50 bg-gradient-card shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                  <Star className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-lg">Verified Reviews</CardTitle>
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">Verified Reviews</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   Read authentic reviews from real guests to make informed booking decisions.
                 </CardDescription>
@@ -712,11 +721,13 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/50 to-background">
-        <div className="container mx-auto">
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/50 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent"></div>
+        <div className="container mx-auto relative">
           <div className="text-center mb-20 space-y-4 animate-fade-in">
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
-              POWERFUL FEATURES
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
+              <Zap className="h-4 w-4" />
+              <span>POWERFUL FEATURES</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Everything You Need to Succeed</h2>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -727,14 +738,14 @@ const Landing = () => {
             {features.map((feature, index) => (
               <Card 
                 key={feature.title} 
-                className="group border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+                className="group border-border/50 bg-gradient-card shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-300 hover:-translate-y-2"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardHeader className="space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    <feature.icon className="h-7 w-7 text-primary" />
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:shadow-lg group-hover:from-primary/30 group-hover:to-primary/10 transition-all duration-300">
+                    <feature.icon className="h-8 w-8 text-primary" />
                   </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">{feature.title}</CardTitle>
                   <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
                 </CardHeader>
               </Card>
@@ -744,47 +755,61 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4 md:px-6">
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background to-accent/20">
         <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold">Simple, Transparent Pricing</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <div className="text-center mb-16 space-y-4 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
+              <DollarSign className="h-4 w-4" />
+              <span>PRICING</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Choose the plan that best fits your hotel's needs
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
               <Card 
                 key={plan.name} 
-                className={`relative flex flex-col ${plan.popular ? 'border-primary shadow-elegant' : 'border-border'}`}
+                className={`relative flex flex-col transition-all duration-300 hover:-translate-y-2 ${
+                  plan.popular 
+                    ? 'border-primary shadow-card-hover scale-105' 
+                    : 'border-border/50 shadow-card hover:shadow-card-hover hover:border-primary/30'
+                }`}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <span className="bg-gradient-primary text-white px-5 py-2 rounded-full text-sm font-semibold shadow-lg">
                       Most Popular
                     </span>
                   </div>
                 )}
                 <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-5xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="mt-6">
+                    <span className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">{plan.price}</span>
+                    <span className="text-muted-foreground text-lg">{plan.period}</span>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col space-y-4">
-                  <ul className="space-y-3 flex-1">
+                <CardContent className="flex-1 flex flex-col space-y-6">
+                  <ul className="space-y-4 flex-1">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-primary"></div>
-                        <span>{feature}</span>
+                      <li key={feature} className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-sm leading-relaxed">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   <Link to="/auth" className="block mt-auto">
                     <Button 
-                      className={`w-full ${plan.popular ? 'bg-gradient-primary' : ''}`}
+                      className={`w-full font-semibold ${
+                        plan.popular 
+                          ? 'bg-gradient-primary shadow-elegant hover:shadow-glow hover:scale-[1.02]' 
+                          : 'border-2 hover:border-primary hover:bg-primary/5'
+                      }`}
                       variant={plan.popular ? 'default' : 'outline'}
+                      size="lg"
                     >
                       Get Started
                     </Button>
@@ -798,27 +823,48 @@ const Landing = () => {
 
 
       {/* Footer */}
-      <footer className="py-12 px-4 md:px-6 border-t bg-accent/30">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <span className="text-2xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
-              <p className="text-sm text-muted-foreground mt-4">Modern hotel management for the digital age</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <div className="space-y-2">
-                <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="block text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
+      <footer className="relative py-16 px-4 md:px-6 border-t border-border/40 bg-gradient-footer overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+        <div className="container mx-auto relative">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2">
+              <span className="text-3xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">WIXOTEL</span>
+              <p className="text-base text-muted-foreground mt-4 max-w-md leading-relaxed">
+                Modern hotel management for the digital age. Empowering hospitality businesses worldwide with cutting-edge technology.
+              </p>
+              <div className="flex gap-4 mt-6">
+                <Link to="/register-hotel">
+                  <Button size="sm" className="bg-gradient-primary hover:opacity-90 transition-all shadow-md hover:shadow-lg">
+                    Get Started
+                  </Button>
+                </Link>
+                <Button size="sm" variant="outline" onClick={() => setIsDemoOpen(true)}>
+                  Watch Demo
+                </Button>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Contact</h3>
-              <a href="mailto:support@wixotel.com" className="block text-sm text-primary hover:underline">support@wixotel.com</a>
+              <h3 className="font-bold text-lg mb-4 text-foreground">Legal</h3>
+              <div className="space-y-3">
+                <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 duration-200">Privacy Policy</Link>
+                <Link to="/terms" className="block text-sm text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 duration-200">Terms of Service</Link>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg mb-4 text-foreground">Contact</h3>
+              <a href="mailto:support@wixotel.com" className="block text-sm text-primary hover:underline transition-all hover:translate-x-1 duration-200">
+                support@wixotel.com
+              </a>
             </div>
           </div>
-          <div className="border-t pt-8 text-center">
-            <p className="text-sm text-muted-foreground">© 2025 WIXOTEL. All rights reserved. GDPR Compliant.</p>
+          <div className="border-t border-border/40 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-muted-foreground">© 2025 WIXOTEL. All rights reserved. GDPR Compliant.</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Secure & Encrypted</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

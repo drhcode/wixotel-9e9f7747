@@ -31,6 +31,11 @@ All colors MUST be HSL.
 
     --secondary: 203 88% 64%;
     --secondary-foreground: 0 0% 100%;
+    
+    /* Star Rating Colors */
+    --star-filled: 45 93% 47%;
+    --star-half: 45 93% 47%;
+    --star-empty: 240 5% 64.9%;
 
     --muted: 210 20% 90%;
     --muted-foreground: 216 10% 50%;
@@ -66,6 +71,8 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(208 69% 33%), hsl(208 69% 45%));
     --gradient-hero: linear-gradient(135deg, hsl(208 69% 33%) 0%, hsl(203 88% 64%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 33% 98%));
+    --gradient-footer: linear-gradient(to bottom, hsl(210 33% 98%), hsl(0 0% 100%));
+    --gradient-nav: linear-gradient(to bottom, hsl(0 0% 100% / 0.95), hsl(0 0% 100% / 0.98));
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -73,6 +80,8 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
     --shadow-glow: 0 0 30px hsl(203 88% 64% / 0.3);
     --shadow-elegant: 0 20px 40px -10px hsl(208 69% 33% / 0.2);
+    --shadow-card: 0 2px 8px hsl(208 69% 33% / 0.08);
+    --shadow-card-hover: 0 8px 24px hsl(208 69% 33% / 0.15);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -95,6 +104,11 @@ All colors MUST be HSL.
 
     --secondary: 203 88% 50%;
     --secondary-foreground: 0 0% 100%;
+    
+    /* Star Rating Colors - Dark Mode */
+    --star-filled: 48 96% 53%;
+    --star-half: 48 96% 53%;
+    --star-empty: 217.2 32.6% 17.5%;
 
     --muted: 216 15% 25%;
     --muted-foreground: 210 15% 65%;
@@ -128,10 +142,14 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(208 69% 40%), hsl(208 69% 55%));
     --gradient-hero: linear-gradient(135deg, hsl(208 69% 40%) 0%, hsl(203 88% 50%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(216 18% 16%), hsl(216 18% 18%));
+    --gradient-footer: linear-gradient(to bottom, hsl(216 18% 16%), hsl(216 20% 12%));
+    --gradient-nav: linear-gradient(to bottom, hsl(216 20% 12% / 0.95), hsl(216 20% 12% / 0.98));
     
     /* Dark mode shadows */
     --shadow-glow: 0 0 30px hsl(203 88% 64% / 0.2);
     --shadow-elegant: 0 20px 40px -10px hsl(208 69% 40% / 0.3);
+    --shadow-card: 0 2px 8px hsl(208 69% 40% / 0.08);
+    --shadow-card-hover: 0 8px 24px hsl(208 69% 40% / 0.15);
   }
 }
 
