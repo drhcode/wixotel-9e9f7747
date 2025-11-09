@@ -1,32 +1,62 @@
 import { useState, useEffect } from "react";
 
 interface TypingAnimationProps {
-  text: string;
+  phrases: string[];
   className?: string;
-  speed?: number;
+  typingSpeed?: number;
+  deletingSpeed?: number;
+  pauseDuration?: number;
 }
 
-export const TypingAnimation = ({ text, className = "", speed = 100 }: TypingAnimationProps) => {
+export const TypingAnimation = ({ 
+  phrases, 
+  className = "", 
+  typingSpeed = 80,
+  deletingSpeed = 50,
+  pauseDuration = 2000
+}: TypingAnimationProps) => {
   const [displayedText, setDisplayedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
+    const currentPhrase = phrases[phraseIndex];
 
-      return () => clearTimeout(timeout);
+    if (isPaused) {
+      const pauseTimeout = setTimeout(() => {
+        setIsPaused(false);
+        setIsDeleting(true);
+      }, pauseDuration);
+      return () => clearTimeout(pauseTimeout);
     }
-  }, [currentIndex, text, speed]);
+
+    if (!isDeleting && displayedText === currentPhrase) {
+      setIsPaused(true);
+      return;
+    }
+
+    if (isDeleting && displayedText === "") {
+      setIsDeleting(false);
+      setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      if (isDeleting) {
+        setDisplayedText(currentPhrase.substring(0, displayedText.length - 1));
+      } else {
+        setDisplayedText(currentPhrase.substring(0, displayedText.length + 1));
+      }
+    }, isDeleting ? deletingSpeed : typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, phraseIndex, isDeleting, isPaused, phrases, typingSpeed, deletingSpeed, pauseDuration]);
 
   return (
     <span className={className}>
       {displayedText}
-      {currentIndex < text.length && (
-        <span className="animate-pulse">|</span>
-      )}
+      <span className="animate-pulse ml-1">|</span>
     </span>
   );
 };

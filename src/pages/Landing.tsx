@@ -437,9 +437,15 @@ const Landing = () => {
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight min-h-[180px] lg:min-h-[240px]">
                 <TypingAnimation 
-                  text="Elevate Your Hotel Experience" 
+                  phrases={[
+                    "Elevate Your Hotel Experience",
+                    "Transform Your Hospitality",
+                    "Modernize Your Management"
+                  ]}
                   className="bg-gradient-primary bg-clip-text text-transparent"
-                  speed={80}
+                  typingSpeed={80}
+                  deletingSpeed={50}
+                  pauseDuration={2000}
                 />
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
