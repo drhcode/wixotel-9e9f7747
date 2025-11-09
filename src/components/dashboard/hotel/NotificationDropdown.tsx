@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -27,11 +29,10 @@ interface NotificationDropdownProps {
 }
 
 export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const MAX_DISPLAY = 20;
 
   useEffect(() => {
     fetchNotifications();
@@ -73,21 +74,9 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
     };
   }, [hotelId]);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [currentPage]);
 
   const fetchNotifications = async () => {
     try {
-      // Get total count
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: 'exact', head: true })
-        .eq("hotel_id", hotelId);
-
-      const total = count || 0;
-      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
-
       // Get unread count
       const { count: unreadCountResult } = await supabase
         .from("notifications")
@@ -97,16 +86,13 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
       
       setUnreadCount(unreadCountResult || 0);
 
-      // Get paginated data
-      const from = (currentPage - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
+      // Get recent notifications (max 20)
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("hotel_id", hotelId)
         .order("created_at", { ascending: false })
-        .range(from, to);
+        .limit(MAX_DISPLAY);
 
       if (error) throw error;
       
@@ -204,33 +190,17 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
             ))
           )}
         </ScrollArea>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-2 py-2 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="h-8"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="h-8"
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        )}
+        <DropdownMenuSeparator />
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full"
+            onClick={() => navigate('/notifications')}
+          >
+            See All Notifications
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

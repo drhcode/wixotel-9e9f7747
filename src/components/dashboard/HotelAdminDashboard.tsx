@@ -310,8 +310,6 @@ const HotelAdminDashboard = () => {
         return <InvoicesViewer key={refreshKey} />;
       case "support":
         return <SupportManager key={refreshKey} hotelId={hotel.id} />;
-      case "notifications":
-        return <Notifications key={refreshKey} />;
       case "settings":
         return <ProfileSettings key={refreshKey} />;
       default:
@@ -375,7 +373,6 @@ const HotelAdminDashboard = () => {
                   { id: "earnings", label: "Earnings" },
                   { id: "invoices", label: "Invoices" },
                   { id: "ical", label: "Sync" },
-                  { id: "notifications", label: "Notifications" },
                   { id: "support", label: "Support" },
                   { id: "settings", label: "Settings" },
                 ].map((tab) => (
@@ -421,7 +418,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "calendar", "bookings", "rooms", "guests", "leads", "earnings", "invoices", "ical", "notifications", "support", "settings"].map((tab) => (
+                {["overview", "calendar", "bookings", "rooms", "guests", "leads", "earnings", "invoices", "ical", "support", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}
