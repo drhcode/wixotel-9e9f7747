@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 import { TypingAnimation } from "@/components/TypingAnimation";
+import { ExploreCities } from "@/components/ExploreCities";
 
 
 interface PublicHotel {
@@ -40,6 +41,7 @@ const Landing = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
@@ -163,6 +165,7 @@ const Landing = () => {
         const country = data.address.country;
         
         if (country) {
+          setUserCountry(country);
           setSelectedCountry(country);
           // Don't set city to avoid exact match issues - just filter by country and sort by distance
           setTimeout(() => setSelectedCity("all"), 100);
@@ -516,6 +519,9 @@ const Landing = () => {
 
       {/* Demo Modal */}
       <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
+
+      {/* Explore Cities Section */}
+      <ExploreCities userCountry={userCountry} hotels={hotels} />
 
       {/* Hotels Section */}
       {hotels.length > 0 && (
