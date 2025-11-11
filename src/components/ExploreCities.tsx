@@ -1,12 +1,15 @@
 import { MapPin } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CityData {
   city: string;
   hotelCount: number;
   country: string;
   imageUrl: string | null;
+  isLoading?: boolean;
 }
 
 interface ExploreCitiesProps {
@@ -20,35 +23,78 @@ interface ExploreCitiesProps {
 
 export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
   const navigate = useNavigate();
+  const [citiesWithImages, setCitiesWithImages] = useState<CityData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!userCountry) return null;
+  useEffect(() => {
+    if (!userCountry) return;
 
-  // Filter hotels by user's country and group by city
-  const cityData = hotels
-    .filter(h => h.country === userCountry && h.city)
-    .reduce((acc, hotel) => {
-      const city = hotel.city!;
-      if (!acc[city]) {
-        acc[city] = { 
-          city, 
-          hotelCount: 0, 
-          country: userCountry,
-          imageUrl: hotel.about_us_image || null
-        };
-      }
-      acc[city].hotelCount++;
-      // Use first available image
-      if (!acc[city].imageUrl && hotel.about_us_image) {
-        acc[city].imageUrl = hotel.about_us_image;
-      }
-      return acc;
-    }, {} as Record<string, CityData>);
+    // Filter hotels by user's country and group by city
+    const cityData = hotels
+      .filter(h => h.country === userCountry && h.city)
+      .reduce((acc, hotel) => {
+        const city = hotel.city!;
+        if (!acc[city]) {
+          acc[city] = { 
+            city, 
+            hotelCount: 0, 
+            country: userCountry,
+            imageUrl: hotel.about_us_image || null,
+            isLoading: false
+          };
+        }
+        acc[city].hotelCount++;
+        // Use first available image
+        if (!acc[city].imageUrl && hotel.about_us_image) {
+          acc[city].imageUrl = hotel.about_us_image;
+        }
+        return acc;
+      }, {} as Record<string, CityData>);
 
-  const cities = Object.values(cityData)
-    .sort((a, b) => b.hotelCount - a.hotelCount)
-    .slice(0, 12);
+    const cities = Object.values(cityData)
+      .sort((a, b) => b.hotelCount - a.hotelCount)
+      .slice(0, 12);
 
-  if (cities.length === 0) return null;
+    if (cities.length === 0) return;
+
+    const fetchCityImages = async () => {
+      setIsLoading(true);
+      setCitiesWithImages(cities);
+
+      const updatedCities = await Promise.all(
+        cities.map(async (city) => {
+          // If hotel already has an image, use it
+          if (city.imageUrl) {
+            return city;
+          }
+
+          // Otherwise, fetch from Unsplash
+          try {
+            const { data, error } = await supabase.functions.invoke('fetch-city-image', {
+              body: { cityName: city.city }
+            });
+
+            if (error) throw error;
+
+            return {
+              ...city,
+              imageUrl: data?.imageUrl || null
+            };
+          } catch (error) {
+            console.error(`Error fetching image for ${city.city}:`, error);
+            return city;
+          }
+        })
+      );
+
+      setCitiesWithImages(updatedCities);
+      setIsLoading(false);
+    };
+
+    fetchCityImages();
+  }, [userCountry, hotels]);
+
+  if (!userCountry || citiesWithImages.length === 0) return null;
 
   const handleCityClick = (city: string) => {
     navigate(`/city-hotels?country=${encodeURIComponent(userCountry)}&city=${encodeURIComponent(city)}`);
@@ -72,7 +118,7 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
 
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex gap-8 pb-4 px-4">
-            {cities.map((cityData, index) => (
+            {citiesWithImages.map((cityData, index) => (
               <div
                 key={cityData.city}
                 className="flex-none cursor-pointer group animate-fade-in"
@@ -85,7 +131,11 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
                   {/* City Image Circle */}
                   <div className="relative">
                     <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 shadow-elegant transition-all group-hover:border-primary/50 group-hover:shadow-glow group-hover:scale-110">
-                      {cityData.imageUrl ? (
+                      {isLoading && !cityData.imageUrl ? (
+                        <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+                          <MapPin className="h-12 w-12 text-muted-foreground animate-pulse" />
+                        </div>
+                      ) : cityData.imageUrl ? (
                         <img 
                           src={cityData.imageUrl} 
                           alt={cityData.city}
