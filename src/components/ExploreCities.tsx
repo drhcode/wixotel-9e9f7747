@@ -66,7 +66,7 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
             Explore {userCountry}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            These popular destinations have a lot to offer
+            Discover exceptional stays in the most sought-after destinations
           </p>
         </div>
 
