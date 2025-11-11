@@ -1,5 +1,4 @@
 import { MapPin } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 
@@ -7,6 +6,7 @@ interface CityData {
   city: string;
   hotelCount: number;
   country: string;
+  imageUrl: string | null;
 }
 
 interface ExploreCitiesProps {
@@ -14,6 +14,7 @@ interface ExploreCitiesProps {
   hotels: Array<{
     city: string | null;
     country: string | null;
+    about_us_image: string | null;
   }>;
 }
 
@@ -28,9 +29,18 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
     .reduce((acc, hotel) => {
       const city = hotel.city!;
       if (!acc[city]) {
-        acc[city] = { city, hotelCount: 0, country: userCountry };
+        acc[city] = { 
+          city, 
+          hotelCount: 0, 
+          country: userCountry,
+          imageUrl: hotel.about_us_image || null
+        };
       }
       acc[city].hotelCount++;
+      // Use first available image
+      if (!acc[city].imageUrl && hotel.about_us_image) {
+        acc[city].imageUrl = hotel.about_us_image;
+      }
       return acc;
     }, {} as Record<string, CityData>);
 
@@ -61,38 +71,49 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
         </div>
 
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-6 pb-4">
+          <div className="flex gap-8 pb-4 px-4">
             {cities.map((cityData, index) => (
-              <Card
+              <div
                 key={cityData.city}
-                className="flex-none w-[280px] cursor-pointer transition-all hover:shadow-elegant hover:scale-105 hover:border-primary/50 bg-card/80 backdrop-blur-sm animate-fade-in"
+                className="flex-none cursor-pointer group animate-fade-in"
                 onClick={() => handleCityClick(cityData.city)}
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}
               >
-                <CardContent className="p-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                        <MapPin className="h-6 w-6 text-primary-foreground" />
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">
-                          {cityData.hotelCount}
+                <div className="flex flex-col items-center gap-3">
+                  {/* City Image Circle */}
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 shadow-elegant transition-all group-hover:border-primary/50 group-hover:shadow-glow group-hover:scale-110">
+                      {cityData.imageUrl ? (
+                        <img 
+                          src={cityData.imageUrl} 
+                          alt={cityData.city}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
+                          <MapPin className="h-12 w-12 text-primary-foreground" />
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {cityData.hotelCount === 1 ? 'Hotel' : 'Hotels'}
-                        </div>
-                      </div>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold">{cityData.city}</h3>
-                      <p className="text-sm text-muted-foreground">{userCountry}</p>
+                    {/* Hotel Count Badge */}
+                    <div className="absolute -bottom-2 -right-2 bg-gradient-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm shadow-glow border-2 border-background">
+                      {cityData.hotelCount}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  {/* City Name */}
+                  <div className="text-center">
+                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                      {cityData.city}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {cityData.hotelCount} {cityData.hotelCount === 1 ? 'Hotel' : 'Hotels'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
           <ScrollBar orientation="horizontal" />
