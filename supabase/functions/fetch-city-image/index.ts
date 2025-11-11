@@ -20,53 +20,44 @@ serve(async (req) => {
       );
     }
 
-    const unsplashAccessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
+    // Fetch image from Wikipedia/Wikimedia Commons (completely free, no API key needed)
+    const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages|pageterms&piprop=original&titles=${encodeURIComponent(cityName)}&origin=*`;
     
-    if (!unsplashAccessKey) {
-      return new Response(
-        JSON.stringify({ error: 'Unsplash API key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    // Fetch image from Unsplash
-    const searchQuery = `${cityName} city skyline landmark`;
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`,
-      {
-        headers: {
-          'Authorization': `Client-ID ${unsplashAccessKey}`,
-        },
-      }
-    );
+    const response = await fetch(wikiSearchUrl);
 
     if (!response.ok) {
-      throw new Error(`Unsplash API error: ${response.statusText}`);
+      throw new Error(`Wikipedia API error: ${response.statusText}`);
     }
 
     const data = await response.json();
+    const pages = data.query?.pages;
     
-    if (data.results && data.results.length > 0) {
-      const image = data.results[0];
-      return new Response(
-        JSON.stringify({ 
-          imageUrl: image.urls.regular,
-          thumbnail: image.urls.small,
-          photographer: image.user.name,
-          photographerUrl: image.user.links.html
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ imageUrl: null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (pages) {
+      const page = Object.values(pages)[0] as any;
+      const imageUrl = page?.original?.source;
+      
+      if (imageUrl) {
+        return new Response(
+          JSON.stringify({ 
+            imageUrl: imageUrl,
+            thumbnail: imageUrl,
+            photographer: 'Wikimedia Commons',
+            photographerUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(cityName)}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
+    
+    return new Response(
+      JSON.stringify({ imageUrl: null }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error fetching city image:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
