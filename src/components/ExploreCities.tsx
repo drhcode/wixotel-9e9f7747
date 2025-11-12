@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import korcaImage from "@/assets/cities/korca.jpg";
 
 interface CityData {
   city: string;
@@ -26,6 +26,13 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
   const [citiesWithImages, setCitiesWithImages] = useState<CityData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // City images mapping - add your uploaded city photos here
+  const cityImagesMap: Record<string, string> = {
+    'Korçë': korcaImage,
+    'Korca': korcaImage,
+    'Korça': korcaImage,
+  };
+
   useEffect(() => {
     if (!userCountry) return;
 
@@ -35,16 +42,18 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
       .reduce((acc, hotel) => {
         const city = hotel.city!;
         if (!acc[city]) {
+          // Use uploaded city image if available, otherwise use hotel image
+          const cityImage = cityImagesMap[city] || hotel.about_us_image || null;
           acc[city] = { 
             city, 
             hotelCount: 0, 
             country: userCountry,
-            imageUrl: hotel.about_us_image || null,
+            imageUrl: cityImage,
             isLoading: false
           };
         }
         acc[city].hotelCount++;
-        // Use first available image
+        // If no city image, use first available hotel image
         if (!acc[city].imageUrl && hotel.about_us_image) {
           acc[city].imageUrl = hotel.about_us_image;
         }
@@ -55,43 +64,8 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
       .sort((a, b) => b.hotelCount - a.hotelCount)
       .slice(0, 12);
 
-    if (cities.length === 0) return;
-
-    const fetchCityImages = async () => {
-      setIsLoading(true);
-      setCitiesWithImages(cities);
-
-      const updatedCities = await Promise.all(
-        cities.map(async (city) => {
-          // If hotel already has an image, use it
-          if (city.imageUrl) {
-            return city;
-          }
-
-          // Otherwise, fetch from Unsplash
-          try {
-            const { data, error } = await supabase.functions.invoke('fetch-city-image', {
-              body: { cityName: city.city }
-            });
-
-            if (error) throw error;
-
-            return {
-              ...city,
-              imageUrl: data?.imageUrl || null
-            };
-          } catch (error) {
-            console.error(`Error fetching image for ${city.city}:`, error);
-            return city;
-          }
-        })
-      );
-
-      setCitiesWithImages(updatedCities);
-      setIsLoading(false);
-    };
-
-    fetchCityImages();
+    setCitiesWithImages(cities);
+    setIsLoading(false);
   }, [userCountry, hotels]);
 
   if (!userCountry || citiesWithImages.length === 0) return null;
