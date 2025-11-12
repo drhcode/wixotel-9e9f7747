@@ -438,18 +438,11 @@ const Landing = () => {
                 <Zap className="h-4 w-4 text-primary animate-pulse" />
                 <span className="text-foreground">AI-Powered Hotel Management</span>
               </div>
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight min-h-[180px] lg:min-h-[240px]">
-                <TypingAnimation 
-                  phrases={[
-                    "Elevate Your Hotel Experience",
-                    "Transform Your Hospitality",
-                    "Modernize Your Management"
-                  ]}
-                  className="bg-gradient-primary bg-clip-text text-transparent"
-                  typingSpeed={80}
-                  deletingSpeed={50}
-                  pauseDuration={2000}
-                />
+              <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight">
+                <span className="bg-gradient-primary bg-clip-text text-transparent drop-shadow-[0_0_25px_hsl(var(--primary)/0.3)]">
+                  Elevate
+                </span>{" "}
+                Your Hotel Experience
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
                 The ultimate platform for modern hospitality. Seamlessly manage rooms, bookings, guests, and revenue with intelligent automation.
