@@ -157,8 +157,23 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
 
     // Cleanup
     return () => {
-      markers.forEach(marker => marker.remove());
-      map.current?.remove();
+      markers.forEach(marker => {
+        try {
+          marker.remove();
+        } catch (e) {
+          // Marker already removed
+        }
+      });
+      
+      if (map.current) {
+        try {
+          map.current.remove();
+          map.current = null;
+        } catch (e) {
+          // Map already removed
+        }
+      }
+      
       // Remove custom styles
       const styles = document.querySelectorAll('style');
       styles.forEach(s => {
