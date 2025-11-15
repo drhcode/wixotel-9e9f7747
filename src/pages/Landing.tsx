@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
-import { TypingAnimation } from "@/components/TypingAnimation";
 import { ExploreCities } from "@/components/ExploreCities";
 
 
