@@ -333,7 +333,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-gradient-nav backdrop-blur-2xl border-b border-border/40 z-50 shadow-md">
+      <nav className="fixed top-0 w-full bg-gradient-nav backdrop-blur-2xl border-b border-border/40 z-[100] shadow-md">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
@@ -639,7 +639,7 @@ const Landing = () => {
               </div>
 
               {/* Map - Visible on all devices */}
-              <div className="w-full">
+              <div className="w-full relative z-10">
                 <div className="h-[400px] lg:h-[720px] rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-border/40">
                   <HotelsLeafletMap 
                     hotels={filteredHotels}
