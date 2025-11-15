@@ -401,6 +401,11 @@ const HotelPublicView = () => {
       const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       const totalAmount = selectedRoom.price * nights;
 
+      // Capture device info for fraud prevention (GDPR compliant - disclosed in Privacy Policy)
+      const { getDeviceInfo, getUserIP } = await import("@/lib/deviceTracking");
+      const deviceInfo = getDeviceInfo();
+      const ipAddress = await getUserIP();
+
       const leadData = {
         hotel_id: hotel.id,
         room_id: selectedRoom.id,
@@ -413,6 +418,10 @@ const HotelPublicView = () => {
         status: "new",
         total_amount: totalAmount,
         message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"}) - ${nights} night(s) at €${selectedRoom.price}/night = €${totalAmount}`,
+        ip_address: ipAddress,
+        device_type: deviceInfo.device_type,
+        browser: deviceInfo.browser,
+        user_agent: deviceInfo.user_agent,
       };
 
       console.log("Submitting lead with data:", leadData);
@@ -534,6 +543,11 @@ const HotelPublicView = () => {
         return;
       }
 
+      // Capture device info for fraud prevention (GDPR compliant - disclosed in Privacy Policy)
+      const { getDeviceInfo, getUserIP } = await import("@/lib/deviceTracking");
+      const deviceInfo = getDeviceInfo();
+      const ipAddress = await getUserIP();
+
       // Submit lead
       const { error } = await supabase.from("leads").insert({
         hotel_id: hotel.id,
@@ -544,6 +558,10 @@ const HotelPublicView = () => {
         check_out: validatedData.checkOut,
         guests: validatedData.guests,
         message: validatedData.message || null,
+        ip_address: ipAddress,
+        device_type: deviceInfo.device_type,
+        browser: deviceInfo.browser,
+        user_agent: deviceInfo.user_agent,
       });
 
       if (error) throw error;
