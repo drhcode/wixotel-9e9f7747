@@ -386,7 +386,7 @@ const Landing = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px]">
+                <SheetContent side="right" className="w-[300px] z-[110]">
                   <div className="flex flex-col gap-6 mt-8">
                     <Link 
                       to="/hotels" 
