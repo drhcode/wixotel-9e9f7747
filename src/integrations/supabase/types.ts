@@ -722,14 +722,17 @@ export type Database = {
       }
       leads: {
         Row: {
+          browser: string | null
           check_in: string
           check_out: string
           created_at: string
+          device_type: string | null
           email: string
           full_name: string
           guests: number
           hotel_id: string
           id: string
+          ip_address: string | null
           is_read: boolean
           message: string | null
           phone: string
@@ -737,16 +740,20 @@ export type Database = {
           status: string
           total_amount: number | null
           updated_at: string
+          user_agent: string | null
         }
         Insert: {
+          browser?: string | null
           check_in: string
           check_out: string
           created_at?: string
+          device_type?: string | null
           email: string
           full_name: string
           guests?: number
           hotel_id: string
           id?: string
+          ip_address?: string | null
           is_read?: boolean
           message?: string | null
           phone: string
@@ -754,16 +761,20 @@ export type Database = {
           status?: string
           total_amount?: number | null
           updated_at?: string
+          user_agent?: string | null
         }
         Update: {
+          browser?: string | null
           check_in?: string
           check_out?: string
           created_at?: string
+          device_type?: string | null
           email?: string
           full_name?: string
           guests?: number
           hotel_id?: string
           id?: string
+          ip_address?: string | null
           is_read?: boolean
           message?: string | null
           phone?: string
@@ -771,6 +782,7 @@ export type Database = {
           status?: string
           total_amount?: number | null
           updated_at?: string
+          user_agent?: string | null
         }
         Relationships: [
           {
