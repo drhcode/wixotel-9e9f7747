@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Mail, Phone, Calendar, Users, MessageSquare, Loader2, ChevronLeft, ChevronRight, Search, Monitor, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -25,6 +25,10 @@ interface Lead {
   room_id: string | null;
   is_read?: boolean;
   total_amount?: number;
+  ip_address?: string | null;
+  device_type?: string | null;
+  browser?: string | null;
+  user_agent?: string | null;
 }
 
 interface Room {
@@ -439,6 +443,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                     <TableHead>Contact</TableHead>
                     <TableHead>Stay Dates</TableHead>
                     <TableHead>Guests</TableHead>
+                    <TableHead>Device</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
@@ -481,6 +486,22 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                         {format(new Date(lead.check_in), "MMM dd")} - {format(new Date(lead.check_out), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell>{lead.guests}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5 text-xs">
+                          {lead.device_type && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Monitor className="h-3 w-3" />
+                              <span className="capitalize">{lead.device_type}</span>
+                            </div>
+                          )}
+                          {lead.browser && (
+                            <span className="text-muted-foreground">{lead.browser}</span>
+                          )}
+                          {!lead.device_type && !lead.browser && (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">
                         {lead.total_amount ? `€${lead.total_amount.toFixed(2)}` : 'N/A'}
                       </TableCell>
@@ -637,6 +658,49 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground leading-relaxed">{selectedLead.message}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Security & Device Information */}
+                {(selectedLead.ip_address || selectedLead.device_type || selectedLead.browser) && (
+                  <Card className="border-muted">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Security & Device Information
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Collected for fraud prevention (90-day retention)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedLead.ip_address && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">IP Address</div>
+                          <div className="font-mono text-sm">{selectedLead.ip_address}</div>
+                        </div>
+                      )}
+                      {selectedLead.device_type && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">Device Type</div>
+                          <div className="font-medium capitalize">{selectedLead.device_type}</div>
+                        </div>
+                      )}
+                      {selectedLead.browser && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">Browser</div>
+                          <div className="font-medium">{selectedLead.browser}</div>
+                        </div>
+                      )}
+                      {selectedLead.user_agent && (
+                        <div>
+                          <div className="text-sm text-muted-foreground">User Agent</div>
+                          <div className="font-mono text-xs text-muted-foreground break-all">
+                            {selectedLead.user_agent}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}
