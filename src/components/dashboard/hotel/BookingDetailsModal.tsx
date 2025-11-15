@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Edit2, AlertTriangle } from "lucide-react";
+import { CalendarIcon, Edit2, AlertTriangle, Printer } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,90 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [notes, setNotes] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
   const [status, setStatus] = useState<BookingStatus>("pending");
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=300,height=600');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Booking Receipt</title>
+          <style>
+            @media print {
+              @page { margin: 0; size: 80mm auto; }
+            }
+            body {
+              font-family: 'Courier New', monospace;
+              width: 80mm;
+              margin: 0;
+              padding: 10mm;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .line { border-bottom: 1px dashed #000; margin: 5px 0; }
+            .row { display: flex; justify-content: space-between; margin: 3px 0; }
+            .label { font-weight: bold; }
+            h1 { font-size: 16px; margin: 10px 0; }
+            h2 { font-size: 14px; margin: 8px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="center">
+            <h1>${booking.hotels?.name || 'Hotel'}</h1>
+            <div class="bold">BOOKING RECEIPT</div>
+          </div>
+          <div class="line"></div>
+          <div class="row">
+            <span class="label">Confirmation:</span>
+            <span>${booking.confirmation_number}</span>
+          </div>
+          <div class="line"></div>
+          <div class="row">
+            <span class="label">Guest:</span>
+            <span>${booking.full_name || booking.guests?.name || ''}</span>
+          </div>
+          <div class="row">
+            <span class="label">Room:</span>
+            <span>${booking.rooms?.name || ''} ${booking.rooms?.room_number ? '('+booking.rooms.room_number+')' : ''}</span>
+          </div>
+          <div class="line"></div>
+          <div class="row">
+            <span class="label">Check-in:</span>
+            <span>${format(new Date(booking.check_in), 'dd/MM/yyyy')}</span>
+          </div>
+          <div class="row">
+            <span class="label">Check-out:</span>
+            <span>${format(new Date(booking.check_out), 'dd/MM/yyyy')}</span>
+          </div>
+          <div class="row">
+            <span class="label">Guests:</span>
+            <span>${booking.guest_count || 1}</span>
+          </div>
+          <div class="line"></div>
+          <div class="row">
+            <span class="label">Total Amount:</span>
+            <span class="bold">€${booking.total_amount}</span>
+          </div>
+          <div class="line"></div>
+          <div class="center" style="margin-top: 10px; font-size: 10px;">
+            Thank you for your booking!
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
 
   useEffect(() => {
     if (booking) {
@@ -560,6 +644,10 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
                     Delete
                   </Button>
                 )}
+                <Button size="sm" variant="outline" onClick={handlePrint}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
                 <Button size="sm" variant="outline" onClick={onClose}>
                   Close
                 </Button>
