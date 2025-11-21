@@ -34,28 +34,36 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
   };
 
   useEffect(() => {
-    if (!userCountry) return;
-
-    // Filter hotels by user's country and group by city
+    // Group hotels by city (either from user's country or all countries)
     const cityData = hotels
-      .filter(h => h.country === userCountry && h.city)
+      .filter(h => {
+        // If userCountry is available, filter by that country
+        // Otherwise, show all cities
+        if (userCountry) {
+          return h.country === userCountry && h.city;
+        }
+        return h.city; // Show all cities if no country detected
+      })
       .reduce((acc, hotel) => {
         const city = hotel.city!;
-        if (!acc[city]) {
+        const country = hotel.country || 'Unknown';
+        const cityKey = `${city}, ${country}`; // Use city+country as key to avoid conflicts
+        
+        if (!acc[cityKey]) {
           // Use uploaded city image if available, otherwise use hotel image
           const cityImage = cityImagesMap[city] || hotel.about_us_image || null;
-          acc[city] = { 
-            city, 
+          acc[cityKey] = { 
+            city: cityKey, // Show "City, Country" format
             hotelCount: 0, 
-            country: userCountry,
+            country: country,
             imageUrl: cityImage,
             isLoading: false
           };
         }
-        acc[city].hotelCount++;
+        acc[cityKey].hotelCount++;
         // If no city image, use first available hotel image
-        if (!acc[city].imageUrl && hotel.about_us_image) {
-          acc[city].imageUrl = hotel.about_us_image;
+        if (!acc[cityKey].imageUrl && hotel.about_us_image) {
+          acc[cityKey].imageUrl = hotel.about_us_image;
         }
         return acc;
       }, {} as Record<string, CityData>);
@@ -68,10 +76,12 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
     setIsLoading(false);
   }, [userCountry, hotels]);
 
-  if (!userCountry || citiesWithImages.length === 0) return null;
+  if (citiesWithImages.length === 0) return null;
 
-  const handleCityClick = (city: string) => {
-    navigate(`/city-hotels?country=${encodeURIComponent(userCountry)}&city=${encodeURIComponent(city)}`);
+  const handleCityClick = (cityKey: string) => {
+    // cityKey is in format "City, Country"
+    const [city, country] = cityKey.split(', ');
+    navigate(`/city-hotels?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}`);
   };
 
   return (
@@ -83,7 +93,7 @@ export const ExploreCities = ({ userCountry, hotels }: ExploreCitiesProps) => {
             <span>EXPLORE DESTINATIONS</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Explore {userCountry}
+            {userCountry ? `Explore ${userCountry}` : 'Explore Popular Destinations'}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Discover exceptional stays in the most sought-after destinations
