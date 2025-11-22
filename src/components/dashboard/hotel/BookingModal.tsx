@@ -330,19 +330,24 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
                   <Calendar 
                     mode="single" 
                     selected={checkIn} 
-                     onSelect={(date) => {
-                       if (date) {
-                         setCheckIn(date);
-                         // Auto-adjust checkout to be at least 1 day after check-in
-                         const minCheckout = new Date(date);
-                         minCheckout.setDate(minCheckout.getDate() + 1);
-                         if (checkOut <= date) {
-                           setCheckOut(minCheckout);
-                         }
-                         setCheckInOpen(false);
-                         setCheckOutOpen(true);
-                       }
-                     }}
+                    onSelect={(date) => {
+                      if (date) {
+                        setCheckIn(date);
+                        // Auto-adjust checkout to be at least 1 day after check-in
+                        const minCheckout = new Date(date);
+                        minCheckout.setDate(minCheckout.getDate() + 1);
+                        if (checkOut <= date) {
+                          setCheckOut(minCheckout);
+                        }
+                        setCheckInOpen(false);
+                        setCheckOutOpen(true);
+                      }
+                    }}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
                   />
                 </PopoverContent>
               </Popover>
