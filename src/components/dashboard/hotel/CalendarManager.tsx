@@ -63,6 +63,46 @@ const CalendarManager = ({ hotelId }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotelId]);
 
+  // Listen for real-time room status updates
+  useEffect(() => {
+    if (!hotelId) return;
+
+    const channel = supabase
+      .channel('room-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `hotel_id=eq.${hotelId}`
+        },
+        (payload) => {
+          console.log('Room status updated:', payload);
+          // Update the room in the local state
+          setRooms(prevRooms => 
+            prevRooms.map(room => 
+              room.id === payload.new.id 
+                ? { ...room, status: payload.new.status }
+                : room
+            )
+          );
+          // Show a subtle notification for automatic status changes
+          if (payload.new.status === 'dirty') {
+            toast.info(
+              `Room ${payload.new.room_number || payload.new.name} marked as dirty after checkout`,
+              { duration: 3000 }
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [hotelId]);
+
   // Safari-only: fetch bookings for the single selected date
   useEffect(() => {
     if (!hotelId) return;
