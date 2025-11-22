@@ -80,6 +80,15 @@ const HotelAdminDashboard = () => {
         )
         .subscribe();
 
+      // Listen for manual broadcasts from lead marking
+      const broadcastChannel = supabase
+        .channel(`hotel-${hotel.id}`)
+        .on('broadcast', { event: 'leads_updated' }, () => {
+          console.log('Broadcast leads_updated received in horizontal menu');
+          fetchLeadsCount();
+        })
+        .subscribe();
+
       // Subscribe to invoices changes
       const invoicesChannel = supabase
         .channel(`invoices-count-horizontal-${hotel.id}`)
@@ -101,6 +110,7 @@ const HotelAdminDashboard = () => {
 
       return () => {
         supabase.removeChannel(leadsChannel);
+        supabase.removeChannel(broadcastChannel);
         supabase.removeChannel(invoicesChannel);
       };
     }
