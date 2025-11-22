@@ -172,6 +172,16 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       setLeads(leads.map(lead => 
         lead.id === leadId ? { ...lead, is_read: true } : lead
       ));
+      
+      // Force immediate count refresh in sidebar and dashboard via broadcast
+      const channel = supabase.channel(`hotel-${hotelId}`);
+      await channel.subscribe();
+      await channel.send({
+        type: 'broadcast',
+        event: 'leads_updated',
+        payload: { leadId, action: 'marked_read' }
+      });
+      await channel.unsubscribe();
     } catch (error: any) {
       console.error("Error marking lead as read:", error);
     }
