@@ -49,19 +49,7 @@ export const CalendarBookingsList = ({
                         />
                       )}
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
-                          <span 
-                            className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                            style={{
-                              backgroundColor: booking.lead_id ? "#7C3BED15" : "#16A24915",
-                              color: booking.lead_id ? "#7C3BED" : "#16A249",
-                              border: `1px solid ${booking.lead_id ? "#7C3BED40" : "#16A24940"}`
-                            }}
-                          >
-                            {booking.lead_id ? "Lead" : "Direct"}
-                          </span>
-                        </div>
+                        <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
                         <p className="text-sm text-muted-foreground">
                           Room {booking.rooms?.room_number || booking.rooms?.name}
                         </p>
@@ -74,6 +62,18 @@ export const CalendarBookingsList = ({
                   <div className="text-xs text-muted-foreground">
                     {format(new Date(booking.check_in), "MMM dd")} -{" "}
                     {format(new Date(booking.check_out), "MMM dd, yyyy")}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span 
+                      className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                      style={{
+                        backgroundColor: booking.lead_id ? "#7C3BED15" : "#16A24915",
+                        color: booking.lead_id ? "#7C3BED" : "#16A249",
+                        border: `1px solid ${booking.lead_id ? "#7C3BED40" : "#16A24940"}`
+                      }}
+                    >
+                      {booking.lead_id ? "Lead" : "Direct"}
+                    </span>
                   </div>
                   <div className="text-sm font-medium mt-2">€{booking.total_amount}</div>
                 </Card>

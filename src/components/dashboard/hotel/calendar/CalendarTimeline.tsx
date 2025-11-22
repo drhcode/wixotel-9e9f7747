@@ -222,12 +222,16 @@ export const CalendarTimeline = ({
                             onClick={() => onBookingClick(startBooking)}
                             title={startBooking.full_name || startBooking.guests?.name}
                           >
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <div className="font-semibold truncate">
-                                {startBooking.full_name || startBooking.guests?.name}
-                              </div>
+                            <div className="font-semibold truncate">
+                              {startBooking.full_name || startBooking.guests?.name}
+                            </div>
+                            <div className="text-[10px] opacity-90 truncate">
+                              {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
+                              {format(new Date(startBooking.check_out), "MMM dd")}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
                               <span 
-                                className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0"
+                                className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                                 style={{
                                   backgroundColor: startBooking.lead_id ? "#7C3BED15" : "#16A24915",
                                   color: startBooking.lead_id ? "#7C3BED" : "#16A249",
@@ -236,10 +240,6 @@ export const CalendarTimeline = ({
                               >
                                 {startBooking.lead_id ? "Lead" : "Direct"}
                               </span>
-                            </div>
-                            <div className="text-[10px] opacity-90 truncate">
-                              {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
-                              {format(new Date(startBooking.check_out), "MMM dd")}
                             </div>
                           </div>
                         </div>
