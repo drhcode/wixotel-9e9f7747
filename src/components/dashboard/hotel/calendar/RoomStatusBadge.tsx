@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 
 interface RoomStatusBadgeProps {
   roomId: string;
@@ -30,7 +31,12 @@ export const RoomStatusBadge = ({ roomId, status, onStatusChange }: RoomStatusBa
 
       if (error) throw error;
 
-      toast.success("Room status updated");
+      toast.success(
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4" />
+          <span>Room status updated to {ROOM_STATUSES[newStatus as keyof typeof ROOM_STATUSES]?.label}</span>
+        </div>
+      );
       onStatusChange?.(newStatus);
     } catch (error) {
       console.error("Error updating room status:", error);
@@ -40,14 +46,20 @@ export const RoomStatusBadge = ({ roomId, status, onStatusChange }: RoomStatusBa
 
   return (
     <Select value={currentStatus} onValueChange={handleStatusChange}>
-      <SelectTrigger className="w-[140px] h-6 text-xs">
+      <SelectTrigger className="w-[140px] h-7 text-xs border-2">
         <SelectValue>
-          <Badge variant="outline" className={`${statusConfig.color} text-[10px] px-2 py-0`}>
+          <Badge variant="outline" className={`${statusConfig.color} text-[10px] px-2 py-0.5 font-semibold`}>
             {statusConfig.label}
           </Badge>
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="bg-background z-[150]">
+        <div className="p-2 text-[10px] text-muted-foreground border-b mb-1">
+          <div className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            <span>Auto-updates on checkout</span>
+          </div>
+        </div>
         {Object.entries(ROOM_STATUSES).map(([key, config]) => (
           <SelectItem key={key} value={key}>
             <Badge variant="outline" className={`${config.color} text-xs`}>
