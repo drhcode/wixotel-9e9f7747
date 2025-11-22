@@ -222,8 +222,20 @@ export const CalendarTimeline = ({
                             onClick={() => onBookingClick(startBooking)}
                             title={startBooking.full_name || startBooking.guests?.name}
                           >
-                            <div className="font-semibold truncate">
-                              {startBooking.full_name || startBooking.guests?.name}
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="font-semibold truncate">
+                                {startBooking.full_name || startBooking.guests?.name}
+                              </div>
+                              <span 
+                                className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0"
+                                style={{
+                                  backgroundColor: startBooking.lead_id ? "#7C3BED15" : "#16A24915",
+                                  color: startBooking.lead_id ? "#7C3BED" : "#16A249",
+                                  border: `1px solid ${startBooking.lead_id ? "#7C3BED40" : "#16A24940"}`
+                                }}
+                              >
+                                {startBooking.lead_id ? "Lead" : "Direct"}
+                              </span>
                             </div>
                             <div className="text-[10px] opacity-90 truncate">
                               {format(new Date(startBooking.check_in), "MMM dd")} -{" "}

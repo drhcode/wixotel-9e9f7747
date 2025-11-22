@@ -49,7 +49,19 @@ export const CalendarBookingsList = ({
                         />
                       )}
                       <div>
-                        <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{booking.full_name || booking.guests?.name}</p>
+                          <span 
+                            className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{
+                              backgroundColor: booking.lead_id ? "#7C3BED15" : "#16A24915",
+                              color: booking.lead_id ? "#7C3BED" : "#16A249",
+                              border: `1px solid ${booking.lead_id ? "#7C3BED40" : "#16A24940"}`
+                            }}
+                          >
+                            {booking.lead_id ? "Lead" : "Direct"}
+                          </span>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           Room {booking.rooms?.room_number || booking.rooms?.name}
                         </p>
