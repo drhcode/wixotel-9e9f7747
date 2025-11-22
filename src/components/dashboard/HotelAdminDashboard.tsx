@@ -362,7 +362,7 @@ const HotelAdminDashboard = () => {
 
             {/* Desktop Navigation Menu */}
             <div className="hidden lg:block border-t">
-              <div className="flex px-4 py-2 gap-1 items-center overflow-x-auto">
+              <div className="flex px-4 py-3 gap-1 items-center overflow-x-auto overflow-y-visible">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "calendar", label: "Calendar" },
