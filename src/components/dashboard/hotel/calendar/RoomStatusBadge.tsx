@@ -20,23 +20,8 @@ export const ROOM_STATUSES = {
     label: "Dirty", 
     color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
     icon: AlertCircle
-  },
-  cleaning: { 
-    label: "Cleaning", 
-    color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
-    icon: Loader2
-  },
-  maintenance: { 
-    label: "Maintenance", 
-    color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30",
-    icon: Wrench
-  },
-  out_of_service: { 
-    label: "Out of Service", 
-    color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30",
-    icon: XCircle
-  },
-};
+  }
+} as const;
 
 export const RoomStatusBadge = ({ roomId, status, onStatusChange }: RoomStatusBadgeProps) => {
   const currentStatus = status || "ready";
