@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfDay, addDays, isSameDay } from "date-fns";
+import { RoomStatusBadge } from "./RoomStatusBadge";
 
 interface CalendarTimelineProps {
   rooms: any[];
@@ -26,6 +27,14 @@ export const CalendarTimeline = ({
   getStatusColor,
   onBookingClick,
 }: CalendarTimelineProps) => {
+  const [roomStatuses, setRoomStatuses] = useState<Record<string, string>>(
+    rooms.reduce((acc, room) => ({ ...acc, [room.id]: room.status || "ready" }), {})
+  );
+
+  const handleStatusChange = (roomId: string, newStatus: string) => {
+    setRoomStatuses(prev => ({ ...prev, [roomId]: newStatus }));
+  };
+
   const generateTimelineDates = useMemo(() => {
     const dates: Date[] = [];
     const normalizedStart = startOfDay(timelineStartDate);
@@ -147,7 +156,7 @@ export const CalendarTimeline = ({
                   style={{ gridTemplateColumns: "250px repeat(12, 1fr)" }}
                 >
                   <div className="p-4 border-b border-r bg-background sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                    <div className="text-sm font-bold flex items-center gap-2">
+                    <div className="text-sm font-bold flex items-center gap-2 mb-2">
                       {room.main_photo_url && (
                         <img
                           src={room.main_photo_url}
@@ -155,11 +164,15 @@ export const CalendarTimeline = ({
                           className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
                         />
                       )}
-                      <span>
+                      <span className="text-xs">
                         {room.room_number} {room.name}
                       </span>
                     </div>
-                    <div className="text-xs text-muted-foreground font-medium mt-1">Room</div>
+                    <RoomStatusBadge 
+                      roomId={room.id} 
+                      status={roomStatuses[room.id] || room.status || "ready"}
+                      onStatusChange={(newStatus) => handleStatusChange(room.id, newStatus)}
+                    />
                   </div>
 
                   {generateTimelineDates.map((date, dateIndex) => {
