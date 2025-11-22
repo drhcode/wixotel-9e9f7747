@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,8 +31,18 @@ export const CalendarTimeline = ({
     rooms.reduce((acc, room) => ({ ...acc, [room.id]: room.status || "ready" }), {})
   );
 
+  useEffect(() => {
+    setRoomStatuses((prev) => {
+      const updated = { ...prev };
+      rooms.forEach((room) => {
+        updated[room.id] = room.status || prev[room.id] || "ready";
+      });
+      return updated;
+    });
+  }, [rooms]);
+
   const handleStatusChange = (roomId: string, newStatus: string) => {
-    setRoomStatuses(prev => ({ ...prev, [roomId]: newStatus }));
+    setRoomStatuses((prev) => ({ ...prev, [roomId]: newStatus }));
   };
 
   const generateTimelineDates = useMemo(() => {
