@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import { Sparkles, CheckCircle2, Loader2, Wrench, AlertCircle, XCircle } from "lucide-react";
 
 interface RoomStatusBadgeProps {
   roomId: string;
@@ -11,16 +11,37 @@ interface RoomStatusBadgeProps {
 }
 
 export const ROOM_STATUSES = {
-  ready: { label: "Ready", color: "bg-green-500/20 text-green-700 border-green-500" },
-  dirty: { label: "Dirty", color: "bg-yellow-500/20 text-yellow-700 border-yellow-500" },
-  cleaning: { label: "Cleaning", color: "bg-blue-500/20 text-blue-700 border-blue-500" },
-  maintenance: { label: "Maintenance", color: "bg-orange-500/20 text-orange-700 border-orange-500" },
-  out_of_service: { label: "Out of Service", color: "bg-red-500/20 text-red-700 border-red-500" },
+  ready: { 
+    label: "Ready", 
+    color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30",
+    icon: CheckCircle2
+  },
+  dirty: { 
+    label: "Dirty", 
+    color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
+    icon: AlertCircle
+  },
+  cleaning: { 
+    label: "Cleaning", 
+    color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
+    icon: Loader2
+  },
+  maintenance: { 
+    label: "Maintenance", 
+    color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30",
+    icon: Wrench
+  },
+  out_of_service: { 
+    label: "Out of Service", 
+    color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30",
+    icon: XCircle
+  },
 };
 
 export const RoomStatusBadge = ({ roomId, status, onStatusChange }: RoomStatusBadgeProps) => {
   const currentStatus = status || "ready";
   const statusConfig = ROOM_STATUSES[currentStatus as keyof typeof ROOM_STATUSES] || ROOM_STATUSES.ready;
+  const StatusIcon = statusConfig.icon;
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -46,27 +67,42 @@ export const RoomStatusBadge = ({ roomId, status, onStatusChange }: RoomStatusBa
 
   return (
     <Select value={currentStatus} onValueChange={handleStatusChange}>
-      <SelectTrigger className="w-[140px] h-7 text-xs border-2">
+      <SelectTrigger className="w-[160px] h-9 border-2 hover:border-primary/50 transition-all duration-200 bg-gradient-to-r from-background to-muted/20">
         <SelectValue>
-          <Badge variant="outline" className={`${statusConfig.color} text-[10px] px-2 py-0.5 font-semibold`}>
-            {statusConfig.label}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <StatusIcon className="h-4 w-4" />
+            <Badge variant="outline" className={`${statusConfig.color} text-xs px-2.5 py-0.5 font-medium border-2`}>
+              {statusConfig.label}
+            </Badge>
+          </div>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="bg-background z-[150]">
-        <div className="p-2 text-[10px] text-muted-foreground border-b mb-1">
-          <div className="flex items-center gap-1">
-            <Sparkles className="h-3 w-3" />
-            <span>Auto-updates on checkout</span>
+      <SelectContent className="bg-background border-2 shadow-lg z-[150] min-w-[200px]">
+        <div className="p-3 text-xs text-muted-foreground border-b bg-muted/30 mb-1">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <span className="font-medium">Auto-updates on checkout</span>
           </div>
         </div>
-        {Object.entries(ROOM_STATUSES).map(([key, config]) => (
-          <SelectItem key={key} value={key}>
-            <Badge variant="outline" className={`${config.color} text-xs`}>
-              {config.label}
-            </Badge>
-          </SelectItem>
-        ))}
+        <div className="p-1">
+          {Object.entries(ROOM_STATUSES).map(([key, config]) => {
+            const Icon = config.icon;
+            return (
+              <SelectItem 
+                key={key} 
+                value={key}
+                className="cursor-pointer hover:bg-muted/50 my-1 rounded-md"
+              >
+                <div className="flex items-center gap-3 py-1">
+                  <Icon className="h-4 w-4" />
+                  <Badge variant="outline" className={`${config.color} text-xs font-medium border-2 px-3 py-1`}>
+                    {config.label}
+                  </Badge>
+                </div>
+              </SelectItem>
+            );
+          })}
+        </div>
       </SelectContent>
     </Select>
   );

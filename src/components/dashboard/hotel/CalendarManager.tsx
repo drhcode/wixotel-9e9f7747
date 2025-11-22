@@ -78,17 +78,22 @@ const CalendarManager = ({ hotelId }: Props) => {
           filter: `hotel_id=eq.${hotelId}`
         },
         (payload) => {
-          console.log('Room status updated:', payload);
+          console.log('Room status realtime update:', payload);
+          console.log('Old status:', payload.old, 'New status:', payload.new);
+          
           // Update the room in the local state
-          setRooms(prevRooms => 
-            prevRooms.map(room => 
+          setRooms(prevRooms => {
+            const updatedRooms = prevRooms.map(room => 
               room.id === payload.new.id 
-                ? { ...room, status: payload.new.status }
+                ? { ...room, ...payload.new }
                 : room
-            )
-          );
-          // Show a subtle notification for automatic status changes
-          if (payload.new.status === 'dirty') {
+            );
+            console.log('Updated rooms state:', updatedRooms);
+            return updatedRooms;
+          });
+          
+          // Show a subtle notification for automatic status changes to dirty
+          if (payload.new.status === 'dirty' && payload.old?.status !== 'dirty') {
             toast.info(
               `Room ${payload.new.room_number || payload.new.name} marked as dirty after checkout`,
               { duration: 3000 }
@@ -96,7 +101,9 @@ const CalendarManager = ({ hotelId }: Props) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Room status channel subscription:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
