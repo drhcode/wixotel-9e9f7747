@@ -18,6 +18,7 @@ import { PlaceAutocomplete } from "@/components/ui/place-autocomplete";
 import demoCalendar from "@/assets/demo-calendar.jpg";
 import demoBookings from "@/assets/demo-bookings.jpg";
 import demoMobile from "@/assets/demo-mobile.jpg";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 const hotelSchema = z.object({
   name: z.string().trim().min(2, "Min 2 characters").max(100),
@@ -53,6 +54,7 @@ interface Room {
 
 const HotelRegistration = () => {
   const navigate = useNavigate();
+  const { executeRecaptcha } = useRecaptcha();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -171,6 +173,29 @@ const HotelRegistration = () => {
       const accountValidation = accountSchema.safeParse(accountData);
       if (!accountValidation.success) {
         toast.error(accountValidation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
+      // Execute reCAPTCHA
+      let recaptchaToken: string;
+      try {
+        recaptchaToken = await executeRecaptcha('hotel_registration');
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        toast.error('Security verification failed. Please refresh and try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Verify reCAPTCHA token
+      const { data: recaptchaResult, error: recaptchaError } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken, action: 'hotel_registration' }
+      });
+
+      if (recaptchaError || !recaptchaResult?.passed) {
+        console.error('reCAPTCHA verification failed:', recaptchaResult);
+        toast.error('Security verification failed. Please try again.');
         setLoading(false);
         return;
       }

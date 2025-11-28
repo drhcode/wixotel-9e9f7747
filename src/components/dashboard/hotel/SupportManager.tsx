@@ -12,6 +12,7 @@ import { Plus, Upload, X, MessageSquare, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDistanceToNow } from "date-fns";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 interface SupportManagerProps {
   hotelId: string;
@@ -37,6 +38,7 @@ interface TicketReply {
 }
 
 export default function SupportManager({ hotelId }: SupportManagerProps) {
+  const { executeRecaptcha } = useRecaptcha();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -99,6 +101,27 @@ export default function SupportManager({ hotelId }: SupportManagerProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      // Execute reCAPTCHA
+      let recaptchaToken: string;
+      try {
+        recaptchaToken = await executeRecaptcha('create_support_ticket');
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        toast.error('Security verification failed. Please refresh and try again.');
+        return;
+      }
+
+      // Verify reCAPTCHA token
+      const { data: recaptchaResult, error: recaptchaError } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken, action: 'create_support_ticket' }
+      });
+
+      if (recaptchaError || !recaptchaResult?.passed) {
+        console.error('reCAPTCHA verification failed:', recaptchaResult);
+        toast.error('Security verification failed. Please try again.');
+        return;
+      }
 
       // Upload files first
       const attachmentUrls: string[] = [];

@@ -8,6 +8,7 @@ import { Star, Upload, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 interface ReviewModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface ReviewModalProps {
 }
 
 export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewModalProps) {
+  const { executeRecaptcha } = useRecaptcha();
   const [step, setStep] = useState<"confirmation" | "review">("confirmation");
   const [confirmationNumber, setConfirmationNumber] = useState("");
   const [validatingConfirmation, setValidatingConfirmation] = useState(false);
@@ -119,6 +121,29 @@ export function ReviewModal({ open, onOpenChange, hotelId, hotelName }: ReviewMo
       });
 
       const validated = reviewSchema.parse(reviewData);
+
+      // Execute reCAPTCHA
+      let recaptchaToken: string;
+      try {
+        recaptchaToken = await executeRecaptcha('submit_review');
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        toast.error('Security verification failed. Please refresh and try again.');
+        setSubmitting(false);
+        return;
+      }
+
+      // Verify reCAPTCHA token
+      const { data: recaptchaResult, error: recaptchaError } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken, action: 'submit_review' }
+      });
+
+      if (recaptchaError || !recaptchaResult?.passed) {
+        console.error('reCAPTCHA verification failed:', recaptchaResult);
+        toast.error('Security verification failed. Please try again.');
+        setSubmitting(false);
+        return;
+      }
 
       const { data, error } = await supabase.rpc('create_review_with_validation', {
         p_hotel_id: hotelId,
