@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { mapAuthError } from "@/lib/errorUtils";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
@@ -17,6 +18,7 @@ const loginSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { executeRecaptcha } = useRecaptcha();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -54,6 +56,29 @@ const Auth = () => {
       const validation = loginSchema.safeParse(loginData);
       if (!validation.success) {
         toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
+      // Execute reCAPTCHA
+      let recaptchaToken: string;
+      try {
+        recaptchaToken = await executeRecaptcha('login');
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        toast.error('Security verification failed. Please refresh and try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Verify reCAPTCHA token
+      const { data: recaptchaResult, error: recaptchaError } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken, action: 'login' }
+      });
+
+      if (recaptchaError || !recaptchaResult?.passed) {
+        console.error('reCAPTCHA verification failed:', recaptchaResult);
+        toast.error('Security verification failed. Please try again.');
         setLoading(false);
         return;
       }

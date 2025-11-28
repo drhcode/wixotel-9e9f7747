@@ -56,6 +56,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
 import wixotelLogo from "@/assets/wixotel-logo.png";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 interface Hotel {
   id: string;
@@ -105,6 +106,7 @@ interface Review {
 const HotelPublicView = () => {
   const { hotelSlug } = useParams();
   const navigate = useNavigate();
+  const { executeRecaptcha } = useRecaptcha();
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -394,6 +396,29 @@ const HotelPublicView = () => {
 
       if (checkOut <= checkIn) {
         toast.error("Check-out date must be after check-in date");
+        return;
+      }
+
+      // Execute reCAPTCHA
+      let recaptchaToken: string;
+      try {
+        recaptchaToken = await executeRecaptcha('submit_lead');
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        toast.error('Security verification failed. Please refresh and try again.');
+        setSubmittingLead(false);
+        return;
+      }
+
+      // Verify reCAPTCHA token
+      const { data: recaptchaResult, error: recaptchaError } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token: recaptchaToken, action: 'submit_lead' }
+      });
+
+      if (recaptchaError || !recaptchaResult?.passed) {
+        console.error('reCAPTCHA verification failed:', recaptchaResult);
+        toast.error('Security verification failed. Please try again.');
+        setSubmittingLead(false);
         return;
       }
 
