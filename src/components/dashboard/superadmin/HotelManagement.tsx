@@ -42,6 +42,8 @@ interface Hotel {
   description: string;
   owner_id: string;
   show_on_landing: boolean;
+  is_verified: boolean;
+  is_featured: boolean;
   city: string | null;
   country: string | null;
   subscription_plans?: { name: string; price: number };
@@ -226,6 +228,34 @@ const HotelManagement = () => {
       toast.error("Failed to update landing page visibility");
     } else {
       toast.success(currentValue ? "Hotel hidden from landing page" : "Hotel visible on landing page");
+      fetchHotels();
+    }
+  };
+
+  const toggleVerified = async (hotelId: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from('hotels')
+      .update({ is_verified: !currentValue })
+      .eq('id', hotelId);
+
+    if (error) {
+      toast.error("Failed to update verification status");
+    } else {
+      toast.success(currentValue ? "Hotel unverified" : "Hotel verified");
+      fetchHotels();
+    }
+  };
+
+  const toggleFeatured = async (hotelId: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from('hotels')
+      .update({ is_featured: !currentValue })
+      .eq('id', hotelId);
+
+    if (error) {
+      toast.error("Failed to update featured status");
+    } else {
+      toast.success(currentValue ? "Hotel removed from featured" : "Hotel marked as featured");
       fetchHotels();
     }
   };
@@ -428,6 +458,8 @@ const HotelManagement = () => {
                 <TableHead>Status</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Landing</TableHead>
+                <TableHead>Verified</TableHead>
+                <TableHead>Featured</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -461,6 +493,18 @@ const HotelManagement = () => {
                     <Switch
                       checked={hotel.show_on_landing}
                       onCheckedChange={() => toggleShowOnLanding(hotel.id, hotel.show_on_landing)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={hotel.is_verified}
+                      onCheckedChange={() => toggleVerified(hotel.id, hotel.is_verified)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={hotel.is_featured}
+                      onCheckedChange={() => toggleFeatured(hotel.id, hotel.is_featured)}
                     />
                   </TableCell>
                   <TableCell className="text-right">
