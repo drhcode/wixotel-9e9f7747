@@ -295,7 +295,8 @@ const Landing = () => {
           period: "/month",
           features: [
             "Up to 10 rooms",
-            "Lead capture forms",
+            "Reports",
+            "Lead collection",
             "Calendar integration",
             "Email support"
           ]
@@ -307,14 +308,12 @@ const Landing = () => {
           popular: true,
           features: [
             "Up to 20 rooms",
-            "iCal sync with booking platforms",
-            "Lead management system",
-            "Guest management",
-            "Analytics & reports",
-            "24/7 support",
-            "Dedicated hotel website",
-            "Custom reports",
-            "Featured on our marketplace"
+            "iCal Sync",
+            "Leads & Guest Management",
+            "Reports",
+            "24/7 Support",
+            "Website included",
+            "Hotel listed on our platform"
           ]
         },
         {
@@ -323,15 +322,13 @@ const Landing = () => {
           period: "/month",
           features: [
             "Up to 40 rooms",
-            "iCal sync with booking platforms",
-            "Advanced lead management",
-            "Complete guest management",
-            "Advanced analytics & reports",
-            "24/7 priority support",
-            "Ticket-based support system",
-            "Premium hotel website",
-            "Custom branded reports",
-            "Priority listing on our marketplace"
+            "iCal Sync",
+            "Leads & Guest Management",
+            "Advanced reports",
+            "24/7 + Ticket Support",
+            "Website included",
+            "Custom reports",
+            "Hotel featured on our platform"
           ]
         }
       ];
