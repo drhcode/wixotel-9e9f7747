@@ -416,6 +416,7 @@ export type Database = {
           owner_id: string
           phone: string | null
           plan_id: string
+          referred_by: string | null
           seo_description: string | null
           seo_title: string | null
           show_on_landing: boolean
@@ -452,6 +453,7 @@ export type Database = {
           owner_id: string
           phone?: string | null
           plan_id: string
+          referred_by?: string | null
           seo_description?: string | null
           seo_title?: string | null
           show_on_landing?: boolean
@@ -488,6 +490,7 @@ export type Database = {
           owner_id?: string
           phone?: string | null
           plan_id?: string
+          referred_by?: string | null
           seo_description?: string | null
           seo_title?: string | null
           show_on_landing?: boolean
@@ -504,6 +507,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotels_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -966,6 +976,96 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_earnings: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          hotel_id: string
+          id: string
+          month_year: string
+          plan_amount: number
+          referral_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate?: number
+          created_at?: string
+          hotel_id: string
+          id?: string
+          month_year: string
+          plan_amount: number
+          referral_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          month_year?: string
+          plan_amount?: number
+          referral_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_earnings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_earnings_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone: string | null
+          referral_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          referral_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          referral_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string | null
@@ -1380,6 +1480,7 @@ export type Database = {
     }
     Functions: {
       auto_checkout_overdue_bookings: { Args: never; Returns: undefined }
+      calculate_referral_earnings: { Args: never; Returns: undefined }
       check_booking_overlap: {
         Args: {
           p_booking_id?: string
@@ -1489,7 +1590,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "hotel_admin"
+      app_role: "super_admin" | "hotel_admin" | "referral"
       booking_status:
         | "pending"
         | "reserved"
@@ -1627,7 +1728,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "hotel_admin"],
+      app_role: ["super_admin", "hotel_admin", "referral"],
       booking_status: [
         "pending",
         "reserved",

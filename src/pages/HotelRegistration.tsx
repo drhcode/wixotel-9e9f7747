@@ -77,6 +77,7 @@ const HotelRegistration = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
   });
 
   const [defaultCountry, setDefaultCountry] = useState<any>("US");
@@ -219,6 +220,22 @@ const HotelRegistration = () => {
         .eq('name', 'Basic')
         .single();
 
+      // Check referral code if provided
+      let referralId = null;
+      if (accountData.referralCode) {
+        const { data: referral } = await supabase
+          .from('referrals')
+          .select('id, is_active')
+          .eq('referral_code', accountData.referralCode)
+          .single();
+
+        if (referral && referral.is_active) {
+          referralId = referral.id;
+        } else if (accountData.referralCode) {
+          toast.warning('Referral code not found or inactive. Continuing without referral.');
+        }
+      }
+
       // Create hotel
       const { data: hotel, error: hotelError } = await supabase
         .from('hotels')
@@ -234,6 +251,7 @@ const HotelRegistration = () => {
           about_us: hotelValidation.data.about_us || null,
           status: 'pending',
           plan_id: basicPlan?.id,
+          referred_by: referralId,
         })
         .select()
         .single();
@@ -521,17 +539,32 @@ const HotelRegistration = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password *</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="Confirm password"
-                      value={accountData.confirmPassword}
-                      onChange={(e) => setAccountData({ ...accountData, confirmPassword: e.target.value })}
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password *</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="Confirm password"
+                    value={accountData.confirmPassword}
+                    onChange={(e) => setAccountData({ ...accountData, confirmPassword: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="referral-code">Referral Code (Optional)</Label>
+                  <Input
+                    id="referral-code"
+                    type="text"
+                    placeholder="Enter referral code if you have one"
+                    value={accountData.referralCode}
+                    onChange={(e) => setAccountData({ ...accountData, referralCode: e.target.value.toUpperCase() })}
+                    className="font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Have a referral code? Enter it here to support your referrer!
+                  </p>
+                </div>
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

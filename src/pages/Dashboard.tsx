@@ -6,11 +6,12 @@ import { Loader2 } from "lucide-react";
 // Lazy load components OUTSIDE the component to prevent recreation on every render
 const LazySuperAdminDashboard = lazy(() => import("@/components/dashboard/SuperAdminDashboard"));
 const LazyHotelAdminDashboard = lazy(() => import("@/components/dashboard/HotelAdminDashboard"));
+const LazyReferralDashboard = lazy(() => import("@/components/dashboard/ReferralDashboard"));
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'super_admin' | 'hotel_admin' | null>(null);
+  const [userRole, setUserRole] = useState<'super_admin' | 'hotel_admin' | 'referral' | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -115,7 +116,13 @@ const Dashboard = () => {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     }>
-      {userRole === 'super_admin' ? <LazySuperAdminDashboard /> : <LazyHotelAdminDashboard />}
+      {userRole === 'super_admin' ? (
+        <LazySuperAdminDashboard />
+      ) : userRole === 'referral' ? (
+        <LazyReferralDashboard />
+      ) : (
+        <LazyHotelAdminDashboard />
+      )}
     </Suspense>
   );
 };

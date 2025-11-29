@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle, Receipt, Settings, Database } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle, Receipt, Settings, Database, UserCheck } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,7 @@ interface SuperAdminSidebarProps {
 const menuItems = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "hotels", label: "Hotels", icon: Building2 },
+  { id: "referrals", label: "Referrals", icon: UserCheck },
   { id: "earnings", label: "Earnings", icon: DollarSign },
   { id: "plans", label: "Plans", icon: CreditCard },
   { id: "subscriptions", label: "Subscriptions", icon: UserCog },
