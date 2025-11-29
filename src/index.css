@@ -187,8 +187,9 @@ All colors MUST be HSL.
     @apply mr-2 bg-transparent border-0 focus:outline-none focus:ring-0;
   }
 
-  /* Hide Google reCAPTCHA badge */
+  /* Hide Google reCAPTCHA badge (note: keep legal text elsewhere) */
   .grecaptcha-badge {
-    visibility: hidden;
+    display: none !important;
+    visibility: hidden !important;
   }
 }
