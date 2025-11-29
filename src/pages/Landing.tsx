@@ -295,10 +295,9 @@ const Landing = () => {
           period: "/month",
           features: [
             "Up to 10 rooms",
-            "Basic booking calendar",
-            "Guest management",
-            "Email support",
-            "Monthly reports"
+            "Lead capture forms",
+            "Calendar integration",
+            "Email support"
           ]
         },
         {
@@ -307,12 +306,15 @@ const Landing = () => {
           period: "/month",
           popular: true,
           features: [
-            "Up to 25 rooms",
-            "Advanced calendar",
-            "AI assistant",
-            "Priority support",
-            "Real-time analytics",
-            "Custom branding"
+            "Up to 20 rooms",
+            "iCal sync with booking platforms",
+            "Lead management system",
+            "Guest management",
+            "Analytics & reports",
+            "24/7 support",
+            "Dedicated hotel website",
+            "Custom reports",
+            "Featured on our marketplace"
           ]
         },
         {
@@ -320,12 +322,16 @@ const Landing = () => {
           price: "€22.99",
           period: "/month",
           features: [
-            "Unlimited rooms",
-            "White-label solution",
-            "Dedicated support",
-            "API access",
-            "Advanced automation",
-            "Multi-location support"
+            "Up to 40 rooms",
+            "iCal sync with booking platforms",
+            "Advanced lead management",
+            "Complete guest management",
+            "Advanced analytics & reports",
+            "24/7 priority support",
+            "Ticket-based support system",
+            "Premium hotel website",
+            "Custom branded reports",
+            "Priority listing on our marketplace"
           ]
         }
       ];
