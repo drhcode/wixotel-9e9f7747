@@ -186,4 +186,9 @@ All colors MUST be HSL.
   .PhoneInputCountrySelect {
     @apply mr-2 bg-transparent border-0 focus:outline-none focus:ring-0;
   }
+
+  /* Hide Google reCAPTCHA badge */
+  .grecaptcha-badge {
+    visibility: hidden;
+  }
 }
