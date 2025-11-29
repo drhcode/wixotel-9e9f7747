@@ -5,15 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, DollarSign, TrendingUp, Calendar, Copy } from "lucide-react";
+import { LogOut, Users, DollarSign, TrendingUp, Calendar, Copy, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ReferralData {
   id: string;
   referral_code: string;
   full_name: string;
   email: string;
+  phone: string | null;
 }
 
 interface ReferredHotel {
@@ -47,6 +51,12 @@ const ReferralDashboard = () => {
     totalEarnings: 0,
     pendingEarnings: 0,
   });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+  });
 
   useEffect(() => {
     fetchReferralData();
@@ -69,6 +79,11 @@ const ReferralDashboard = () => {
 
       if (referralError) throw referralError;
       setReferralData(referral);
+      setEditForm({
+        full_name: referral.full_name,
+        email: referral.email,
+        phone: referral.phone || "",
+      });
 
       // Get referred hotels
       const { data: hotels, error: hotelsError } = await supabase
@@ -179,6 +194,31 @@ const ReferralDashboard = () => {
     return <Badge variant={variants[status] || "default"}>{status}</Badge>;
   };
 
+  const handleUpdateProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("referrals")
+        .update({
+          full_name: editForm.full_name,
+          email: editForm.email,
+          phone: editForm.phone || null,
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Profile updated successfully");
+      setEditDialogOpen(false);
+      fetchReferralData();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -203,10 +243,56 @@ const ReferralDashboard = () => {
               <p className="text-sm text-muted-foreground">Referral Partner</p>
             </div>
           </div>
-          <Button onClick={handleLogout} variant="outline" size="sm">
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Profile</DialogTitle>
+                  <DialogDescription>Update your referral profile information</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      value={editForm.full_name}
+                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone (Optional)</Label>
+                    <Input
+                      id="phone"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleUpdateProfile} className="w-full">
+                    Save Changes
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
