@@ -23,6 +23,7 @@ import EarningsManager from "./superadmin/EarningsManager";
 import CancellationRequests from "./superadmin/CancellationRequests";
 import { SuperAdminSettings } from "./superadmin/SuperAdminSettings";
 import { BackupManager } from "./superadmin/BackupManager";
+import ReferralsManagement from "./superadmin/ReferralsManagement";
 
 interface Hotel {
   id: string;
@@ -330,6 +331,8 @@ const SuperAdminDashboard = () => {
         );
       case "hotels":
         return <HotelManagement key={refreshKey} />;
+      case "referrals":
+        return <ReferralsManagement key={refreshKey} />;
       case "earnings":
         return <EarningsManager key={refreshKey} />;
       case "plans":
