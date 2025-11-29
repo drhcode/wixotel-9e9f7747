@@ -407,6 +407,8 @@ export type Database = {
           id: string
           images: string[] | null
           instagram_url: string | null
+          is_featured: boolean
+          is_verified: boolean
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -441,6 +443,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_url?: string | null
+          is_featured?: boolean
+          is_verified?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -475,6 +479,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_url?: string | null
+          is_featured?: boolean
+          is_verified?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null

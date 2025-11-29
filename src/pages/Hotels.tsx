@@ -31,6 +31,8 @@ interface PublicHotel {
   about_us_image: string | null;
   latitude: number | null;
   longitude: number | null;
+  is_verified: boolean;
+  is_featured: boolean;
   avgRating?: number;
   reviewCount?: number;
 }
@@ -83,7 +85,7 @@ const Hotels = () => {
   const fetchHotels = async () => {
     const { data } = await supabase
       .from('hotels')
-      .select('id, name, slug, address, city, country, description, images, about_us_image, latitude, longitude')
+      .select('id, name, slug, address, city, country, description, images, about_us_image, latitude, longitude, is_verified, is_featured')
       .eq('status', 'active')
       .eq('show_on_landing', true);
     
@@ -179,9 +181,15 @@ const Hotels = () => {
             ? calculateDistance(userLocation.lat, userLocation.lng, Number(hotel.latitude), Number(hotel.longitude))
             : Infinity
         }))
-        .sort((a: any, b: any) => a.distance - b.distance);
+        .sort((a: any, b: any) => {
+          // Featured hotels first
+          if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1;
+          return a.distance - b.distance;
+        });
     } else {
       filtered = filtered.sort((a, b) => {
+        // Featured hotels first
+        if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1;
         const aRating = a.avgRating ?? 0;
         const bRating = b.avgRating ?? 0;
         if (bRating !== aRating) return bRating - aRating;
@@ -425,7 +433,16 @@ const Hotels = () => {
                         )}
                       </div>
                       <CardHeader className="flex-1">
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors">{hotel.name}</CardTitle>
+                        <div className="flex items-start gap-2">
+                          <CardTitle className="text-lg group-hover:text-primary transition-colors flex-1">{hotel.name}</CardTitle>
+                          {hotel.is_verified && (
+                            <div className="flex-shrink-0 bg-primary/10 text-primary rounded-full p-1" title="Verified">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
                         
                         {hotel.avgRating && hotel.reviewCount && (
                           <div className="flex items-center gap-2 py-2">
