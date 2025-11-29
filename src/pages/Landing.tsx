@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 import { ExploreCities } from "@/components/ExploreCities";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 
 interface PublicHotel {
@@ -801,6 +804,110 @@ const Landing = () => {
                 </CardHeader>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Referral Program Section */}
+      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/10 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+        <div className="container mx-auto relative max-w-5xl">
+          <div className="text-center mb-16 space-y-4 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
+              <Users className="h-4 w-4" />
+              <span>REFERRAL PROGRAM</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Become a Referral Partner</h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Earn 10% commission on every hotel you refer. Join our partner program and start earning today!
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Generous Commission</h3>
+                  <p className="text-muted-foreground">Earn 10% commission on every successful hotel referral, paid monthly.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Track Your Earnings</h3>
+                  <p className="text-muted-foreground">Access real-time dashboard with detailed statistics and earnings reports.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Easy to Join</h3>
+                  <p className="text-muted-foreground">Simple application process. Get approved and start referring hotels immediately.</p>
+                </div>
+              </div>
+            </div>
+
+            <Card className="shadow-card-hover border-primary/30">
+              <CardHeader>
+                <CardTitle>Apply as a Referral Partner</CardTitle>
+                <CardDescription>Fill out the form below and we'll review your application</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const data = {
+                    full_name: formData.get('full_name') as string,
+                    email: formData.get('email') as string,
+                    phone: formData.get('phone') as string,
+                    message: formData.get('message') as string,
+                  };
+
+                  try {
+                    const { error } = await supabase
+                      .from('referral_applications')
+                      .insert([data]);
+
+                    if (error) throw error;
+
+                    toast.success("Application submitted! We'll review it and get back to you soon.");
+                    e.currentTarget.reset();
+                  } catch (error: any) {
+                    toast.error("Failed to submit application");
+                    console.error(error);
+                  }
+                }} className="space-y-4">
+                  <div>
+                    <Label htmlFor="ref_full_name">Full Name *</Label>
+                    <Input id="ref_full_name" name="full_name" required placeholder="John Doe" />
+                  </div>
+                  <div>
+                    <Label htmlFor="ref_email">Email *</Label>
+                    <Input id="ref_email" name="email" type="email" required placeholder="john@example.com" />
+                  </div>
+                  <div>
+                    <Label htmlFor="ref_phone">Phone</Label>
+                    <Input id="ref_phone" name="phone" type="tel" placeholder="+1234567890" />
+                  </div>
+                  <div>
+                    <Label htmlFor="ref_message">Why do you want to join? (Optional)</Label>
+                    <Textarea id="ref_message" name="message" rows={3} placeholder="Tell us about your network and experience..." />
+                  </div>
+                  <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:shadow-glow">
+                    Submit Application
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
