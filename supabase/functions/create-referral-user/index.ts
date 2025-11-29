@@ -25,6 +25,13 @@ serve(async (req) => {
 
     const { full_name, email, password, phone, referral_code } = await req.json();
 
+    console.log('Creating referral user for:', email);
+
+    // Validate required fields
+    if (!full_name || !email || !password || !referral_code) {
+      throw new Error('Missing required fields: full_name, email, password, and referral_code are required');
+    }
+
     // Create the auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -35,8 +42,15 @@ serve(async (req) => {
       },
     });
 
-    if (authError) throw authError;
-    if (!authData.user) throw new Error("Failed to create user");
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(`Failed to create auth user: ${authError.message}`);
+    }
+    if (!authData.user) {
+      throw new Error("Failed to create user - no user data returned");
+    }
+
+    console.log('Auth user created:', authData.user.id);
 
     // Create referral record
     const { error: referralError } = await supabaseAdmin
@@ -49,7 +63,12 @@ serve(async (req) => {
         phone: phone || null,
       });
 
-    if (referralError) throw referralError;
+    if (referralError) {
+      console.error('Referral insert error:', referralError);
+      throw new Error(`Failed to create referral record: ${referralError.message}`);
+    }
+
+    console.log('Referral record created');
 
     // Assign referral role
     const { error: roleError } = await supabaseAdmin
@@ -59,13 +78,19 @@ serve(async (req) => {
         role: "referral",
       });
 
-    if (roleError) throw roleError;
+    if (roleError) {
+      console.error('Role insert error:', roleError);
+      throw new Error(`Failed to assign referral role: ${roleError.message}`);
+    }
+
+    console.log('Referral role assigned successfully');
 
     return new Response(
       JSON.stringify({ success: true, user_id: authData.user.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
+    console.error('Edge function error:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
