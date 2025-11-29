@@ -107,42 +107,19 @@ const ReferralsManagement = () => {
         if (error) throw error;
         toast.success("Referral updated successfully");
       } else {
-        // Create new referral user
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.full_name,
-            },
+        // Create new referral user via edge function to avoid logging out the super admin
+        const { data, error } = await supabase.functions.invoke('create-referral-user', {
+          body: {
+            full_name: formData.full_name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone || null,
+            referral_code: formData.referral_code,
           },
         });
 
-        if (authError) throw authError;
-        if (!authData.user) throw new Error("Failed to create user");
-
-        // Create referral record
-        const { error: referralError } = await supabase
-          .from("referrals")
-          .insert({
-            user_id: authData.user.id,
-            referral_code: formData.referral_code,
-            full_name: formData.full_name,
-            email: formData.email,
-            phone: formData.phone || null,
-          });
-
-        if (referralError) throw referralError;
-
-        // Assign referral role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: "referral",
-          });
-
-        if (roleError) throw roleError;
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
 
         toast.success("Referral created successfully");
       }
