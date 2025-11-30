@@ -28,9 +28,9 @@ interface RegistrationRequest {
   accountEmail: string;
 }
 
-// Generate PDF contract as base64 (simplified version - in production use a proper PDF library)
-function generateContractPDF(hotel: Hotel, rooms: Room[]): string {
-  const contractText = `
+// Generate contract text
+function generateContractText(hotel: Hotel, rooms: Room[]): string {
+  return `
 HOTEL PARTNERSHIP AGREEMENT
 
 This agreement is entered into between Wixotel Platform and ${hotel.name}.
@@ -77,9 +77,6 @@ Date: ${new Date().toLocaleDateString()}
 
 This document serves as confirmation of registration on Wixotel Platform.
 `;
-
-  // Convert text to base64 (simplified)
-  return btoa(contractText);
 }
 
 serve(async (req) => {
@@ -112,7 +109,7 @@ serve(async (req) => {
     }
 
     // Generate contract
-    const contractBase64 = generateContractPDF(hotel, rooms);
+    const contractText = generateContractText(hotel, rooms);
 
     // Create email HTML
     const emailHtml = `
@@ -247,7 +244,7 @@ serve(async (req) => {
       attachments: [
         {
           filename: "Hotel_Partnership_Agreement.txt",
-          content: atob(contractBase64),
+          content: contractText,
           contentType: "text/plain",
           encoding: "text",
         },
