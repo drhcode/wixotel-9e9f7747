@@ -16,6 +16,7 @@ import { ExploreCities } from "@/components/ExploreCities";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 
 interface PublicHotel {
@@ -377,6 +378,7 @@ const Landing = () => {
                 <Search className="h-4 w-4" />
                 Find My Booking
               </Button>
+              <LanguageSwitcher />
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105 hover:shadow-glow" size="sm">
                   Login
@@ -395,6 +397,7 @@ const Landing = () => {
                 <Search className="h-4 w-4" />
                 <span className="text-xs sm:text-sm">Find My Booking</span>
               </Button>
+              <LanguageSwitcher />
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-2">
