@@ -227,13 +227,8 @@ const ProfileSettings = () => {
       return;
     }
 
-    if (!/[a-z]/.test(newPassword)) {
-      toast.error("Password must contain at least one lowercase letter");
-      return;
-    }
-
-    if (!/[0-9]/.test(newPassword)) {
-      toast.error("Password must contain at least one number");
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      toast.error("Password must contain at least one symbol (!@#$%^&* etc.)");
       return;
     }
 

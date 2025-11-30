@@ -39,3 +39,19 @@ export const mapStorageError = (error: any): string => {
   
   return 'File operation failed. Please try again';
 };
+
+export const validatePassword = (password: string): { valid: boolean; error?: string } => {
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters' };
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one uppercase letter' };
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one symbol (!@#$%^&* etc.)' };
+  }
+  
+  return { valid: true };
+};
