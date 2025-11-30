@@ -13,7 +13,9 @@ import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
-  password: z.string().min(6, "Min 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Password must contain at least one symbol"),
 });
 
 const Auth = () => {

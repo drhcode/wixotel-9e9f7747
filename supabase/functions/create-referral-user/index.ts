@@ -32,6 +32,17 @@ serve(async (req) => {
       throw new Error('Missing required fields: full_name, email, password, and referral_code are required');
     }
 
+    // Validate password requirements
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      throw new Error('Password must contain at least one uppercase letter');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      throw new Error('Password must contain at least one symbol');
+    }
+
     // Create the auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
