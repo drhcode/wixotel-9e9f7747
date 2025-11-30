@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface Language {
   id: string;
@@ -251,6 +252,39 @@ export function TranslationManagement() {
     loadTranslations();
   };
 
+  const handleToggleLanguage = async (languageId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('languages')
+      .update({ is_active: !currentStatus })
+      .eq('id', languageId);
+
+    if (error) {
+      toast.error("Failed to update language status");
+    } else {
+      toast.success(`Language ${!currentStatus ? 'enabled' : 'disabled'}`);
+      loadLanguages();
+    }
+  };
+
+  const handleAutoTranslate = async () => {
+    setLoading(true);
+    toast.info("Starting auto-translation... This may take a few minutes.");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('auto-translate-keys');
+      
+      if (error) throw error;
+      
+      toast.success(`Auto-translation completed! ${data?.translationsCreated || 0} translations created.`);
+      loadTranslations();
+    } catch (error) {
+      console.error('Auto-translation error:', error);
+      toast.error("Auto-translation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExportJSON = () => {
     const exportData: any = {};
     
@@ -324,6 +358,10 @@ export function TranslationManagement() {
                   <CardDescription>Manage and translate content keys</CardDescription>
                 </div>
                 <div className="flex gap-2">
+                  <Button onClick={handleAutoTranslate} size="sm" disabled={loading}>
+                    <Languages className="h-4 w-4 mr-2" />
+                    Auto-Translate All
+                  </Button>
                   <Button onClick={() => setShowAddKeyDialog(true)} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Key
@@ -483,36 +521,44 @@ export function TranslationManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Flag</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Native Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Default</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {languages.map(lang => (
-                    <TableRow key={lang.id}>
-                      <TableCell className="text-2xl">{lang.flag_emoji}</TableCell>
-                      <TableCell className="font-mono">{lang.code}</TableCell>
-                      <TableCell>{lang.name}</TableCell>
-                      <TableCell>{lang.native_name}</TableCell>
-                      <TableCell>
-                        <Badge variant={lang.is_active ? "default" : "secondary"}>
-                          {lang.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {lang.is_default && <Badge>Default</Badge>}
-                      </TableCell>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Flag</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Native Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Default</TableHead>
+                      <TableHead>Enabled</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {languages.map(lang => (
+                      <TableRow key={lang.id}>
+                        <TableCell className="text-2xl">{lang.flag_emoji}</TableCell>
+                        <TableCell className="font-mono">{lang.code}</TableCell>
+                        <TableCell>{lang.name}</TableCell>
+                        <TableCell>{lang.native_name}</TableCell>
+                        <TableCell>
+                          <Badge variant={lang.is_active ? "default" : "secondary"}>
+                            {lang.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {lang.is_default && <Badge>Default</Badge>}
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={lang.is_active}
+                            onCheckedChange={() => handleToggleLanguage(lang.id, lang.is_active)}
+                            disabled={lang.is_default}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
             </CardContent>
           </Card>
         </TabsContent>
