@@ -82,7 +82,9 @@ const HotelRegistration = () => {
 
   const [defaultCountry, setDefaultCountry] = useState<any>("US");
 
-  const totalSteps = 4;
+  const [acceptedContract, setAcceptedContract] = useState(false);
+
+  const totalSteps = 5;
   const progress = (step / totalSteps) * 100;
 
   // Auto-detect country from IP
@@ -141,6 +143,11 @@ const HotelRegistration = () => {
         toast.error(validation.error.errors[0].message);
         return;
       }
+    }
+
+    if (step === 4 && !acceptedContract) {
+      toast.error("Please accept the terms and conditions to continue");
+      return;
     }
 
     setStep(step + 1);
@@ -272,6 +279,27 @@ const HotelRegistration = () => {
         .insert(roomsData);
 
       if (roomsError) throw roomsError;
+
+      // Send registration confirmation email with contract
+      try {
+        await supabase.functions.invoke('send-registration-confirmation', {
+          body: {
+            hotel: {
+              name: hotelValidation.data.name,
+              address: hotelValidation.data.address,
+              city: hotelValidation.data.city,
+              country: hotelValidation.data.country,
+              phone: hotelValidation.data.phone,
+              email: hotelValidation.data.email,
+            },
+            rooms: rooms,
+            accountEmail: accountValidation.data.email,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the registration if email fails
+      }
 
       // Sign out user (they can't login until approved)
       await supabase.auth.signOut();
@@ -575,8 +603,132 @@ const HotelRegistration = () => {
               </div>
             )}
 
-            {/* Step 4: Review & Submit */}
+            {/* Step 4: Terms & Contract */}
             {step === 4 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-2 text-lg font-semibold mb-4">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Platform Agreement
+                </div>
+
+                <Card className="p-6 bg-accent/20 max-h-[500px] overflow-y-auto">
+                  <h3 className="font-bold text-xl mb-4 text-center">Hotel Partnership Agreement</h3>
+                  
+                  <div className="space-y-4 text-sm">
+                    <section>
+                      <h4 className="font-semibold mb-2">1. Agreement Overview</h4>
+                      <p className="text-muted-foreground">
+                        This agreement ("Agreement") is entered into between Wixotel Platform ("Platform") and the hotel 
+                        property ("Partner") registering through this system. By accepting these terms, Partner agrees to 
+                        list their property on the Platform under the conditions outlined below.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">2. Commission Structure</h4>
+                      <p className="text-muted-foreground">
+                        Platform charges an 8% commission on all confirmed bookings that result from guest leads generated 
+                        through the Platform. Commission is calculated on the total booking amount and is due upon guest check-in.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">3. Partner Responsibilities</h4>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                        <li>Maintain accurate room availability and pricing information</li>
+                        <li>Respond to booking inquiries within 24 hours</li>
+                        <li>Honor all confirmed reservations made through the Platform</li>
+                        <li>Provide quality service meeting industry standards</li>
+                        <li>Keep hotel information and photos current and accurate</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">4. Platform Services</h4>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                        <li>Booking management system with calendar view</li>
+                        <li>Lead generation and guest communication tools</li>
+                        <li>Payment tracking and commission reporting</li>
+                        <li>24/7 platform support and technical assistance</li>
+                        <li>Marketing exposure on the Platform website</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">5. Cancellation Policy</h4>
+                      <p className="text-muted-foreground">
+                        Partner maintains control over their cancellation policies. Platform does not charge commission 
+                        on cancelled bookings. Partner must communicate cancellation terms clearly to guests.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">6. Data & Privacy</h4>
+                      <p className="text-muted-foreground">
+                        Both parties agree to handle guest data responsibly and in compliance with applicable data 
+                        protection laws (GDPR, etc.). Partner data remains confidential and will not be shared with 
+                        third parties without consent.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">7. Quality Standards</h4>
+                      <p className="text-muted-foreground">
+                        Partner agrees to maintain their property in good condition and provide accurate descriptions. 
+                        Platform reserves the right to remove listings that receive consistently poor reviews or violate 
+                        quality standards.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">8. Payment Terms</h4>
+                      <p className="text-muted-foreground">
+                        Commission payments are due within 30 days of guest check-in. Platform provides monthly statements 
+                        detailing all bookings and commission amounts owed.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">9. Termination</h4>
+                      <p className="text-muted-foreground">
+                        Either party may terminate this agreement with 30 days written notice. Upon termination, Partner 
+                        remains responsible for honoring existing bookings and paying commissions on those bookings.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="font-semibold mb-2">10. Approval Process</h4>
+                      <p className="text-muted-foreground">
+                        All hotel registrations are subject to Platform approval. We review applications within 24-48 hours. 
+                        Platform reserves the right to decline applications that don't meet our partnership criteria.
+                      </p>
+                    </section>
+                  </div>
+                </Card>
+
+                <div className="flex items-center space-x-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <input
+                    type="checkbox"
+                    id="accept-contract"
+                    checked={acceptedContract}
+                    onChange={(e) => setAcceptedContract(e.target.checked)}
+                    className="w-5 h-5 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="accept-contract" className="text-sm cursor-pointer select-none">
+                    I have read and agree to the terms and conditions of this Hotel Partnership Agreement
+                  </label>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    📄 A copy of this agreement along with your registration details will be sent to your email upon submission.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Review & Submit */}
+            {step === 5 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-2 text-lg font-semibold mb-4">
                   <Building2 className="h-5 w-5 text-primary" />
