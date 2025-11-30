@@ -570,8 +570,11 @@ const ProfileSettings = () => {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password (min 6 characters)"
+              placeholder="Create a secure password"
             />
+            <p className="text-xs text-muted-foreground">
+              Must be at least 8 characters with uppercase letter and symbol (!@#$%^&* etc.)
+            </p>
           </div>
 
           <div className="space-y-2">
