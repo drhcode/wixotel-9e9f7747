@@ -389,6 +389,54 @@ export type Database = {
           },
         ]
       }
+      hotel_translations: {
+        Row: {
+          about_us: string | null
+          created_at: string
+          description: string | null
+          hotel_id: string
+          id: string
+          language_code: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          about_us?: string | null
+          created_at?: string
+          description?: string | null
+          hotel_id: string
+          id?: string
+          language_code: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          about_us?: string | null
+          created_at?: string
+          description?: string | null
+          hotel_id?: string
+          id?: string
+          language_code?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_translations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       hotels: {
         Row: {
           about_us: string | null
@@ -735,6 +783,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      languages: {
+        Row: {
+          code: string
+          created_at: string
+          flag_emoji: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          native_name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          native_name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          native_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       leads: {
         Row: {
@@ -1222,6 +1306,51 @@ export type Database = {
           },
         ]
       }
+      room_translations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          language_code: string
+          name: string | null
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code: string
+          name?: string | null
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code?: string
+          name?: string | null
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "room_translations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           amenities: string[] | null
@@ -1492,6 +1621,116 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "support_tickets"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      translation_keys: {
+        Row: {
+          created_at: string
+          default_value: string
+          description: string | null
+          id: string
+          key: string
+          namespace_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value: string
+          description?: string | null
+          id?: string
+          key: string
+          namespace_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: string
+          description?: string | null
+          id?: string
+          key?: string
+          namespace_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translation_keys_namespace_id_fkey"
+            columns: ["namespace_id"]
+            isOneToOne: false
+            referencedRelation: "translation_namespaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      translation_namespaces: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          created_at: string
+          id: string
+          is_verified: boolean
+          key_id: string
+          language_code: string
+          translated_by: string | null
+          translated_text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          key_id: string
+          language_code: string
+          translated_by?: string | null
+          translated_text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          key_id?: string
+          language_code?: string
+          translated_by?: string | null
+          translated_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translations_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "translation_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
           },
         ]
       }

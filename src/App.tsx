@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const Landing = lazy(() => import("./pages/Landing"));
 const Hotels = lazy(() => import("./pages/Hotels"));
@@ -31,10 +32,11 @@ const Router = isMobileSafari ? HashRouter : BrowserRouter;
 const App = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200} skipDelayDuration={300}>
-        <Toaster />
-        <Sonner />
-        <Router>
+      <LanguageProvider>
+        <TooltipProvider delayDuration={200} skipDelayDuration={300}>
+          <Toaster />
+          <Sonner />
+          <Router>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><BedLoader size="lg" /></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
@@ -54,8 +56,9 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </Router>
-      </TooltipProvider>
+          </Router>
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </GlobalErrorBoundary>
 );

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle, Receipt, Settings, Database, UserCheck, UserPlus } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, BookOpen, UserCog, Mail, X, MessageSquare, Star, DollarSign, XCircle, Receipt, Settings, Database, UserCheck, UserPlus, Languages } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +31,7 @@ const menuItems = [
   { id: "cancellations", label: "Cancellation Requests", icon: XCircle },
   { id: "support", label: "Support", icon: MessageSquare },
   { id: "reviews", label: "Reviews", icon: Star },
+  { id: "translations", label: "Translations", icon: Languages },
   { id: "smtp", label: "Email Settings", icon: Mail },
   { id: "backups", label: "Database Backups", icon: Database },
   { id: "settings", label: "Settings", icon: Settings },
