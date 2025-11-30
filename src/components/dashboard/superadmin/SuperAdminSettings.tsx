@@ -301,10 +301,10 @@ export function SuperAdminSettings() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password"
+              placeholder="Create a secure password"
             />
             <p className="text-xs text-muted-foreground">
-              Must be at least 8 characters with uppercase, lowercase, and numbers
+              Must be at least 8 characters with uppercase letter and symbol (!@#$%^&* etc.)
             </p>
           </div>
 

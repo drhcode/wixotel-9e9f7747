@@ -562,11 +562,14 @@ const HotelRegistration = () => {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter password (min 6 characters)"
+                      placeholder="Create a secure password"
                       value={accountData.password}
                       onChange={(e) => setAccountData({ ...accountData, password: e.target.value })}
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Must be at least 8 characters with uppercase letter and symbol (!@#$%^&* etc.)
+                    </p>
                   </div>
 
                 <div className="space-y-2">
