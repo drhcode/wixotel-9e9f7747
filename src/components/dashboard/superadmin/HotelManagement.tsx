@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Search, Eye, EyeOff, FileText, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, EyeOff, FileText, CheckCircle, XCircle, Key } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
@@ -59,6 +59,11 @@ const HotelManagement = () => {
   const [viewingHotel, setViewingHotel] = useState<Hotel | null>(null);
   const [hotelRooms, setHotelRooms] = useState<any[]>([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordHotel, setPasswordHotel] = useState<Hotel | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -306,6 +311,61 @@ const HotelManagement = () => {
     }
   };
 
+  const handleResetPassword = (hotel: Hotel) => {
+    setPasswordHotel(hotel);
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsPasswordModalOpen(true);
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error("Password must contain at least one number");
+      return;
+    }
+
+    if (!passwordHotel) return;
+
+    setIsResettingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-hotel-password', {
+        body: {
+          owner_id: passwordHotel.owner_id,
+          new_password: newPassword
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Password reset successfully");
+      setIsPasswordModalOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordHotel(null);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -512,6 +572,9 @@ const HotelManagement = () => {
                       <Button size="sm" variant="ghost" onClick={() => handleViewDetails(hotel)} title="View Details">
                         <FileText className="h-4 w-4" />
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleResetPassword(hotel)} title="Reset Password">
+                        <Key className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => handleEdit(hotel)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -631,6 +694,73 @@ const HotelManagement = () => {
                 )}
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Modal */}
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset Hotel Admin Password</DialogTitle>
+          </DialogHeader>
+          
+          {passwordHotel && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground mb-2 block">Hotel</Label>
+                <p className="font-medium">{passwordHotel.name}</p>
+                <p className="text-sm text-muted-foreground">{passwordHotel.email}</p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label htmlFor="new-password">New Password *</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="Enter new password"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Must be at least 8 characters with uppercase and number
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="confirm-password">Confirm Password *</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="Confirm new password"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  disabled={isResettingPassword}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isResettingPassword}
+                >
+                  {isResettingPassword ? "Resetting..." : "Reset Password"}
+                </Button>
+              </div>
+            </form>
           )}
         </DialogContent>
       </Dialog>
