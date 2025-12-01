@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 import { format, startOfDay, addDays, isSameDay } from "date-fns";
+import { cn } from "@/lib/utils";
 import { RoomStatusBadge } from "./RoomStatusBadge";
 
 interface CalendarTimelineProps {
@@ -118,6 +121,33 @@ export const CalendarTimeline = ({
               <Button variant="outline" size="sm" onClick={() => onTimelineStartDateChange(startOfDay(new Date()))}>
                 Today
               </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      "hover:bg-accent",
+                      !timelineStartDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 z-[100]" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={timelineStartDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        onTimelineStartDateChange(startOfDay(date));
+                      }
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
               <Button
                 variant="outline"
                 size="icon"
