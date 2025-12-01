@@ -22,7 +22,9 @@ export const LanguageSwitcher = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           {currentLang?.flag_emoji ? (
-            <span className="text-xl">{currentLang.flag_emoji}</span>
+            <span className="text-xl" style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}>
+              {currentLang.flag_emoji}
+            </span>
           ) : (
             <Globe className="h-5 w-5" />
           )}
@@ -40,7 +42,12 @@ export const LanguageSwitcher = () => {
             }`}
           >
             {language.flag_emoji && (
-              <span className="text-2xl flex-shrink-0">{language.flag_emoji}</span>
+              <span 
+                className="text-2xl flex-shrink-0" 
+                style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
+              >
+                {language.flag_emoji}
+              </span>
             )}
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-semibold text-sm">{language.native_name}</span>
