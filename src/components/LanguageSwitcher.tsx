@@ -33,19 +33,16 @@ export const LanguageSwitcher = () => {
           <DropdownMenuItem
             key={language.code}
             onClick={() => setLanguage(language.code)}
-            className={`flex items-center gap-3 cursor-pointer py-3 px-3 ${
+            className={`flex items-center gap-3 cursor-pointer py-2.5 px-3 ${
               currentLanguage === language.code 
                 ? 'bg-primary/10 text-primary hover:bg-primary/15' 
                 : 'hover:bg-accent'
             }`}
           >
             {language.flag_emoji && (
-              <span className="text-2xl flex-shrink-0">{language.flag_emoji}</span>
+              <span className="text-xl flex-shrink-0">{language.flag_emoji}</span>
             )}
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="font-semibold text-sm">{language.native_name}</span>
-              <span className="text-xs text-muted-foreground">{language.name}</span>
-            </div>
+            <span className="font-semibold text-sm uppercase">{language.code}</span>
             {currentLanguage === language.code && (
               <Check className="h-4 w-4 ml-auto flex-shrink-0 text-primary" />
             )}
