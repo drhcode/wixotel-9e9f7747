@@ -358,17 +358,13 @@ const Landing = () => {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <Link to="/hotels" className="text-sm font-medium hover:text-primary transition-colors">
-                Hotels
-              </Link>
               <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
                 About Us
               </Link>
-              <Link to="/register-hotel">
-                <Button size="sm" variant="outline">
-                  Register Hotel
-                </Button>
+              <Link to="/hotels" className="text-sm font-medium hover:text-primary transition-colors">
+                Hotels
               </Link>
+              <LanguageSwitcher />
               <Button
                 variant="outline"
                 size="sm"
@@ -378,7 +374,6 @@ const Landing = () => {
                 <Search className="h-4 w-4" />
                 Find My Booking
               </Button>
-              <LanguageSwitcher />
               <Link to="/auth">
                 <Button className="bg-gradient-primary hover:opacity-90 transition-all shadow-elegant hover:scale-105 hover:shadow-glow" size="sm">
                   Login
