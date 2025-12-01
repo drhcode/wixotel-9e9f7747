@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, AlertCircle, Menu, ExternalLink, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -225,10 +226,13 @@ const HotelAdminDashboard = () => {
                   <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
                 </div>
               </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <div className="flex items-center gap-2">
+                <LanguageSwitcher />
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -277,10 +281,13 @@ const HotelAdminDashboard = () => {
                   <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
                 </div>
               </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <div className="flex items-center gap-2">
+                <LanguageSwitcher />
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -362,6 +369,7 @@ const HotelAdminDashboard = () => {
                     </Button>
                   )}
                   <NotificationDropdown hotelId={hotel.id} />
+                  <LanguageSwitcher />
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Logout</span>
