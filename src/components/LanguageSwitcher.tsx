@@ -20,17 +20,11 @@ export const LanguageSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative gap-2">
+        <Button variant="ghost" size="icon" className="relative">
           {currentLang?.flag_emoji ? (
-            <>
-              <span className="text-lg">{currentLang.flag_emoji}</span>
-              <span className="font-semibold uppercase">{currentLang.code}</span>
-            </>
+            <span className="text-2xl">{currentLang.flag_emoji}</span>
           ) : (
-            <>
-              <Globe className="h-4 w-4" />
-              <span className="font-semibold uppercase">{currentLang?.code}</span>
-            </>
+            <Globe className="h-5 w-5" />
           )}
         </Button>
       </DropdownMenuTrigger>
