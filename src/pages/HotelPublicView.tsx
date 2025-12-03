@@ -947,7 +947,7 @@ const HotelPublicView = () => {
                         <div className="text-xs text-muted-foreground">per night</div>
                       </div>
                       <Button size="sm" className="group-hover:bg-gradient-primary transition-all">
-                        View & Book
+                        Book Now
                       </Button>
                     </div>
                   </CardContent>
