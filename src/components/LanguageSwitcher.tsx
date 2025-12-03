@@ -7,6 +7,47 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import "flag-icons/css/flag-icons.min.css";
+
+// Map language codes to country codes for flags
+const languageToCountryCode: Record<string, string> = {
+  en: "gb",
+  sq: "al",
+  it: "it",
+  de: "de",
+  fr: "fr",
+  es: "es",
+  pt: "pt",
+  nl: "nl",
+  pl: "pl",
+  ru: "ru",
+  zh: "cn",
+  ja: "jp",
+  ko: "kr",
+  ar: "sa",
+  tr: "tr",
+  el: "gr",
+  cs: "cz",
+  ro: "ro",
+  bg: "bg",
+  hr: "hr",
+  sr: "rs",
+  mk: "mk",
+  sl: "si",
+  bs: "ba",
+  me: "me",
+  xk: "xk",
+};
+
+const FlagIcon = ({ languageCode, className = "" }: { languageCode: string; className?: string }) => {
+  const countryCode = languageToCountryCode[languageCode] || languageCode;
+  return (
+    <span 
+      className={`fi fi-${countryCode} rounded-sm ${className}`}
+      style={{ fontSize: "1.25em", lineHeight: 1 }}
+    />
+  );
+};
 
 export const LanguageSwitcher = () => {
   const { currentLanguage, availableLanguages, setLanguage, isLoading } = useLanguage();
@@ -15,19 +56,11 @@ export const LanguageSwitcher = () => {
     return null;
   }
 
-  const currentLang = availableLanguages.find(l => l.code === currentLanguage);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          {currentLang?.flag_emoji ? (
-            <span className="text-xl" style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}>
-              {currentLang.flag_emoji}
-            </span>
-          ) : (
-            <Globe className="h-5 w-5" />
-          )}
+          <FlagIcon languageCode={currentLanguage} className="text-xl" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-background border-border z-[100]">
@@ -41,14 +74,7 @@ export const LanguageSwitcher = () => {
                 : 'hover:bg-accent'
             }`}
           >
-            {language.flag_emoji && (
-              <span 
-                className="text-2xl flex-shrink-0" 
-                style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
-              >
-                {language.flag_emoji}
-              </span>
-            )}
+            <FlagIcon languageCode={language.code} className="text-2xl flex-shrink-0" />
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-semibold text-sm">{language.native_name}</span>
               <span className="text-xs text-muted-foreground">{language.name}</span>
