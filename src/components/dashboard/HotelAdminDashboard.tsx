@@ -19,7 +19,7 @@ const GuestsManager = lazy(() => import("./hotel/GuestsManager"));
 const CalendarManager = lazy(() => import("./hotel/CalendarManager"));
 const ProfileSettings = lazy(() => import("./hotel/ProfileSettings"));
 const InvoicesViewer = lazy(() => import("./hotel/InvoicesViewer"));
-const LeadsManager = lazy(() => import("./hotel/LeadsManager"));
+const BookingRequestsManager = lazy(() => import("./hotel/BookingRequestsManager"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SupportManager = lazy(() => import("./hotel/SupportManager"));
 const LazyEarningsManager = lazy(() => import("./hotel/EarningsManager"));
@@ -320,7 +320,7 @@ const HotelAdminDashboard = () => {
       case "guests":
         return <GuestsManager key={refreshKey} hotelId={hotel.id} />;
       case "leads":
-        return <LeadsManager key={refreshKey} hotelId={hotel.id} />;
+        return <BookingRequestsManager key={refreshKey} hotelId={hotel.id} />;
       case "earnings":
         return <LazyEarningsManager key={refreshKey} hotelId={hotel.id} />;
       case "invoices":
@@ -387,7 +387,7 @@ const HotelAdminDashboard = () => {
                   { id: "bookings", label: "Bookings" },
                   { id: "rooms", label: "Rooms" },
                   { id: "guests", label: "Guests" },
-                  { id: "leads", label: "Leads" },
+                  { id: "leads", label: "Booking Requests" },
                   { id: "earnings", label: "Earnings" },
                   { id: "invoices", label: "Invoices" },
                   { id: "ical", label: "Sync" },
