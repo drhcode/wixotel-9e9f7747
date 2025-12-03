@@ -23,6 +23,37 @@ serve(async (req) => {
       }
     );
 
+    // Verify caller is authenticated and is a super_admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Unauthorized: No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !caller) {
+      console.error('Auth verification error:', authError);
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    console.log('Caller authenticated:', caller.id);
+
+    // Check if caller has super_admin role
+    const { data: roleData, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', caller.id)
+      .eq('role', 'super_admin')
+      .single();
+
+    if (roleError || !roleData) {
+      console.error('Role check failed:', roleError);
+      throw new Error('Unauthorized: Only super admins can reset passwords');
+    }
+
+    console.log('Super admin verified:', caller.id);
+
     const { owner_id, new_password } = await req.json();
 
     console.log('Resetting password for user:', owner_id);
@@ -62,9 +93,10 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Edge function error:', error);
+    const status = error.message?.includes('Unauthorized') ? 403 : 400;
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

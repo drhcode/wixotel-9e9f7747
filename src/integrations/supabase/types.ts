@@ -1808,6 +1808,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_booking_by_confirmation: {
+        Args: { p_confirmation_number: string }
+        Returns: Json
+      }
       send_booking_confirmation_email:
         | {
             Args: {

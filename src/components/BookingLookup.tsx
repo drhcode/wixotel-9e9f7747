@@ -29,27 +29,20 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
     try {
       setLoading(true);
 
+      // Use secure RPC function instead of direct table query
       const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          rooms (
-            name,
-            room_number
-          ),
-          hotels (
-            name,
-            email,
-            phone,
-            address,
-            city,
-            country
-          )
-        `)
-        .eq('confirmation_number', confirmationNumber.trim().toUpperCase())
-        .single();
+        .rpc('lookup_booking_by_confirmation', {
+          p_confirmation_number: confirmationNumber.trim().toUpperCase()
+        });
 
-      if (error || !data) {
+      if (error) {
+        console.error("Booking lookup error:", error);
+        toast.error("Failed to lookup booking. Please try again.");
+        setBooking(null);
+        return;
+      }
+
+      if (!data) {
         toast.error("No booking found with this confirmation number");
         setBooking(null);
         return;
@@ -226,9 +219,11 @@ export function BookingLookup({ open, onOpenChange }: BookingLookupProps) {
     doc.text(`Name: ${booking.full_name}`, leftColumnX, leftY);
     leftY += 4.5;
     
-    const guestEmail = doc.splitTextToSize(`Email: ${booking.guest_email}`, columnWidth);
-    doc.text(guestEmail, leftColumnX, leftY);
-    leftY += guestEmail.length * 4;
+    if (booking.guest_email) {
+      const guestEmail = doc.splitTextToSize(`Email: ${booking.guest_email}`, columnWidth);
+      doc.text(guestEmail, leftColumnX, leftY);
+      leftY += guestEmail.length * 4;
+    }
     
     if (booking.guest_phone) {
       doc.text(`Phone: ${booking.guest_phone}`, leftColumnX, leftY);
