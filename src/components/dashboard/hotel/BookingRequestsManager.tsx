@@ -37,11 +37,11 @@ interface Room {
   room_number: string | null;
 }
 
-interface LeadsManagerProps {
+interface BookingRequestsManagerProps {
   hotelId: string;
 }
 
-const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
+const BookingRequestsManager = ({ hotelId }: BookingRequestsManagerProps) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -78,8 +78,8 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
           await supabase.from('notifications').insert({
             hotel_id: hotelId,
             type: 'new_lead',
-            title: 'New Lead',
-            message: `New booking inquiry from ${newLead.full_name}`,
+            title: 'New Booking Request',
+            message: `New booking request from ${newLead.full_name}`,
           });
           
           fetchLeads();
@@ -153,7 +153,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
       setLeads(data || []);
     } catch (error: any) {
       console.error("Error fetching leads:", error);
-      toast.error("Failed to load leads");
+      toast.error("Failed to load booking requests");
     } finally {
       setLoading(false);
     }
@@ -195,17 +195,17 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         .eq("id", leadId);
 
       if (error) throw error;
-      toast.success("Lead status updated");
+      toast.success("Status updated");
       fetchLeads();
     } catch (error: any) {
       console.error("Error updating lead:", error);
-      toast.error("Failed to update lead status");
+      toast.error("Failed to update status");
     }
   };
 
   const acceptBookingRequest = async (lead: Lead) => {
     if (!lead.room_id) {
-      toast.error("This lead doesn't have a room associated");
+      toast.error("This booking request doesn't have a room associated");
       return;
     }
 
@@ -322,7 +322,7 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         {
           hotel_id: hotelId,
           type: 'lead_converted',
-          title: 'Lead Converted',
+          title: 'Booking Request Accepted',
           message: `Booking request from ${lead.full_name} accepted and converted to reservation`,
         }
       ]);
@@ -414,9 +414,9 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Leads Management</CardTitle>
+          <CardTitle>Booking Requests</CardTitle>
           <CardDescription>
-            Manage inquiries from potential guests ({totalCount} total)
+            Manage booking requests from potential guests ({totalCount} total)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -438,11 +438,11 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
 
           {leads.length === 0 && !searchQuery ? (
             <div className="text-center py-12 text-muted-foreground">
-              No leads yet. They will appear here when visitors submit the contact form.
+              No booking requests yet. They will appear here when visitors submit the booking form.
             </div>
           ) : leads.length === 0 && searchQuery ? (
             <div className="text-center py-12 text-muted-foreground">
-              No leads found matching "{searchQuery}". Try a different search term.
+              No booking requests found matching "{searchQuery}". Try a different search term.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -575,13 +575,13 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
         </div>
       )}
 
-      {/* Lead Details Dialog */}
+      {/* Booking Request Details Dialog */}
       <Dialog open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           {selectedLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Lead Details</DialogTitle>
+                <DialogTitle>Booking Request Details</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 sm:space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -762,4 +762,4 @@ const LeadsManager = ({ hotelId }: LeadsManagerProps) => {
   );
 };
 
-export default LeadsManager;
+export default BookingRequestsManager;

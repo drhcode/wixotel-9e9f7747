@@ -27,7 +27,7 @@ const menuItems = [
   { id: "bookings", label: "Bookings", icon: BookOpen },
   { id: "rooms", label: "Rooms", icon: DoorOpen },
   { id: "guests", label: "Guests", icon: Users },
-  { id: "leads", label: "Leads", icon: UserPlus },
+  { id: "leads", label: "Booking Requests", icon: UserPlus },
   { id: "earnings", label: "Earnings", icon: BarChart3 },
   { id: "invoices", label: "Invoices", icon: Receipt },
   { id: "ical", label: "Sync", icon: Link2 },
