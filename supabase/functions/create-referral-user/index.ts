@@ -23,6 +23,37 @@ serve(async (req) => {
       }
     );
 
+    // Verify caller is authenticated and is a super_admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Unauthorized: No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !caller) {
+      console.error('Auth verification error:', authError);
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    console.log('Caller authenticated:', caller.id);
+
+    // Check if caller has super_admin role
+    const { data: roleData, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', caller.id)
+      .eq('role', 'super_admin')
+      .single();
+
+    if (roleError || !roleData) {
+      console.error('Role check failed:', roleError);
+      throw new Error('Unauthorized: Only super admins can create referral users');
+    }
+
+    console.log('Super admin verified:', caller.id);
+
     const { full_name, email, password, phone, referral_code } = await req.json();
 
     console.log('Creating referral user for:', email);
@@ -44,7 +75,7 @@ serve(async (req) => {
     }
 
     // Create the auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -53,9 +84,9 @@ serve(async (req) => {
       },
     });
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      throw new Error(`Failed to create auth user: ${authError.message}`);
+    if (createAuthError) {
+      console.error('Auth error:', createAuthError);
+      throw new Error(`Failed to create auth user: ${createAuthError.message}`);
     }
     if (!authData.user) {
       throw new Error("Failed to create user - no user data returned");
@@ -82,16 +113,16 @@ serve(async (req) => {
     console.log('Referral record created');
 
     // Assign referral role
-    const { error: roleError } = await supabaseAdmin
+    const { error: roleInsertError } = await supabaseAdmin
       .from("user_roles")
       .insert({
         user_id: authData.user.id,
         role: "referral",
       });
 
-    if (roleError) {
-      console.error('Role insert error:', roleError);
-      throw new Error(`Failed to assign referral role: ${roleError.message}`);
+    if (roleInsertError) {
+      console.error('Role insert error:', roleInsertError);
+      throw new Error(`Failed to assign referral role: ${roleInsertError.message}`);
     }
 
     console.log('Referral role assigned successfully');
@@ -102,9 +133,10 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Edge function error:', error);
+    const status = error.message?.includes('Unauthorized') ? 403 : 400;
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
