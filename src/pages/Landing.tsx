@@ -50,7 +50,7 @@ const Landing = () => {
   const [userCountry, setUserCountry] = useState<string | null>(null);
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
+  
   
   useEffect(() => {
     let mounted = true;
@@ -75,22 +75,10 @@ const Landing = () => {
 
   useEffect(() => {
     fetchHotels();
-    fetchSubscriptionPlans();
     // Auto-detect user location on page load
     getUserLocation();
   }, []);
 
-  const fetchSubscriptionPlans = async () => {
-    const { data } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('is_active', true)
-      .order('price', { ascending: true });
-    
-    if (data) {
-      setSubscriptionPlans(data);
-    }
-  };
 
   useEffect(() => {
     // Update available cities when country changes
@@ -293,58 +281,6 @@ const Landing = () => {
     }
   ];
 
-  const plans = subscriptionPlans.length > 0 
-    ? subscriptionPlans.map((plan, index) => ({
-        name: plan.name,
-        price: `€${plan.price}`,
-        period: `/${plan.billing_period}`,
-        popular: index === 1, // Mark middle plan as popular
-        features: plan.features || []
-      }))
-    : [
-        {
-          name: "Basic",
-          price: "€15.99",
-          period: "/month",
-          features: [
-            "Up to 10 rooms",
-            "Reports",
-            "Lead collection",
-            "Calendar integration",
-            "Email support"
-          ]
-        },
-        {
-          name: "Pro",
-          price: "€19.99",
-          period: "/month",
-          popular: true,
-          features: [
-            "Up to 20 rooms",
-            "iCal Sync",
-            "Leads & Guest Management",
-            "Reports",
-            "24/7 Support",
-            "Website included",
-            "Hotel listed on our platform"
-          ]
-        },
-        {
-          name: "Premium",
-          price: "€22.99",
-          period: "/month",
-          features: [
-            "Up to 40 rooms",
-            "iCal Sync",
-            "Leads & Guest Management",
-            "Advanced reports",
-            "24/7 + Ticket Support",
-            "Website included",
-            "Custom reports",
-            "Hotel featured on our platform"
-          ]
-        }
-      ];
 
   return (
     <div className="min-h-screen">
@@ -909,74 +845,6 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
-      {/* Pricing Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background to-accent/20">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full text-sm font-semibold text-primary mb-4 border border-primary/20">
-              <DollarSign className="h-4 w-4" />
-              <span>PRICING</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Choose the plan that best fits your hotel's needs
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card 
-                key={plan.name} 
-                className={`relative flex flex-col transition-all duration-300 hover:-translate-y-2 ${
-                  plan.popular 
-                    ? 'border-primary shadow-card-hover scale-105' 
-                    : 'border-border/50 shadow-card hover:shadow-card-hover hover:border-primary/30'
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <span className="bg-gradient-primary text-white px-5 py-2 rounded-full text-sm font-semibold shadow-lg">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="mt-6">
-                    <span className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">{plan.price}</span>
-                    <span className="text-muted-foreground text-lg">{plan.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col space-y-6">
-                  <ul className="space-y-4 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-sm leading-relaxed">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/auth" className="block mt-auto">
-                    <Button 
-                      className={`w-full font-semibold ${
-                        plan.popular 
-                          ? 'bg-gradient-primary shadow-elegant hover:shadow-glow hover:scale-[1.02]' 
-                          : 'border-2 hover:border-primary hover:bg-primary/5'
-                      }`}
-                      variant={plan.popular ? 'default' : 'outline'}
-                      size="lg"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
 
       {/* Footer */}
       <footer className="relative py-16 px-4 md:px-6 border-t border-border/40 bg-gradient-footer overflow-hidden">
