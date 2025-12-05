@@ -188,7 +188,9 @@ All colors MUST be HSL.
   }
 
   /* Hide Google reCAPTCHA badge (note: keep legal text elsewhere per Google ToS) */
-  .grecaptcha-badge {
+  .grecaptcha-badge,
+  iframe[src*="recaptcha"],
+  div[style*="z-index: 2000000000"] {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -196,5 +198,7 @@ All colors MUST be HSL.
     height: 0 !important;
     overflow: hidden !important;
     pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
   }
 }
