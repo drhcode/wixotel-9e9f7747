@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, BarChart3, MessageSquare, Link2, Receipt, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, BarChart3, MessageSquare, Link2, Receipt, HelpCircle, AlertTriangle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -42,11 +43,14 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
   const { t } = useLanguage();
   const [leadsCount, setLeadsCount] = useState(0);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
+  const [hasOverdueInvoices, setHasOverdueInvoices] = useState(false);
+  const [oldestOverdueDays, setOldestOverdueDays] = useState(0);
 
   useEffect(() => {
     if (hotelId) {
       fetchLeadsCount();
       fetchUnpaidInvoicesCount();
+      fetchOverdueInvoices();
       
       // Subscribe to leads changes with a unique channel name
       const leadsChannel = supabase
@@ -114,6 +118,7 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
             console.log('Invoices change detected in sidebar:', payload);
             setTimeout(() => {
               fetchUnpaidInvoicesCount();
+              fetchOverdueInvoices();
             }, 100);
           }
         )
@@ -165,11 +170,50 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
     }
   };
 
+  const fetchOverdueInvoices = async () => {
+    if (!hotelId) return;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("due_date")
+        .eq("hotel_id", hotelId)
+        .in("status", ["pending", "overdue"])
+        .lt("due_date", today)
+        .order("due_date", { ascending: true })
+        .limit(1);
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setHasOverdueInvoices(true);
+        // Calculate days overdue
+        const dueDate = new Date(data[0].due_date);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - dueDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setOldestOverdueDays(diffDays);
+      } else {
+        setHasOverdueInvoices(false);
+        setOldestOverdueDays(0);
+      }
+    } catch (error) {
+      console.error("Error fetching overdue invoices:", error);
+    }
+  };
+
   const handleMenuClick = (tabId: string) => {
     onTabChange(tabId);
     if (isMobile) {
       setOpenMobile(false);
     }
+  };
+
+  const getWarningLevel = () => {
+    if (oldestOverdueDays >= 30) return 'critical';
+    if (oldestOverdueDays >= 14) return 'high';
+    return 'warning';
   };
 
   return (
@@ -226,6 +270,45 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      {hasOverdueInvoices && (
+        <SidebarFooter className="p-2">
+          <button
+            onClick={() => handleMenuClick('invoices')}
+            className={`w-full p-3 rounded-lg text-left transition-all ${
+              getWarningLevel() === 'critical'
+                ? 'bg-destructive/15 border-2 border-destructive animate-pulse'
+                : getWarningLevel() === 'high'
+                ? 'bg-destructive/10 border border-destructive/50'
+                : 'bg-warning/10 border border-warning/50'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <AlertTriangle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                getWarningLevel() === 'critical' ? 'text-destructive' : 'text-warning'
+              }`} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold ${
+                  getWarningLevel() === 'critical' ? 'text-destructive' : 'text-warning'
+                }`}>
+                  {t('warning.overdue_invoice', 'Payment Overdue')}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {oldestOverdueDays >= 30 
+                    ? t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')
+                    : oldestOverdueDays >= 14
+                    ? t('warning.pay_soon', 'Please pay your invoice to avoid suspension')
+                    : t('warning.invoice_overdue', 'You have an overdue invoice')
+                  }
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {oldestOverdueDays} {t('common.days_overdue', 'days overdue')}
+                </p>
+              </div>
+            </div>
+          </button>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
