@@ -44,6 +44,21 @@ serve(async (req) => {
       );
     }
 
+    // Allow dev mode to bypass reCAPTCHA verification
+    if (token === 'dev-mode-skip-recaptcha') {
+      console.log("[DEV] Skipping reCAPTCHA verification for development mode");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          passed: true,
+          score: 1.0,
+          action: action,
+          message: "Development mode - reCAPTCHA bypassed",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Verify token with Google reCAPTCHA API
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify`;
     const verifyResponse = await fetch(verifyUrl, {
