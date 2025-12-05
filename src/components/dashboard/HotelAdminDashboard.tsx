@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, AlertCircle, Menu, ExternalLink, RefreshCw } from "lucide-react";
+import { LogOut, AlertCircle, Menu, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { NotificationDropdown } from "./hotel/NotificationDropdown";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
@@ -37,12 +38,15 @@ interface HotelData {
 
 const HotelAdminDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [hotel, setHotel] = useState<HotelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
+  const [hasOverdueInvoices, setHasOverdueInvoices] = useState(false);
+  const [oldestOverdueDays, setOldestOverdueDays] = useState(0);
 
   // Read section from URL query params
   useEffect(() => {
@@ -61,6 +65,7 @@ const HotelAdminDashboard = () => {
     if (hotel?.id) {
       fetchLeadsCount();
       fetchUnpaidInvoicesCount();
+      fetchOverdueInvoices();
       
       // Subscribe to leads changes
       const leadsChannel = supabase
@@ -105,6 +110,7 @@ const HotelAdminDashboard = () => {
           () => {
             setTimeout(() => {
               fetchUnpaidInvoicesCount();
+              fetchOverdueInvoices();
             }, 100);
           }
         )
@@ -178,6 +184,38 @@ const HotelAdminDashboard = () => {
       setUnpaidInvoicesCount(count || 0);
     } catch (error) {
       console.error("Error fetching unpaid invoices count:", error);
+    }
+  };
+
+  const fetchOverdueInvoices = async () => {
+    if (!hotel?.id) return;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("due_date")
+        .eq("hotel_id", hotel.id)
+        .in("status", ["pending", "overdue"])
+        .lt("due_date", today)
+        .order("due_date", { ascending: true })
+        .limit(1);
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setHasOverdueInvoices(true);
+        const dueDate = new Date(data[0].due_date);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - dueDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setOldestOverdueDays(diffDays);
+      } else {
+        setHasOverdueInvoices(false);
+        setOldestOverdueDays(0);
+      }
+    } catch (error) {
+      console.error("Error fetching overdue invoices:", error);
     }
   };
 
@@ -382,6 +420,27 @@ const HotelAdminDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Overdue Invoice Warning Banner */}
+            {hasOverdueInvoices && (
+              <div className="border-t bg-destructive/10 animate-pulse">
+                <button
+                  onClick={() => setActiveTab('invoices')}
+                  className="w-full px-4 py-2 flex items-center gap-3 hover:bg-destructive/15 transition-colors"
+                >
+                  <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <span className="text-sm font-semibold text-destructive">
+                      {t('warning.overdue_invoice', 'Payment Overdue')} - {oldestOverdueDays} {t('common.days_overdue', 'days overdue')}
+                    </span>
+                    <span className="text-xs text-destructive/80 ml-2">
+                      {t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')}
+                    </span>
+                  </div>
+                  <span className="text-xs text-destructive underline">{t('common.view_invoices', 'View Invoices')}</span>
+                </button>
+              </div>
+            )}
 
             {/* Desktop Navigation Menu */}
             <div className="hidden lg:block border-t">
