@@ -210,12 +210,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
     }
   };
 
-  const getWarningLevel = () => {
-    if (oldestOverdueDays >= 30) return 'critical';
-    if (oldestOverdueDays >= 14) return 'high';
-    return 'warning';
-  };
-
   return (
     <Sidebar className="border-r">
       {isMobile && (
@@ -275,33 +269,18 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
         <SidebarFooter className="p-2">
           <button
             onClick={() => handleMenuClick('invoices')}
-            className={`w-full p-3 rounded-lg text-left transition-all ${
-              getWarningLevel() === 'critical'
-                ? 'bg-destructive/15 border-2 border-destructive animate-pulse'
-                : getWarningLevel() === 'high'
-                ? 'bg-destructive/10 border border-destructive/50'
-                : 'bg-warning/10 border border-warning/50'
-            }`}
+            className="w-full p-3 rounded-lg text-left transition-all bg-destructive/15 border-2 border-destructive animate-pulse"
           >
             <div className="flex items-start gap-2">
-              <AlertTriangle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                getWarningLevel() === 'critical' ? 'text-destructive' : 'text-warning'
-              }`} />
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5 text-destructive" />
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold ${
-                  getWarningLevel() === 'critical' ? 'text-destructive' : 'text-warning'
-                }`}>
+                <p className="text-sm font-semibold text-destructive">
                   {t('warning.overdue_invoice', 'Payment Overdue')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {oldestOverdueDays >= 30 
-                    ? t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')
-                    : oldestOverdueDays >= 14
-                    ? t('warning.pay_soon', 'Please pay your invoice to avoid suspension')
-                    : t('warning.invoice_overdue', 'You have an overdue invoice')
-                  }
+                  {t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-destructive font-medium mt-1">
                   {oldestOverdueDays} {t('common.days_overdue', 'days overdue')}
                 </p>
               </div>
