@@ -9,10 +9,11 @@ interface Booking {
   id: string;
   check_in: string;
   check_out: string;
+  full_name: string;
   status: string;
 }
 
-// Generate iCal event WITHOUT exposing guest PII - only shows dates as "Booked"
+// Generate iCal event with guest name for calendar visibility
 function generateICalEvent(booking: Booking, roomName: string): string {
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   
@@ -21,8 +22,8 @@ UID:${booking.id}@wixotel.com
 DTSTAMP:${now}
 DTSTART;VALUE=DATE:${booking.check_in.replace(/-/g, '')}
 DTEND;VALUE=DATE:${booking.check_out.replace(/-/g, '')}
-SUMMARY:Booked - ${roomName}
-DESCRIPTION:Room unavailable
+SUMMARY:${roomName} - ${booking.full_name}
+DESCRIPTION:Room booked
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 END:VEVENT`;
@@ -78,13 +79,12 @@ Deno.serve(async (req) => {
     }
 
     // Fetch bookings for this room (exclude cancelled)
-    // Only fetch non-PII fields: id, check_in, check_out, status
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select('id, check_in, check_out, status')
+      .select('id, check_in, check_out, full_name, status')
       .eq('room_id', roomId)
       .neq('status', 'cancelled')
       .gte('check_out', thirtyDaysAgo.toISOString().split('T')[0]);
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate iCal content - no guest PII exposed
+    // Generate iCal content
     const events = (bookings || []).map(booking => 
       generateICalEvent(booking, room.name)
     ).join('\n');
