@@ -23,6 +23,7 @@ const BookingDetails = lazy(() => import("./pages/BookingDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import { BedLoader } from "@/components/ui/bed-loader";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Router>
+          <CookieConsent />
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><BedLoader size="lg" /></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
