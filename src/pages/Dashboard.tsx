@@ -2,6 +2,8 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import { SessionTimeoutModal } from "@/components/SessionTimeoutModal";
 
 // Lazy load components OUTSIDE the component to prevent recreation on every render
 const LazySuperAdminDashboard = lazy(() => import("@/components/dashboard/SuperAdminDashboard"));
@@ -12,6 +14,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<'super_admin' | 'hotel_admin' | 'referral' | null>(null);
+  const { showWarning, remainingTime, extendSession, logout } = useSessionTimeout();
 
   useEffect(() => {
     let mounted = true;
@@ -111,19 +114,27 @@ const Dashboard = () => {
   }
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
-      {userRole === 'super_admin' ? (
-        <LazySuperAdminDashboard />
-      ) : userRole === 'referral' ? (
-        <LazyReferralDashboard />
-      ) : (
-        <LazyHotelAdminDashboard />
-      )}
-    </Suspense>
+    <>
+      <SessionTimeoutModal
+        isOpen={showWarning}
+        remainingTime={remainingTime}
+        onExtend={extendSession}
+        onLogout={logout}
+      />
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }>
+        {userRole === 'super_admin' ? (
+          <LazySuperAdminDashboard />
+        ) : userRole === 'referral' ? (
+          <LazyReferralDashboard />
+        ) : (
+          <LazyHotelAdminDashboard />
+        )}
+      </Suspense>
+    </>
   );
 };
 

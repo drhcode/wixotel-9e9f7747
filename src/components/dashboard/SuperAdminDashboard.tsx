@@ -151,6 +151,8 @@ const SuperAdminDashboard = () => {
   };
 
   const handleLogout = async () => {
+    localStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('user_role');
     await supabase.auth.signOut();
     navigate("/");
   };

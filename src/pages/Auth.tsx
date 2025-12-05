@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ const Auth = () => {
   }, []);
   
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -91,6 +93,13 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
+      // Store remember me preference
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
 
       if (data.user) {
         // Check if user's hotel is approved
@@ -179,6 +188,19 @@ const Auth = () => {
                   className="h-12 border-border/50 focus:border-primary transition-all"
                   required
                 />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <Label 
+                  htmlFor="remember-me" 
+                  className="text-sm font-normal text-muted-foreground cursor-pointer"
+                >
+                  Remember me (stay logged in)
+                </Label>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="login-password" className="text-sm font-semibold">Password</Label>

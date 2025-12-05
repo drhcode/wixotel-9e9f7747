@@ -164,8 +164,9 @@ const ReferralDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('rememberMe');
     sessionStorage.removeItem('user_role');
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 
