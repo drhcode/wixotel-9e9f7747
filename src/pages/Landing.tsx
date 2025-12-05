@@ -798,26 +798,42 @@ const Landing = () => {
               <CardContent>
                 <form onSubmit={async (e) => {
                   e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
+                  const form = e.currentTarget;
+                  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+                  const originalText = submitBtn.textContent;
+                  
+                  submitBtn.disabled = true;
+                  submitBtn.textContent = "Submitting...";
+                  
+                  const formData = new FormData(form);
                   const data = {
-                    full_name: formData.get('full_name') as string,
-                    email: formData.get('email') as string,
-                    phone: formData.get('phone') as string,
-                    message: formData.get('message') as string,
+                    full_name: (formData.get('full_name') as string)?.trim(),
+                    email: (formData.get('email') as string)?.trim(),
+                    phone: (formData.get('phone') as string)?.trim() || null,
+                    message: (formData.get('message') as string)?.trim() || null,
                   };
 
                   try {
+                    if (!data.full_name || !data.email) {
+                      throw new Error("Please fill in all required fields");
+                    }
+
                     const { error } = await supabase
                       .from('referral_applications')
                       .insert([data]);
 
                     if (error) throw error;
 
-                    toast.success("Application submitted! We'll review it and get back to you soon.");
-                    e.currentTarget.reset();
+                    toast.success("Application submitted! We'll review it and get back to you soon.", {
+                      duration: 5000,
+                    });
+                    form.reset();
                   } catch (error: any) {
-                    toast.error("Failed to submit application");
-                    console.error(error);
+                    console.error("Referral application error:", error);
+                    toast.error(error.message || "Failed to submit application. Please try again.");
+                  } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                   }
                 }} className="space-y-4">
                   <div>
