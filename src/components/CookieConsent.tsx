@@ -44,6 +44,18 @@ export const CookieConsent = () => {
         setPreferences(JSON.parse(savedPrefs));
       }
     }
+
+    // Listen for external requests to open cookie settings
+    const handleOpenSettings = () => {
+      const savedPrefs = localStorage.getItem(COOKIE_PREFERENCES_KEY);
+      if (savedPrefs) {
+        setPreferences(JSON.parse(savedPrefs));
+      }
+      setShowSettings(true);
+    };
+
+    window.addEventListener("open-cookie-settings", handleOpenSettings);
+    return () => window.removeEventListener("open-cookie-settings", handleOpenSettings);
   }, []);
 
   const saveConsent = (prefs: CookiePreferences) => {
@@ -224,6 +236,11 @@ export const CookieConsent = () => {
       </Dialog>
     </>
   );
+};
+
+// Function to open cookie settings from anywhere
+export const openCookieSettings = () => {
+  window.dispatchEvent(new CustomEvent("open-cookie-settings"));
 };
 
 // Hook to check cookie preferences

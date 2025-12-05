@@ -869,6 +869,12 @@ const Landing = () => {
               <div className="space-y-3">
                 <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 duration-200">Privacy Policy</Link>
                 <Link to="/terms" className="block text-sm text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 duration-200">Terms of Service</Link>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-cookie-settings"))}
+                  className="block text-sm text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 duration-200"
+                >
+                  Manage Cookies
+                </button>
               </div>
             </div>
             <div>
