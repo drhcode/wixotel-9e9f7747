@@ -9,23 +9,20 @@ interface Booking {
   id: string;
   check_in: string;
   check_out: string;
-  full_name: string;
   status: string;
-  confirmation_number: string;
 }
 
-function generateICalEvent(booking: Booking, roomName: string, hotelName: string): string {
+// Generate iCal event WITHOUT exposing guest PII - only shows dates as "Booked"
+function generateICalEvent(booking: Booking, roomName: string): string {
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  const checkIn = new Date(booking.check_in).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  const checkOut = new Date(booking.check_out).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   
   return `BEGIN:VEVENT
 UID:${booking.id}@wixotel.com
 DTSTAMP:${now}
 DTSTART;VALUE=DATE:${booking.check_in.replace(/-/g, '')}
 DTEND;VALUE=DATE:${booking.check_out.replace(/-/g, '')}
-SUMMARY:${hotelName} - ${roomName} - ${booking.full_name}
-DESCRIPTION:Booking ${booking.confirmation_number} - Status: ${booking.status}
+SUMMARY:Booked - ${roomName}
+DESCRIPTION:Room unavailable
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 END:VEVENT`;
@@ -81,13 +78,13 @@ Deno.serve(async (req) => {
     }
 
     // Fetch bookings for this room (exclude cancelled)
-    // Include bookings from 30 days ago to ensure recent bookings are visible during Airbnb sync
+    // Only fetch non-PII fields: id, check_in, check_out, status
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select('id, check_in, check_out, full_name, status, confirmation_number')
+      .select('id, check_in, check_out, status')
       .eq('room_id', roomId)
       .neq('status', 'cancelled')
       .gte('check_out', thirtyDaysAgo.toISOString().split('T')[0]);
@@ -102,9 +99,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate iCal content
+    // Generate iCal content - no guest PII exposed
     const events = (bookings || []).map(booking => 
-      generateICalEvent(booking, room.name, hotel.name)
+      generateICalEvent(booking, room.name)
     ).join('\n');
 
     const icalContent = `BEGIN:VCALENDAR
