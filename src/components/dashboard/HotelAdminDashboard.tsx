@@ -25,6 +25,7 @@ const SupportManager = lazy(() => import("./hotel/SupportManager"));
 const LazyEarningsManager = lazy(() => import("./hotel/EarningsManager"));
 const ICalManager = lazy(() => import("./hotel/ICalManager").then(m => ({ default: m.ICalManager })));
 const ConflictsManager = lazy(() => import("./hotel/ConflictsManager"));
+const HelpDocs = lazy(() => import("./hotel/HelpDocs"));
 
 interface HotelData {
   id: string;
@@ -327,6 +328,8 @@ const HotelAdminDashboard = () => {
         return <InvoicesViewer key={refreshKey} />;
       case "support":
         return <SupportManager key={refreshKey} hotelId={hotel.id} />;
+      case "help":
+        return <HelpDocs key={refreshKey} />;
       case "settings":
         return <ProfileSettings key={refreshKey} />;
       default:
@@ -392,6 +395,7 @@ const HotelAdminDashboard = () => {
                   { id: "invoices", label: "Invoices" },
                   { id: "ical", label: "Sync" },
                   { id: "support", label: "Support" },
+                  { id: "help", label: "Help" },
                   { id: "settings", label: "Settings" },
                 ].map((tab) => (
                   <Button
@@ -436,7 +440,7 @@ const HotelAdminDashboard = () => {
             {/* Mobile Tabs */}
             <div className="lg:hidden border-t overflow-x-auto">
               <div className="flex px-2 py-2 gap-1 min-w-max">
-                {["overview", "calendar", "bookings", "rooms", "guests", "leads", "earnings", "invoices", "ical", "support", "settings"].map((tab) => (
+                {["overview", "calendar", "bookings", "rooms", "guests", "leads", "earnings", "invoices", "ical", "support", "help", "settings"].map((tab) => (
                   <Button
                     key={tab}
                     variant={activeTab === tab ? "default" : "ghost"}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, BarChart3, MessageSquare, Link2, Receipt } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, BookOpen, Users, Settings, X, UserPlus, BarChart3, MessageSquare, Link2, Receipt, HelpCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +32,7 @@ const menuItems = [
   { id: "invoices", label: "Invoices", icon: Receipt },
   { id: "ical", label: "Sync", icon: Link2 },
   { id: "support", label: "Support", icon: MessageSquare },
+  { id: "help", label: "Help", icon: HelpCircle },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
