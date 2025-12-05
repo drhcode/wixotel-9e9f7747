@@ -62,6 +62,26 @@ export default function ReferralApplications() {
     setReferralCode(code);
   };
 
+  const generateSecurePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const symbols = '!@#$%&*';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    pwd += symbols.charAt(Math.floor(Math.random() * symbols.length));
+    // Shuffle the password
+    pwd = pwd.split('').sort(() => Math.random() - 0.5).join('');
+    setPassword(pwd);
+  };
+
+  const openApproveDialog = (app: ReferralApplication) => {
+    setSelectedApp(app);
+    generateReferralCode();
+    generateSecurePassword();
+    setApproveDialogOpen(true);
+  };
+
   const handleApprove = async () => {
     if (!selectedApp) return;
     if (!referralCode || !password) {
@@ -236,11 +256,7 @@ export default function ReferralApplications() {
                                 size="sm"
                                 variant="ghost"
                                 className="text-green-600 hover:text-green-700"
-                                onClick={() => {
-                                  setSelectedApp(app);
-                                  generateReferralCode();
-                                  setApproveDialogOpen(true);
-                                }}
+                                onClick={() => openApproveDialog(app)}
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
@@ -313,31 +329,47 @@ export default function ReferralApplications() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Approve Referral Application</DialogTitle>
-            <DialogDescription>Set up referral account credentials</DialogDescription>
+            <DialogDescription>
+              Approving will create an account and send login credentials to {selectedApp?.email}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="bg-muted/50 p-3 rounded-lg text-sm">
+              <p className="font-medium mb-1">What happens next:</p>
+              <ol className="list-decimal list-inside text-muted-foreground space-y-1">
+                <li>Account is created with the credentials below</li>
+                <li>Email is sent to {selectedApp?.email} with login details</li>
+                <li>Referral user can login and start referring hotels</li>
+              </ol>
+            </div>
             <div>
               <Label>Referral Code</Label>
               <div className="flex gap-2">
                 <Input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
-                <Button variant="outline" onClick={generateReferralCode}>Generate</Button>
+                <Button variant="outline" size="sm" onClick={generateReferralCode}>Regenerate</Button>
               </div>
             </div>
             <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter initial password"
-              />
+              <Label>Temporary Password</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Auto-generated password"
+                />
+                <Button variant="outline" size="sm" onClick={generateSecurePassword}>Regenerate</Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                This password will be sent to the user via email. They should change it after first login.
+              </p>
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleApprove} disabled={processing}>
-                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Approve'}
+              <Button onClick={handleApprove} disabled={processing} className="bg-green-600 hover:bg-green-700">
+                {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Approve & Send Email
               </Button>
             </div>
           </div>
