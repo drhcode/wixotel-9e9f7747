@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const roomId = url.searchParams.get('room_id');
     const hotelId = url.searchParams.get('hotel_id');
+    const token = url.searchParams.get('token');
 
     if (!roomId || !hotelId) {
       return new Response(
@@ -46,14 +47,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: 'token is required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch room and hotel info
+    // Fetch room and validate token
     const { data: room, error: roomError } = await supabase
       .from('rooms')
-      .select('name, hotel_id')
+      .select('name, hotel_id, ical_token')
       .eq('id', roomId)
       .eq('hotel_id', hotelId)
       .single();
@@ -62,6 +70,16 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Room not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate token - constant-time comparison to prevent timing attacks
+    const validToken = room.ical_token;
+    if (!validToken || token.length !== validToken.length || token !== validToken) {
+      console.warn(`Invalid token attempt for room ${roomId}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

@@ -41,6 +41,7 @@ interface Room {
   id: string;
   name: string;
   room_number: string | null;
+  ical_token: string | null;
 }
 
 interface ICalFeed {
@@ -76,10 +77,10 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
     try {
       setLoading(true);
       
-      // Fetch rooms
+      // Fetch rooms with ical_token
       const { data: roomsData, error: roomsError } = await supabase
         .from("rooms")
-        .select("id, name, room_number")
+        .select("id, name, room_number, ical_token")
         .eq("hotel_id", hotelId)
         .order("name");
 
@@ -108,8 +109,10 @@ export function ICalManager({ hotelId }: ICalManagerProps) {
   };
 
   const getICalUrl = (roomId: string) => {
+    const room = rooms.find(r => r.id === roomId);
+    const token = room?.ical_token || '';
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return `${supabaseUrl}/functions/v1/generate-ical?room_id=${roomId}&hotel_id=${hotelId}`;
+    return `${supabaseUrl}/functions/v1/generate-ical?room_id=${roomId}&hotel_id=${hotelId}&token=${token}`;
   };
 
   const copyToClipboard = (text: string) => {

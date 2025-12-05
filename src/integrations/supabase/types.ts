@@ -1358,6 +1358,7 @@ export type Database = {
           created_at: string
           description: string | null
           hotel_id: string
+          ical_token: string | null
           id: string
           images: string[] | null
           is_available: boolean
@@ -1376,6 +1377,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           hotel_id: string
+          ical_token?: string | null
           id?: string
           images?: string[] | null
           is_available?: boolean
@@ -1394,6 +1396,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           hotel_id?: string
+          ical_token?: string | null
           id?: string
           images?: string[] | null
           is_available?: boolean
