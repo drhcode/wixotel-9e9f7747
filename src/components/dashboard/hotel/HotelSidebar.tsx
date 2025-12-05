@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HotelSidebarProps {
   activeTab: string;
@@ -22,22 +23,23 @@ interface HotelSidebarProps {
 }
 
 const menuItems = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "calendar", label: "Calendar", icon: Calendar },
-  { id: "bookings", label: "Bookings", icon: BookOpen },
-  { id: "rooms", label: "Rooms", icon: DoorOpen },
-  { id: "guests", label: "Guests", icon: Users },
-  { id: "leads", label: "Booking Requests", icon: UserPlus },
-  { id: "earnings", label: "Earnings", icon: BarChart3 },
-  { id: "invoices", label: "Invoices", icon: Receipt },
-  { id: "ical", label: "Sync", icon: Link2 },
-  { id: "support", label: "Support", icon: MessageSquare },
-  { id: "help", label: "Help", icon: HelpCircle },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "overview", labelKey: "dashboard.overview", fallback: "Overview", icon: LayoutDashboard },
+  { id: "calendar", labelKey: "dashboard.calendar", fallback: "Calendar", icon: Calendar },
+  { id: "bookings", labelKey: "dashboard.bookings", fallback: "Bookings", icon: BookOpen },
+  { id: "rooms", labelKey: "dashboard.rooms", fallback: "Rooms", icon: DoorOpen },
+  { id: "guests", labelKey: "dashboard.guests", fallback: "Guests", icon: Users },
+  { id: "leads", labelKey: "dashboard.booking_requests", fallback: "Booking Requests", icon: UserPlus },
+  { id: "earnings", labelKey: "dashboard.earnings", fallback: "Earnings", icon: BarChart3 },
+  { id: "invoices", labelKey: "dashboard.invoices", fallback: "Invoices", icon: Receipt },
+  { id: "ical", labelKey: "dashboard.sync", fallback: "Sync", icon: Link2 },
+  { id: "support", labelKey: "dashboard.support", fallback: "Support", icon: MessageSquare },
+  { id: "help", labelKey: "dashboard.help", fallback: "Help", icon: HelpCircle },
+  { id: "settings", labelKey: "dashboard.settings", fallback: "Settings", icon: Settings },
 ];
 
 export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const { t } = useLanguage();
   const [leadsCount, setLeadsCount] = useState(0);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
 
@@ -174,7 +176,7 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
     <Sidebar className="border-r">
       {isMobile && (
         <SidebarHeader className="flex flex-row items-center justify-between border-b pb-2">
-          <h2 className="text-lg font-semibold">Menu</h2>
+          <h2 className="text-lg font-semibold">{t('common.menu', 'Menu')}</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -189,34 +191,37 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => handleMenuClick(item.id)}
-                    isActive={activeTab === item.id}
-                    tooltip={item.label}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                    {item.id === "leads" && leadsCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {leadsCount}
-                      </Badge>
-                    )}
-                    {item.id === "invoices" && unpaidInvoicesCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {unpaidInvoicesCount}
-                      </Badge>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const label = t(item.labelKey, item.fallback);
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => handleMenuClick(item.id)}
+                      isActive={activeTab === item.id}
+                      tooltip={label}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{label}</span>
+                      {item.id === "leads" && leadsCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {leadsCount}
+                        </Badge>
+                      )}
+                      {item.id === "invoices" && unpaidInvoicesCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {unpaidInvoicesCount}
+                        </Badge>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
