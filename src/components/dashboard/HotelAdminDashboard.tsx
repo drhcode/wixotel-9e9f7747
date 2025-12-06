@@ -446,8 +446,8 @@ const HotelAdminDashboard = () => {
                     </span>
                     <span className="text-xs text-destructive/80 ml-2">
                       {oldestOverdueDays >= 10 
-                        ? t('warning.account_will_suspend', 'Account will be suspended') 
-                        : t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')}
+                        ? t('warning.account_suspended', 'Account suspended') 
+                        : `${t('warning.suspension_in', 'Suspension in')} ${10 - oldestOverdueDays} ${t('common.days', 'days')}`}
                     </span>
                   </div>
                   <span className="text-xs text-destructive underline">{t('common.view_invoices', 'View Invoices')}</span>
