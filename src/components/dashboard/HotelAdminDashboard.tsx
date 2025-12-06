@@ -204,11 +204,22 @@ const HotelAdminDashboard = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setHasOverdueInvoices(true);
         const dueDate = new Date(data[0].due_date);
         const now = new Date();
         const diffTime = Math.abs(now.getTime() - dueDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // If 7+ days overdue, force logout
+        if (diffDays >= 7) {
+          toast.error("Your account is suspended due to an overdue invoice. Please contact support to resolve payment.");
+          await supabase.auth.signOut();
+          sessionStorage.clear();
+          localStorage.removeItem('rememberMe');
+          navigate('/auth', { replace: true });
+          return;
+        }
+        
+        setHasOverdueInvoices(true);
         setOldestOverdueDays(diffDays);
       } else {
         setHasOverdueInvoices(false);
@@ -421,9 +432,9 @@ const HotelAdminDashboard = () => {
               </div>
             </div>
 
-            {/* Overdue Invoice Warning Banner */}
+            {/* Overdue Invoice Warning Banner - Fixed, no pulsing */}
             {hasOverdueInvoices && (
-              <div className="border-t bg-destructive/10 animate-pulse">
+              <div className="border-t bg-destructive/10">
                 <button
                   onClick={() => setActiveTab('invoices')}
                   className="w-full px-4 py-2 flex items-center gap-3 hover:bg-destructive/15 transition-colors"
@@ -434,7 +445,9 @@ const HotelAdminDashboard = () => {
                       {t('warning.overdue_invoice', 'Payment Overdue')} - {oldestOverdueDays} {t('common.days_overdue', 'days overdue')}
                     </span>
                     <span className="text-xs text-destructive/80 ml-2">
-                      {t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')}
+                      {oldestOverdueDays >= 7 
+                        ? t('warning.account_will_suspend', 'Account will be suspended') 
+                        : t('warning.access_suspended_soon', 'Dashboard access will be suspended soon')}
                     </span>
                   </div>
                   <span className="text-xs text-destructive underline">{t('common.view_invoices', 'View Invoices')}</span>
