@@ -153,7 +153,10 @@ const Auth = () => {
 
         if (overdueInvoice) {
           await supabase.auth.signOut();
-          toast.error("Your account is suspended due to an overdue invoice. Please contact support to resolve payment.");
+          toast.error("Account Suspended", {
+            description: "Your account has been suspended due to an unpaid invoice that is more than 7 days overdue. Please contact support@wixotel.com to resolve your payment and restore access.",
+            duration: 10000,
+          });
           return;
         }
 
