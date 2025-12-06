@@ -105,25 +105,25 @@ const Auth = () => {
         // Check if user's hotel is approved
         const { data: hotel, error: hotelError } = await supabase
           .from('hotels')
-          .select('status')
+          .select('id, status')
           .eq('owner_id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (hotelError || !hotel) {
-          // Check if user is super admin
+          // Check if user is super admin or referral
           const { data: role } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', data.user.id)
-            .single();
+            .maybeSingle();
 
-          if (role?.role === 'super_admin') {
+          if (role?.role === 'super_admin' || role?.role === 'referral') {
             toast.success("Welcome back!");
             navigate("/dashboard");
             return;
           }
 
-          // No hotel found and not admin
+          // No hotel found and not admin/referral
           await supabase.auth.signOut();
           toast.error("Your hotel registration was not found.");
           return;
@@ -133,6 +133,27 @@ const Auth = () => {
           // Hotel not approved yet
           await supabase.auth.signOut();
           toast.error("Your hotel is still pending approval. You'll be notified once approved.");
+          return;
+        }
+
+        // Check if hotel has invoices overdue by 7+ days
+        const today = new Date().toISOString().split('T')[0];
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+        const { data: overdueInvoice } = await supabase
+          .from('invoices')
+          .select('due_date')
+          .eq('hotel_id', hotel.id)
+          .in('status', ['pending', 'overdue'])
+          .lte('due_date', sevenDaysAgoStr)
+          .limit(1)
+          .maybeSingle();
+
+        if (overdueInvoice) {
+          await supabase.auth.signOut();
+          toast.error("Your account is suspended due to an overdue invoice. Please contact support to resolve payment.");
           return;
         }
 
