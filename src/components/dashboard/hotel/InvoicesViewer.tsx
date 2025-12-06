@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, ExternalLink } from "lucide-react";
+import { Download, FileText, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -30,6 +30,7 @@ interface Invoice {
   status: string;
   payment_date: string | null;
   notes: string | null;
+  currency?: string;
 }
 
 const InvoicesViewer = () => {
@@ -37,6 +38,7 @@ const InvoicesViewer = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [paypalLoading, setPaypalLoading] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
@@ -85,6 +87,83 @@ const InvoicesViewer = () => {
     }
   };
 
+  const handlePayWithPayPal = async (invoice: Invoice) => {
+    if (invoice.status === 'paid') {
+      toast.info("This invoice is already paid");
+      return;
+    }
+
+    setPaypalLoading(true);
+
+    try {
+      // Create PayPal order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
+        body: { invoice_id: invoice.id }
+      });
+
+      if (orderError) throw orderError;
+
+      if (!orderData?.order_id) {
+        throw new Error("Failed to create PayPal order");
+      }
+
+      // Find the approval URL
+      const approvalLink = orderData.links?.find((link: any) => link.rel === 'approve');
+      
+      if (approvalLink?.href) {
+        // Open PayPal checkout in a new window
+        const paypalWindow = window.open(approvalLink.href, '_blank', 'width=500,height=600');
+        
+        // Poll for payment completion
+        const checkPayment = setInterval(async () => {
+          if (paypalWindow?.closed) {
+            clearInterval(checkPayment);
+            
+            // Check if payment was completed by verifying invoice status
+            const { data: updatedInvoice } = await supabase
+              .from('invoices')
+              .select('status')
+              .eq('id', invoice.id)
+              .single();
+
+            if (updatedInvoice?.status === 'paid') {
+              toast.success("Payment successful! Invoice has been marked as paid.");
+              fetchInvoices();
+              setIsDetailOpen(false);
+            } else {
+              // Try to capture the order
+              const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-order', {
+                body: { order_id: orderData.order_id, invoice_id: invoice.id }
+              });
+
+              if (captureData?.success) {
+                toast.success("Payment successful! Invoice has been marked as paid.");
+                fetchInvoices();
+                setIsDetailOpen(false);
+              } else if (!captureError) {
+                toast.info("Payment window closed. If you completed the payment, it will be reflected shortly.");
+                fetchInvoices();
+              }
+            }
+            setPaypalLoading(false);
+          }
+        }, 1000);
+
+        // Clear interval after 10 minutes to prevent memory leak
+        setTimeout(() => {
+          clearInterval(checkPayment);
+          setPaypalLoading(false);
+        }, 600000);
+      } else {
+        throw new Error("No approval URL found");
+      }
+    } catch (error: any) {
+      console.error("PayPal payment error:", error);
+      toast.error(error.message || "Failed to initiate PayPal payment");
+      setPaypalLoading(false);
+    }
+  };
+
   const handleDownloadPDF = async (invoice: Invoice) => {
     try {
       const doc = new jsPDF();
@@ -96,7 +175,7 @@ const InvoicesViewer = () => {
       });
       
       // Header with brand color
-      doc.setFillColor(59, 130, 246); // Blue background
+      doc.setFillColor(59, 130, 246);
       doc.rect(0, 0, 210, 40, 'F');
       
       doc.setTextColor(255, 255, 255);
@@ -108,7 +187,6 @@ const InvoicesViewer = () => {
       doc.setFont(undefined, 'normal');
       doc.text("Invoice", 105, 28, { align: "center" });
       
-      // Reset text color
       doc.setTextColor(0, 0, 0);
       
       // Invoice number and status box
@@ -213,7 +291,6 @@ const InvoicesViewer = () => {
       yPos += 5;
       doc.text("https://www.paypal.me/DorjanCocka", 25, yPos + 2);
       
-      // Add QR code
       doc.addImage(qrCodeDataUrl, 'PNG', 160, yPos - 8, 25, 25);
       
       doc.setTextColor(100, 100, 100);
@@ -222,7 +299,6 @@ const InvoicesViewer = () => {
       
       yPos += 5;
       
-      // Notes if any
       if (invoice.notes) {
         yPos += 12;
         doc.setTextColor(0, 0, 0);
@@ -234,7 +310,6 @@ const InvoicesViewer = () => {
         doc.text(invoice.notes, 25, yPos, { maxWidth: 160 });
       }
       
-      // Footer with support email
       doc.setFillColor(249, 250, 251);
       doc.rect(0, 270, 210, 27, 'F');
       
@@ -301,7 +376,23 @@ const InvoicesViewer = () => {
                         {invoice.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-1">
+                      {invoice.status !== 'paid' && (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => handlePayWithPayPal(invoice)}
+                          disabled={paypalLoading}
+                          className="gap-1"
+                        >
+                          {paypalLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CreditCard className="h-4 w-4" />
+                          )}
+                          Pay
+                        </Button>
+                      )}
                       <Button 
                         size="sm" 
                         variant="ghost" 
@@ -391,9 +482,36 @@ const InvoicesViewer = () => {
                 )}
               </div>
 
+              {/* Pay Now Button for unpaid invoices */}
+              {selectedInvoice.status !== 'paid' && (
+                <div className="border-t pt-4">
+                  <Button
+                    onClick={() => handlePayWithPayPal(selectedInvoice)}
+                    disabled={paypalLoading}
+                    className="w-full gap-2"
+                    size="lg"
+                  >
+                    {paypalLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-5 w-5" />
+                        Pay Now with PayPal / Credit Card
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Secure payment powered by PayPal. Pay with credit/debit card or PayPal balance.
+                  </p>
+                </div>
+              )}
+
               {/* Payment Details Section */}
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-4">Payment Details</h3>
+                <h3 className="font-semibold mb-4">Alternative Payment Methods</h3>
                 <div className="space-y-6">
                   {/* Bank Transfer */}
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
@@ -418,9 +536,9 @@ const InvoicesViewer = () => {
                     </div>
                   </div>
 
-                  {/* PayPal Section */}
+                  {/* PayPal Manual Section */}
                   <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="font-medium text-sm mb-3">PayPal Payment</p>
+                    <p className="font-medium text-sm mb-3">PayPal Manual Payment</p>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <div className="flex-1">
                         <a 
@@ -432,20 +550,12 @@ const InvoicesViewer = () => {
                           <ExternalLink className="h-4 w-4" />
                           paypal.me/DorjanCocka
                         </a>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="mt-3 w-full"
-                          onClick={() => window.open('https://www.paypal.me/DorjanCocka', '_blank')}
-                        >
-                          Pay with PayPal
-                        </Button>
                       </div>
                       <div className="flex flex-col items-center gap-2">
                         <div className="bg-white p-2 rounded-lg border">
                           <QRCodeSVG 
                             value="https://www.paypal.me/DorjanCocka" 
-                            size={120}
+                            size={100}
                             level="M"
                           />
                         </div>
