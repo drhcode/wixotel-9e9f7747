@@ -37,6 +37,37 @@ interface TicketReply {
   user_id: string;
 }
 
+// Component to render attachment links with signed URLs for private bucket
+function AttachmentLink({ attachment, index }: { attachment: string; index: number }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getSignedUrl = async () => {
+      const { data, error } = await supabase.storage
+        .from('ticket-attachments')
+        .createSignedUrl(attachment, 3600); // 1 hour expiry
+      
+      if (data && !error) {
+        setUrl(data.signedUrl);
+      }
+    };
+    getSignedUrl();
+  }, [attachment]);
+
+  if (!url) return <span className="text-xs text-muted-foreground">Loading attachment...</span>;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-xs text-primary hover:underline block"
+    >
+      Attachment {index + 1}
+    </a>
+  );
+}
+
 export function SupportTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -317,15 +348,7 @@ export function SupportTickets() {
                       {reply.attachments && reply.attachments.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {reply.attachments.map((attachment, idx) => (
-                            <a
-                              key={idx}
-                              href={supabase.storage.from('ticket-attachments').getPublicUrl(attachment).data.publicUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline block"
-                            >
-                              Attachment {idx + 1}
-                            </a>
+                            <AttachmentLink key={idx} attachment={attachment} index={idx} />
                           ))}
                         </div>
                       )}
