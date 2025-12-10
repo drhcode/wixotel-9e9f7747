@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { mapAuthError } from "@/lib/errorUtils";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
+import { SuspensionModal } from "@/components/SuspensionModal";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
@@ -47,6 +48,7 @@ const Auth = () => {
   
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showSuspensionModal, setShowSuspensionModal] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -153,10 +155,7 @@ const Auth = () => {
 
         if (overdueInvoice) {
           await supabase.auth.signOut();
-          toast.error("Account Suspended", {
-            description: "Your account has been suspended due to an unpaid invoice that is more than 12 days overdue. Please contact support@wixotel.com to resolve your payment and restore access.",
-            duration: 10000,
-          });
+          setShowSuspensionModal(true);
           return;
         }
 
@@ -257,6 +256,11 @@ const Auth = () => {
           </CardContent>
         </Card>
       </div>
+
+      <SuspensionModal 
+        open={showSuspensionModal} 
+        onOpenChange={setShowSuspensionModal} 
+      />
     </div>
   );
 };
