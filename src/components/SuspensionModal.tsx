@@ -25,7 +25,7 @@ export function SuspensionModal({ open, onOpenChange }: SuspensionModalProps) {
             Account Suspended
           </DialogTitle>
           <DialogDescription className="text-center text-base leading-relaxed">
-            Your account has been suspended due to an unpaid invoice that is more than 12 days overdue. 
+            Your account has been suspended due to an unpaid invoice that is more than 10 days overdue. 
             Please contact support to resolve your payment and restore access.
           </DialogDescription>
         </DialogHeader>
