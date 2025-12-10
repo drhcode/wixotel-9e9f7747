@@ -1820,7 +1820,6 @@ export type Database = {
             Args: {
               p_check_in: string
               p_check_out: string
-              p_confirmation_number: string
               p_guest_email: string
               p_guest_name: string
               p_hotel_id: string
@@ -1833,6 +1832,7 @@ export type Database = {
             Args: {
               p_check_in: string
               p_check_out: string
+              p_confirmation_number: string
               p_guest_email: string
               p_guest_name: string
               p_hotel_id: string

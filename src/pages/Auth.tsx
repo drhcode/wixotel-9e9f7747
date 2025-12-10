@@ -136,25 +136,25 @@ const Auth = () => {
           return;
         }
 
-        // Check if hotel has invoices overdue by 14+ days
+        // Check if hotel has invoices overdue by 12+ days
         const today = new Date().toISOString().split('T')[0];
-        const fourteenDaysAgo = new Date();
-        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-        const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().split('T')[0];
+        const twelveDaysAgo = new Date();
+        twelveDaysAgo.setDate(twelveDaysAgo.getDate() - 12);
+        const twelveDaysAgoStr = twelveDaysAgo.toISOString().split('T')[0];
 
         const { data: overdueInvoice } = await supabase
           .from('invoices')
           .select('due_date')
           .eq('hotel_id', hotel.id)
           .in('status', ['pending', 'overdue'])
-          .lte('due_date', fourteenDaysAgoStr)
+          .lte('due_date', twelveDaysAgoStr)
           .limit(1)
           .maybeSingle();
 
         if (overdueInvoice) {
           await supabase.auth.signOut();
           toast.error("Account Suspended", {
-            description: "Your account has been suspended due to an unpaid invoice that is more than 14 days overdue. Please contact support@wixotel.com to resolve your payment and restore access.",
+            description: "Your account has been suspended due to an unpaid invoice that is more than 12 days overdue. Please contact support@wixotel.com to resolve your payment and restore access.",
             duration: 10000,
           });
           return;

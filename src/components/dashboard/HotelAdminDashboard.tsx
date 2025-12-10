@@ -209,8 +209,8 @@ const HotelAdminDashboard = () => {
         const diffTime = Math.abs(now.getTime() - dueDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // If 14+ days overdue, force logout
-        if (diffDays >= 14) {
+        // If 12+ days overdue, force logout
+        if (diffDays >= 12) {
           toast.error("Your account is suspended due to an overdue invoice. Please contact support to resolve payment.");
           await supabase.auth.signOut();
           sessionStorage.clear();
@@ -445,9 +445,9 @@ const HotelAdminDashboard = () => {
                       {t('warning.overdue_invoice', 'Payment Overdue')} - {oldestOverdueDays} {t('common.days_overdue', 'days overdue')}
                     </span>
                     <span className="text-xs text-destructive/80 ml-2">
-                      {oldestOverdueDays >= 14 
+                      {oldestOverdueDays >= 12 
                         ? t('warning.account_suspended', 'Account suspended') 
-                        : `${t('warning.suspension_in', 'Suspension in')} ${14 - oldestOverdueDays} ${t('common.days', 'days')}`}
+                        : `${t('warning.suspension_in', 'Suspension in')} ${12 - oldestOverdueDays} ${t('common.days', 'days')}`}
                     </span>
                   </div>
                   <span className="text-xs text-destructive underline">{t('common.view_invoices', 'View Invoices')}</span>
