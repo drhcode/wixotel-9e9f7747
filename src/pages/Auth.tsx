@@ -138,18 +138,17 @@ const Auth = () => {
           return;
         }
 
-        // Check if hotel has invoices overdue by 12+ days
-        const today = new Date().toISOString().split('T')[0];
-        const twelveDaysAgo = new Date();
-        twelveDaysAgo.setDate(twelveDaysAgo.getDate() - 12);
-        const twelveDaysAgoStr = twelveDaysAgo.toISOString().split('T')[0];
+        // Check if hotel has invoices overdue by 10+ days
+        const tenDaysAgo = new Date();
+        tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+        const tenDaysAgoStr = tenDaysAgo.toISOString().split('T')[0];
 
         const { data: overdueInvoice } = await supabase
           .from('invoices')
           .select('due_date')
           .eq('hotel_id', hotel.id)
           .in('status', ['pending', 'overdue'])
-          .lte('due_date', twelveDaysAgoStr)
+          .lte('due_date', tenDaysAgoStr)
           .limit(1)
           .maybeSingle();
 
