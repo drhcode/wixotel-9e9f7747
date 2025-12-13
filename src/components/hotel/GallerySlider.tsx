@@ -13,6 +13,8 @@ interface GallerySliderProps {
 export const GallerySlider = ({ images, hotelName }: GallerySliderProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
   // Check screen size
   useEffect(() => {
@@ -41,11 +43,34 @@ export const GallerySlider = ({ images, hotelName }: GallerySliderProps) => {
     [Autoplay(autoplayOptions)]
   );
 
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  const scrollTo = useCallback(
+    (index: number) => {
+      if (emblaApi) emblaApi.scrollTo(index);
+    },
+    [emblaApi]
+  );
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    setScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on("select", onSelect);
+    onSelect();
+
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
   // Limit to 10 images max
   const displayImages = images.slice(0, 10);
   
-  // Calculate slides per view based on screen size
-  const slidesPerView = isMobile ? 2 : 5;
+  // Calculate slide width based on screen size
   const slideWidth = isMobile ? "calc(50% - 6px)" : "calc(20% - 10px)";
 
   if (!displayImages || displayImages.length === 0) {
@@ -81,6 +106,23 @@ export const GallerySlider = ({ images, hotelName }: GallerySliderProps) => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Navigation Dots */}
+          <div className="flex justify-center gap-2 mt-6">
+            {scrollSnaps.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => scrollTo(index)}
+                className={cn(
+                  "w-2.5 h-2.5 rounded-full transition-all duration-300",
+                  index === selectedIndex
+                    ? "bg-primary w-6"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                )}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
       </section>
