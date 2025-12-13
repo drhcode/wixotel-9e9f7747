@@ -158,45 +158,60 @@ const ProfileSettings = () => {
   const handleGalleryImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploadingGalleryImage(true);
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image must be less than 5MB");
-        return;
-      }
-
-      if (galleryImages.length >= 10) {
-        toast.error("Maximum 10 gallery images allowed");
-        return;
-      }
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !hotel) return;
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-gallery-${Date.now()}.${fileExt}`;
-      const filePath = `hotel-gallery/${fileName}`;
+      const remainingSlots = 10 - galleryImages.length;
+      const filesToUpload = Array.from(files).slice(0, remainingSlots);
 
-      const { error: uploadError } = await supabase.storage
-        .from('hotel-assets')
-        .upload(filePath, file);
+      if (files.length > remainingSlots) {
+        toast.warning(`Only uploading ${remainingSlots} image(s). Maximum 10 gallery images allowed.`);
+      }
 
-      if (uploadError) throw uploadError;
+      const uploadedUrls: string[] = [];
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('hotel-assets')
-        .getPublicUrl(filePath);
+      for (const file of filesToUpload) {
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image file, skipping`);
+          continue;
+        }
 
-      setGalleryImages(prev => [...prev, publicUrl]);
-      toast.success("Gallery image uploaded successfully");
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 5MB limit, skipping`);
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `gallery_${Math.random()}.${fileExt}`;
+        const filePath = `${hotel.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('hotel-assets')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast.error(`Failed to upload ${file.name}`);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('hotel-assets')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      if (uploadedUrls.length > 0) {
+        setGalleryImages(prev => [...prev, ...uploadedUrls]);
+        toast.success(`${uploadedUrls.length} image(s) uploaded successfully`);
+      }
     } catch (error: any) {
-      toast.error("Failed to upload image");
+      console.error('Gallery upload error:', error);
+      toast.error("Failed to upload images");
     } finally {
       setUploadingGalleryImage(false);
       // Reset input
@@ -637,6 +652,7 @@ const ProfileSettings = () => {
                 id="gallery-image-upload"
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleGalleryImageUpload}
                 disabled={uploadingGalleryImage || galleryImages.length >= 10}
                 className="hidden"
@@ -648,10 +664,10 @@ const ProfileSettings = () => {
                 disabled={uploadingGalleryImage || galleryImages.length >= 10}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {uploadingGalleryImage ? "Uploading..." : `Add Image (${galleryImages.length}/10)`}
+                {uploadingGalleryImage ? "Uploading..." : `Add Images (${galleryImages.length}/10)`}
               </Button>
               <p className="text-xs text-muted-foreground mt-1">
-                Images will appear in the gallery slider on your public hotel page. Max size: 5MB per image
+                Select multiple images at once. Max 10 total, 5MB per image.
               </p>
             </div>
           </div>
