@@ -168,10 +168,15 @@ const HotelPublicView = () => {
     message: z.string().max(1000).optional(),
   });
 
-  // Helper function to remove room number prefix from room name
+  // Helper function to clean room name for public display
   const cleanRoomName = (name: string) => {
     // Remove pattern like "105 - " or "A1 - " from the beginning
-    return name.replace(/^[A-Z0-9]+\s*-\s*/i, "").trim();
+    let cleaned = name.replace(/^[A-Z0-9]+\s*-\s*/i, "");
+    // Remove parenthetical content and trailing numbers like "(flutura)203"
+    cleaned = cleaned.replace(/\s*\([^)]*\)\d*\s*$/, "");
+    // Remove trailing numbers
+    cleaned = cleaned.replace(/\s*\d+\s*$/, "");
+    return cleaned.trim();
   };
 
   const scrollToSection = (sectionId: string) => {
