@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Shield, Hotel, Lock, Upload } from "lucide-react";
+import { Shield, Hotel, Lock, Upload, X, ImageIcon } from "lucide-react";
 import { z } from "zod";
 import { mapAuthError, mapDatabaseError } from "@/lib/errorUtils";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
@@ -36,6 +36,7 @@ interface Hotel {
   description: string | null;
   about_us: string | null;
   about_us_image: string | null;
+  images: string[] | null;
   facebook_url: string | null;
   instagram_url: string | null;
   google_business_url: string | null;
@@ -64,7 +65,9 @@ const ProfileSettings = () => {
   const [seoDescription, setSeoDescription] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [uploadingAboutUsImage, setUploadingAboutUsImage] = useState(false);
+  const [uploadingGalleryImage, setUploadingGalleryImage] = useState(false);
   
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -105,6 +108,7 @@ const ProfileSettings = () => {
       setSeoDescription(hotelData.seo_description || "");
       setLatitude(hotelData.latitude?.toString() || "");
       setLongitude(hotelData.longitude?.toString() || "");
+      setGalleryImages(hotelData.images || []);
     }
   };
 
@@ -151,6 +155,60 @@ const ProfileSettings = () => {
     }
   };
 
+  const handleGalleryImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingGalleryImage(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+
+      if (galleryImages.length >= 10) {
+        toast.error("Maximum 10 gallery images allowed");
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !hotel) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-gallery-${Date.now()}.${fileExt}`;
+      const filePath = `hotel-gallery/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('hotel-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('hotel-assets')
+        .getPublicUrl(filePath);
+
+      setGalleryImages(prev => [...prev, publicUrl]);
+      toast.success("Gallery image uploaded successfully");
+    } catch (error: any) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingGalleryImage(false);
+      // Reset input
+      event.target.value = '';
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+    toast.success("Image removed from gallery");
+  };
+
   const handleSaveHotelInfo = async () => {
     if (!hotel) return;
 
@@ -186,6 +244,7 @@ const ProfileSettings = () => {
         description: hotelDescription || null,
         about_us: hotelAboutUs || null,
         about_us_image: aboutUsImageUrl || null,
+        images: galleryImages.length > 0 ? galleryImages : null,
         facebook_url: facebookUrl || null,
         instagram_url: instagramUrl || null,
         google_business_url: googleBusinessUrl || null,
@@ -529,6 +588,71 @@ const ProfileSettings = () => {
                   This image will appear in the About Us section. Max size: 5MB
                 </p>
               </div>
+            </div>
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* Gallery Images Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Gallery Images
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Upload up to 10 images for your hotel gallery slider on the public page
+              </p>
+            </div>
+
+            {/* Current Gallery Images */}
+            {galleryImages.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {galleryImages.map((imageUrl, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`Gallery image ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove image"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    <span className="absolute bottom-1 left-1 text-xs bg-background/80 px-1.5 py-0.5 rounded">
+                      {index + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div>
+              <Input
+                id="gallery-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleGalleryImageUpload}
+                disabled={uploadingGalleryImage || galleryImages.length >= 10}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('gallery-image-upload')?.click()}
+                disabled={uploadingGalleryImage || galleryImages.length >= 10}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploadingGalleryImage ? "Uploading..." : `Add Image (${galleryImages.length}/10)`}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">
+                Images will appear in the gallery slider on your public hotel page. Max size: 5MB per image
+              </p>
             </div>
           </div>
 
