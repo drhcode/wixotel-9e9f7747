@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
+import { SEO, createHotelsListJsonLd } from "@/components/SEO";
 
 interface PublicHotel {
   id: string;
@@ -225,8 +226,18 @@ const Hotels = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Create JSON-LD for hotels list
+  const hotelsJsonLd = useMemo(() => createHotelsListJsonLd(filteredHotels), [filteredHotels]);
+
   return (
-    <div className="min-h-screen">
+    <>
+      <SEO
+        title="Browse Hotels"
+        description="Discover and book the best hotels. Browse our curated selection of hotels with verified reviews, competitive prices, and seamless booking experience."
+        canonicalUrl="/hotels"
+        jsonLd={hotelsJsonLd}
+      />
+      <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 z-50 shadow-sm">
         <div className="container mx-auto px-4 md:px-6 py-4">
@@ -596,6 +607,7 @@ const Hotels = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 
