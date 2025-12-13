@@ -51,6 +51,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { cn } from "@/lib/utils";
 import { ReviewModal } from "@/components/hotel/ReviewModal";
+import { GallerySlider } from "@/components/hotel/GallerySlider";
 import { BookingLookup } from "@/components/BookingLookup";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -861,6 +862,11 @@ const HotelPublicView = () => {
           </div>
         </div>
       </section>
+
+      {/* Gallery Slider */}
+      {hotel?.images && hotel.images.length > 0 && (
+        <GallerySlider images={hotel.images} hotelName={hotel.name} />
+      )}
 
       {/* Rooms Section */}
       <section id="rooms" className="py-16 px-4 scroll-mt-16">
