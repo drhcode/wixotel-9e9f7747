@@ -172,9 +172,9 @@ const HotelPublicView = () => {
   const cleanRoomName = (name: string) => {
     // Remove pattern like "105 - " or "A1 - " from the beginning
     let cleaned = name.replace(/^[A-Z0-9]+\s*-\s*/i, "");
-    // Remove parenthetical content and trailing numbers like "(flutura)203"
-    cleaned = cleaned.replace(/\s*\([^)]*\)\d*\s*$/, "");
-    // Remove trailing numbers
+    // Remove ALL parenthetical content like "(flutura)" anywhere in the string
+    cleaned = cleaned.replace(/\s*\([^)]*\)/g, "");
+    // Remove trailing numbers like "203"
     cleaned = cleaned.replace(/\s*\d+\s*$/, "");
     return cleaned.trim();
   };
