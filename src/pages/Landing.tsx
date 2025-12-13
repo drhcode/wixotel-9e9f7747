@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SEO, createWebsiteJsonLd, createOrganizationJsonLd } from "@/components/SEO";
 
 
 interface PublicHotel {
@@ -283,7 +284,17 @@ const Landing = () => {
 
 
   return (
-    <div className="min-h-screen">
+    <>
+      <SEO
+        title="Hotel Management Platform"
+        description="WIXOTEL is the complete platform for modern hotel management. Manage rooms, bookings, and guests efficiently with our powerful tools."
+        canonicalUrl="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [createWebsiteJsonLd(), createOrganizationJsonLd()],
+        }}
+      />
+      <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-gradient-nav backdrop-blur-2xl border-b border-border/40 z-[100] shadow-md">
         <div className="container mx-auto px-4 md:px-6 py-4">
@@ -926,6 +937,7 @@ const Landing = () => {
       <DemoModal open={isDemoOpen} onOpenChange={setIsDemoOpen} />
       <BookingLookup open={bookingLookupOpen} onOpenChange={setBookingLookupOpen} />
     </div>
+    </>
   );
 };
 

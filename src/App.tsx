@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { HelmetProvider } from "react-helmet-async";
 
 const Landing = lazy(() => import("./pages/Landing"));
 const Hotels = lazy(() => import("./pages/Hotels"));
@@ -32,36 +33,38 @@ const Router = isMobileSafari ? HashRouter : BrowserRouter;
 
 const App = () => (
   <GlobalErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TooltipProvider delayDuration={200} skipDelayDuration={300}>
-          <Toaster />
-          <Sonner />
-          <Router>
-          <CookieConsent />
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><BedLoader size="lg" /></div>}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/hotels" element={<Hotels />} />
-              <Route path="/city-hotels" element={<CityHotels />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/register-hotel" element={<HotelRegistration />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />
-              <Route path="/booking/:confirmationNumber" element={<BookingDetails />} />
-              <Route path="/hotel-registration" element={<HotelRegistration />} />
-              <Route path="/registration-success" element={<RegistrationSuccess />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          </Router>
-        </TooltipProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <TooltipProvider delayDuration={200} skipDelayDuration={300}>
+            <Toaster />
+            <Sonner />
+            <Router>
+            <CookieConsent />
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><BedLoader size="lg" /></div>}>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/hotels" element={<Hotels />} />
+                <Route path="/city-hotels" element={<CityHotels />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/register-hotel" element={<HotelRegistration />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/hotel/:hotelSlug" element={<HotelPublicView />} />
+                <Route path="/booking/:confirmationNumber" element={<BookingDetails />} />
+                <Route path="/hotel-registration" element={<HotelRegistration />} />
+                <Route path="/registration-success" element={<RegistrationSuccess />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            </Router>
+          </TooltipProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   </GlobalErrorBoundary>
 );
 

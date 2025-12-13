@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAnalyticsTracking } from "@/hooks/useAnalyticsTracking";
+import { SEO, createHotelJsonLd } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,9 @@ interface Hotel {
   longitude: number | null;
   city: string | null;
   country: string | null;
+  images: string[] | null;
+  seo_title: string | null;
+  seo_description: string | null;
 }
 
 interface Room {
@@ -662,6 +666,33 @@ const HotelPublicView = () => {
     }
   };
 
+  // Generate SEO data
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : undefined;
+
+  const hotelJsonLd = useMemo(() => {
+    if (!hotel) return null;
+    return createHotelJsonLd({
+      name: hotel.name,
+      description: hotel.description,
+      address: hotel.address,
+      city: hotel.city,
+      country: hotel.country,
+      phone: hotel.phone,
+      email: hotel.email,
+      latitude: hotel.latitude,
+      longitude: hotel.longitude,
+      images: hotel.images,
+      avgRating,
+      reviewCount: reviews.length,
+    });
+  }, [hotel, reviews, avgRating]);
+
+  const seoTitle = hotel?.seo_title || hotel?.name || "Hotel";
+  const seoDescription = hotel?.seo_description || hotel?.description || `Welcome to ${hotel?.name}. Book your stay today.`;
+  const ogImage = hotel?.images?.[0] || hotel?.about_us_image || undefined;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -675,7 +706,16 @@ const HotelPublicView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={`/hotel/${hotel.slug}`}
+        ogType="business.business"
+        ogImage={ogImage}
+        jsonLd={hotelJsonLd || undefined}
+      />
+      <div className="min-h-screen bg-background">
       {/* Modern Header with Navigation */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
@@ -2028,6 +2068,7 @@ const HotelPublicView = () => {
         </>
       )}
     </div>
+    </>
   );
 };
 
