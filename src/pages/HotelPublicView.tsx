@@ -66,7 +66,6 @@ interface Hotel {
   slug: string;
   address: string;
   phone: string | null;
-  email: string | null;
   description: string | null;
   about_us: string | null;
   about_us_image: string | null;
@@ -611,37 +610,31 @@ const HotelPublicView = () => {
 
         const hotelForEmail = {
           name: hotel.name,
-          email: hotel.email,
           phone: hotel.phone,
           address: hotel.address,
           city: null,
           country: null,
         };
 
-        // Send notification to hotel
-        if (hotel.email) {
-          const hotelHtmlContent = createHotelNotificationEmail({
-            guestName: validated.fullName,
-            guestEmail: validated.email,
-            guestPhone: validated.phone,
-            checkIn: format(validated.checkIn, "PPP"),
-            checkOut: format(validated.checkOut, "PPP"),
-            guests: validated.guests,
-            totalAmount,
-            message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
-            hotel: hotelForEmail,
-          });
-
-          await supabase.functions.invoke("send-email", {
-            body: {
-              hotel_id: hotel.id,
-              recipient_email: hotel.email,
-              subject: `New Booking Inquiry - ${validated.fullName}`,
-              email_type: "new_lead",
-              html_content: hotelHtmlContent,
-            },
-          });
-        }
+        // Send notification to hotel via edge function (fetches email securely server-side)
+        await supabase.functions.invoke("send-email", {
+          body: {
+            hotel_id: hotel.id,
+            subject: `New Booking Inquiry - ${validated.fullName}`,
+            email_type: "new_lead",
+            html_content: createHotelNotificationEmail({
+              guestName: validated.fullName,
+              guestEmail: validated.email,
+              guestPhone: validated.phone,
+              checkIn: format(validated.checkIn, "PPP"),
+              checkOut: format(validated.checkOut, "PPP"),
+              guests: validated.guests,
+              totalAmount,
+              message: `Booking request for ${selectedRoom.name} (Room ${selectedRoom.room_number || "N/A"})`,
+              hotel: hotelForEmail,
+            }),
+          },
+        });
 
         // Send confirmation to guest
         const guestHtmlContent = createLeadConfirmationEmail({
@@ -736,29 +729,26 @@ const HotelPublicView = () => {
 
       if (error) throw error;
 
-      // Send emails via Edge Function (hotel + guest)
+      // Send emails via Edge Function (hotel + guest) - email fetched securely server-side
       try {
-        if (hotel.email) {
-          await supabase.functions.invoke("send-email", {
-            body: {
-              hotel_id: hotel.id,
-              recipient_email: hotel.email,
-              subject: `New Inquiry - ${validatedData.fullName}`,
-              email_type: "new_lead",
-              html_content: `
-                <h2>New Booking Inquiry</h2>
-                <ul>
-                  <li><strong>Name:</strong> ${validatedData.fullName}</li>
-                  <li><strong>Email:</strong> ${validatedData.email}</li>
-                  <li><strong>Phone:</strong> ${leadForm.phonePrefix}${validatedData.phone}</li>
-                  <li><strong>Check-in:</strong> ${validatedData.checkIn}</li>
-                  <li><strong>Check-out:</strong> ${validatedData.checkOut}</li>
-                  <li><strong>Guests:</strong> ${validatedData.guests}</li>
-                </ul>
-              `,
-            },
-          });
-        }
+        await supabase.functions.invoke("send-email", {
+          body: {
+            hotel_id: hotel.id,
+            subject: `New Inquiry - ${validatedData.fullName}`,
+            email_type: "new_lead",
+            html_content: `
+              <h2>New Booking Inquiry</h2>
+              <ul>
+                <li><strong>Name:</strong> ${validatedData.fullName}</li>
+                <li><strong>Email:</strong> ${validatedData.email}</li>
+                <li><strong>Phone:</strong> ${leadForm.phonePrefix}${validatedData.phone}</li>
+                <li><strong>Check-in:</strong> ${validatedData.checkIn}</li>
+                <li><strong>Check-out:</strong> ${validatedData.checkOut}</li>
+                <li><strong>Guests:</strong> ${validatedData.guests}</li>
+              </ul>
+            `,
+          },
+        });
         await supabase.functions.invoke("send-email", {
           body: {
             hotel_id: hotel.id,
@@ -816,7 +806,6 @@ const HotelPublicView = () => {
       city: hotel.city,
       country: hotel.country,
       phone: hotel.phone,
-      email: hotel.email,
       latitude: hotel.latitude,
       longitude: hotel.longitude,
       images: hotel.images,
@@ -1250,26 +1239,6 @@ const HotelPublicView = () => {
                   </Card>
                 )}
 
-                {hotel?.email && (
-                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                          <Mail className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">Email</CardTitle>
-                          <a
-                            href={`mailto:${hotel.email}`}
-                            className="text-muted-foreground hover:text-primary transition-colors break-all"
-                          >
-                            {hotel.email}
-                          </a>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                )}
 
                 <Card className="border-border/50 hover:shadow-elegant transition-shadow">
                   <CardHeader>
