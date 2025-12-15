@@ -1658,9 +1658,20 @@ const HotelPublicView = () => {
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t bg-accent/20">
-        <div className="container mx-auto text-center text-sm text-muted-foreground">
+        <div className="container mx-auto text-center text-sm text-muted-foreground space-y-2">
           <p>
             © {new Date().getFullYear()} {hotel?.name}. All rights reserved.
+          </p>
+          <p className="text-xs">
+            Powered by{" "}
+            <a 
+              href="https://wixotel.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-semibold text-primary hover:underline"
+            >
+              WIXOTEL
+            </a>
           </p>
         </div>
       </footer>
