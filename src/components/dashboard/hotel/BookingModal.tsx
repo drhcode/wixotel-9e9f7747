@@ -57,6 +57,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
   const [loading, setLoading] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "completed">("pending");
   const [totalPrice, setTotalPrice] = useState(0);
 
   useEffect(() => {
@@ -233,6 +234,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
         guest_count: guestCount || 1,
         notes: notes || null,
         status: 'reserved',
+        payment_status: paymentStatus,
         confirmation_number: confirmationNumber
       });
       if (error) throw error;
@@ -298,6 +300,7 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
       setGuestCount(1);
       setNotes("");
       setTotalPrice(0);
+      setPaymentStatus("pending");
       
       onSuccess();
       onClose();
@@ -612,6 +615,29 @@ const BookingModal = ({ isOpen, onClose, hotelId, prefilledDates, prefilledRoomI
             <p className="text-sm text-muted-foreground mt-1">
               Auto-calculated based on nights. You can adjust for custom rates.
             </p>
+          </div>
+
+          <div>
+            <Label>Payment Status</Label>
+            <Select value={paymentStatus} onValueChange={(value: "pending" | "completed") => setPaymentStatus(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    Unpaid
+                  </span>
+                </SelectItem>
+                <SelectItem value="completed">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    Paid
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
