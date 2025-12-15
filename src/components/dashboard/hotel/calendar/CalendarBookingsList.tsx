@@ -63,7 +63,7 @@ export const CalendarBookingsList = ({
                     {format(new Date(booking.check_in), "MMM dd")} -{" "}
                     {format(new Date(booking.check_out), "MMM dd, yyyy")}
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span 
                       className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                       style={{
@@ -73,6 +73,16 @@ export const CalendarBookingsList = ({
                       }}
                     >
                       {booking.lead_id ? "Lead" : "Direct"}
+                    </span>
+                    <span 
+                      className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                      style={{
+                        backgroundColor: booking.payment_status === "completed" ? "#10b98115" : "#ef444415",
+                        color: booking.payment_status === "completed" ? "#10b981" : "#ef4444",
+                        border: `1px solid ${booking.payment_status === "completed" ? "#10b98140" : "#ef444440"}`
+                      }}
+                    >
+                      {booking.payment_status === "completed" ? "Paid" : "Unpaid"}
                     </span>
                   </div>
                   <div className="text-sm font-medium mt-2">€{booking.total_amount}</div>

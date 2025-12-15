@@ -259,7 +259,7 @@ export const CalendarTimeline = ({
                               {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
                               {format(new Date(startBooking.check_out), "MMM dd")}
                             </div>
-                            <div className="flex items-center gap-1 mt-1">
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
                               <span 
                                 className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                                 style={{
@@ -269,6 +269,16 @@ export const CalendarTimeline = ({
                                 }}
                               >
                                 {startBooking.lead_id ? "Lead" : "Direct"}
+                              </span>
+                              <span 
+                                className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                                style={{
+                                  backgroundColor: startBooking.payment_status === "completed" ? "#10b98115" : "#ef444415",
+                                  color: startBooking.payment_status === "completed" ? "#10b981" : "#ef4444",
+                                  border: `1px solid ${startBooking.payment_status === "completed" ? "#10b98140" : "#ef444440"}`
+                                }}
+                              >
+                                {startBooking.payment_status === "completed" ? "Paid" : "Unpaid"}
                               </span>
                             </div>
                           </div>
