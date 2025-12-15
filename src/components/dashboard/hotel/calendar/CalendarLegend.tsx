@@ -18,6 +18,16 @@ export const CalendarLegend = () => {
           <span className="text-xs">Checked Out</span>
         </div>
         <div className="h-4 w-px bg-border mx-2"></div>
+        <div className="font-semibold text-sm">Payment:</div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#10b981" }}></div>
+          <span className="text-xs">Paid</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ef4444" }}></div>
+          <span className="text-xs">Unpaid</span>
+        </div>
+        <div className="h-4 w-px bg-border mx-2"></div>
         <div className="font-semibold text-sm">Room Status:</div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-green-500"></div>
