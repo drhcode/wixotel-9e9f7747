@@ -157,6 +157,10 @@ const HotelPublicView = () => {
   const [bookingCheckInOpen, setBookingCheckInOpen] = useState(false);
   const [bookingCheckOutOpen, setBookingCheckOutOpen] = useState(false);
   
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "property">("property");
+  const [processingPayment, setProcessingPayment] = useState(false);
+  
   // OTP verification state
   const [otpStep, setOtpStep] = useState<"form" | "otp" | "verified">("form");
   const [otpCode, setOtpCode] = useState("");
@@ -373,6 +377,144 @@ const HotelPublicView = () => {
       setOtpCode("");
     } finally {
       setVerifyingOtp(false);
+    }
+  };
+
+  const handlePayPalPayment = async () => {
+    if (!hotel || !selectedRoom || !bookingRequest.checkIn || !bookingRequest.checkOut) {
+      toast.error("Please fill in all booking details");
+      return;
+    }
+
+    if (otpStep !== "verified") {
+      toast.error("Please verify your email first");
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+
+      // Calculate total
+      const nights = Math.ceil(
+        (bookingRequest.checkOut.getTime() - bookingRequest.checkIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const totalAmount = selectedRoom.price * nights;
+
+      // Create PayPal order via edge function
+      const { data, error } = await supabase.functions.invoke("create-booking-payment", {
+        body: {
+          hotel_id: hotel.id,
+          room_id: selectedRoom.id,
+          check_in: format(bookingRequest.checkIn, "yyyy-MM-dd"),
+          check_out: format(bookingRequest.checkOut, "yyyy-MM-dd"),
+          full_name: bookingRequest.fullName,
+          email: bookingRequest.email,
+          phone: bookingRequest.phone,
+          guests: bookingRequest.guests,
+          total_amount: totalAmount,
+          return_url: `${window.location.origin}/hotel/${hotelSlug}?payment=success&order_id=`,
+          cancel_url: `${window.location.origin}/hotel/${hotelSlug}?payment=cancelled`,
+        },
+      });
+
+      if (error) {
+        console.error("Error creating payment:", error);
+        toast.error("Failed to initiate payment. Please try again.");
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.approve_url) {
+        // Store order_id in session storage for callback
+        sessionStorage.setItem("pending_booking_order", data.order_id);
+        // Redirect to PayPal
+        window.location.href = data.approve_url;
+      } else {
+        toast.error("Failed to get PayPal checkout URL");
+      }
+    } catch (error: any) {
+      console.error("PayPal payment error:", error);
+      toast.error("Payment initiation failed. Please try again.");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // Handle PayPal return callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("payment");
+    const token = urlParams.get("token"); // PayPal adds this
+
+    if (paymentStatus === "success" && token) {
+      const orderId = sessionStorage.getItem("pending_booking_order");
+      if (orderId) {
+        // Capture the payment
+        capturePayPalPayment(orderId);
+      }
+    } else if (paymentStatus === "cancelled") {
+      toast.error("Payment was cancelled. Please try again.");
+      // Clean URL
+      window.history.replaceState({}, "", `/hotel/${hotelSlug}`);
+    }
+  }, []);
+
+  const capturePayPalPayment = async (orderId: string) => {
+    try {
+      setProcessingPayment(true);
+      toast.loading("Processing your payment...", { id: "payment-processing" });
+
+      const { data, error } = await supabase.functions.invoke("capture-booking-payment", {
+        body: { order_id: orderId },
+      });
+
+      sessionStorage.removeItem("pending_booking_order");
+      // Clean URL
+      window.history.replaceState({}, "", `/hotel/${hotelSlug}`);
+
+      if (error || data?.error) {
+        console.error("Capture error:", error || data?.error);
+        toast.dismiss("payment-processing");
+        toast.error(data?.error || "Payment processing failed. Please contact support.");
+        return;
+      }
+
+      if (data?.success) {
+        toast.dismiss("payment-processing");
+        toast.success(
+          <div className="space-y-2">
+            <p className="font-semibold">Booking Confirmed!</p>
+            <p className="text-sm">Confirmation: <strong>{data.confirmation_number}</strong></p>
+            <p className="text-xs text-muted-foreground">Check your email for details</p>
+          </div>,
+          { duration: 10000 }
+        );
+        
+        // Reset form
+        setSelectedRoom(null);
+        setBookingRequestMode(false);
+        setBookingRequest({
+          checkIn: undefined,
+          checkOut: undefined,
+          fullName: "",
+          email: "",
+          phone: "",
+          guests: 1,
+        });
+        setOtpStep("form");
+        setOtpCode("");
+        setPaymentMethod("property");
+      }
+    } catch (error: any) {
+      console.error("Payment capture error:", error);
+      toast.dismiss("payment-processing");
+      toast.error("Payment processing failed. Please contact support.");
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -1999,6 +2141,65 @@ const HotelPublicView = () => {
                           </Card>
                         )}
 
+                        {/* Payment Method Selection */}
+                        {otpStep === "verified" && isRoomAvailable && bookingRequest.checkIn && bookingRequest.checkOut && (
+                          <div className="space-y-3">
+                            <Label className="text-sm sm:text-base font-semibold">Choose Payment Method</Label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setPaymentMethod("paypal")}
+                                className={cn(
+                                  "p-4 rounded-lg border-2 text-left transition-all",
+                                  paymentMethod === "paypal"
+                                    ? "border-primary bg-primary/10 shadow-md"
+                                    : "border-border hover:border-primary/50"
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-[#003087] rounded-lg flex items-center justify-center">
+                                    <span className="text-white font-bold text-sm">PP</span>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-sm">Pay with PayPal</p>
+                                    <p className="text-xs text-muted-foreground">Secure instant payment</p>
+                                  </div>
+                                </div>
+                                {paymentMethod === "paypal" && (
+                                  <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
+                                    <Check className="h-3 w-3" /> Booking confirmed instantly
+                                  </div>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPaymentMethod("property")}
+                                className={cn(
+                                  "p-4 rounded-lg border-2 text-left transition-all",
+                                  paymentMethod === "property"
+                                    ? "border-primary bg-primary/10 shadow-md"
+                                    : "border-border hover:border-primary/50"
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                                    <Hotel className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-sm">Pay at Property</p>
+                                    <p className="text-xs text-muted-foreground">Pay on arrival</p>
+                                  </div>
+                                </div>
+                                {paymentMethod === "property" && (
+                                  <div className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" /> Requires hotel approval
+                                  </div>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         <Alert className="bg-primary/5 border-primary/20">
                           <AlertDescription className="text-xs sm:text-sm">
                             <strong className="font-semibold">Free Cancellation Policy:</strong> Cancel free of charge up to 14 days before check-in. 
@@ -2023,28 +2224,53 @@ const HotelPublicView = () => {
                               });
                               setOtpStep("form");
                               setOtpCode("");
+                              setPaymentMethod("property");
                             }}
                             className="flex-1 text-sm sm:text-base h-10 sm:h-11"
                           >
                             Cancel
                           </Button>
-                          <Button
-                            type="submit"
-                            className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant text-sm sm:text-base h-10 sm:h-11"
-                            disabled={submittingLead || !isRoomAvailable || loadingAvailability || otpStep !== "verified"}
-                          >
-                            {submittingLead ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Sending...
-                              </>
-                            ) : (
-                              <>
-                                <Send className="h-4 w-4 mr-2" />
-                                Send Request
-                              </>
-                            )}
-                          </Button>
+                          
+                          {paymentMethod === "paypal" ? (
+                            <Button
+                              type="button"
+                              onClick={handlePayPalPayment}
+                              className="flex-1 bg-[#003087] hover:bg-[#002369] text-white shadow-elegant text-sm sm:text-base h-10 sm:h-11"
+                              disabled={processingPayment || !isRoomAvailable || loadingAvailability || otpStep !== "verified"}
+                            >
+                              {processingPayment ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-bold mr-1">Pay</span>
+                                  €{selectedRoom && bookingRequest.checkIn && bookingRequest.checkOut
+                                    ? (selectedRoom.price * Math.ceil((bookingRequest.checkOut.getTime() - bookingRequest.checkIn.getTime()) / (1000 * 60 * 60 * 24))).toFixed(2)
+                                    : "0.00"}
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              type="submit"
+                              className="flex-1 bg-gradient-primary hover:opacity-90 shadow-elegant text-sm sm:text-base h-10 sm:h-11"
+                              disabled={submittingLead || !isRoomAvailable || loadingAvailability || otpStep !== "verified"}
+                            >
+                              {submittingLead ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Send Booking Request
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </form>
                     </CardContent>
