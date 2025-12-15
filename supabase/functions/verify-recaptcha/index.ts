@@ -44,8 +44,10 @@ serve(async (req) => {
       );
     }
 
-    // Allow dev mode to bypass reCAPTCHA verification
-    if (token === 'dev-mode-skip-recaptcha') {
+    // Only allow dev mode bypass if ENVIRONMENT is explicitly set to 'development'
+    // This env variable should NEVER be set in production deployments
+    const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
+    if (isDevelopment && token === 'dev-mode-skip-recaptcha') {
       console.log("[DEV] Skipping reCAPTCHA verification for development mode");
       return new Response(
         JSON.stringify({
