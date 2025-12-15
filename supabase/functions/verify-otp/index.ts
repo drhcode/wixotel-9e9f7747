@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_FAILED_ATTEMPTS = 5;
+
 interface VerifyRequest {
   email: string;
   hotel_id: string;
@@ -34,13 +36,12 @@ serve(async (req) => {
 
     console.log(`Verifying OTP for ${email} at hotel ${hotel_id}`);
 
-    // Find valid OTP
+    // Find the most recent valid (unexpired, unverified) OTP for this email/hotel
     const { data: otps, error: otpError } = await supabase
       .from('booking_otps')
       .select('*')
       .eq('email', email)
       .eq('hotel_id', hotel_id)
-      .eq('otp_code', otp_code)
       .eq('verified', false)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
@@ -55,18 +56,54 @@ serve(async (req) => {
     }
 
     if (!otps || otps.length === 0) {
-      console.log('Invalid or expired OTP');
+      console.log('No valid OTP found for this email/hotel');
       return new Response(
         JSON.stringify({ error: 'Invalid or expired verification code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Mark OTP as verified
+    const otp = otps[0];
+
+    // Check if too many failed attempts
+    if (otp.failed_attempts >= MAX_FAILED_ATTEMPTS) {
+      console.log(`OTP locked due to too many failed attempts: ${otp.failed_attempts}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many failed attempts. Please request a new verification code.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if the OTP code matches
+    if (otp.otp_code !== otp_code) {
+      // Increment failed attempts counter
+      const { error: updateError } = await supabase
+        .from('booking_otps')
+        .update({ failed_attempts: otp.failed_attempts + 1 })
+        .eq('id', otp.id);
+
+      if (updateError) {
+        console.error('Error updating failed attempts:', updateError);
+      }
+
+      const remainingAttempts = MAX_FAILED_ATTEMPTS - (otp.failed_attempts + 1);
+      console.log(`Invalid OTP code. Remaining attempts: ${remainingAttempts}`);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: remainingAttempts > 0 
+            ? `Invalid verification code. ${remainingAttempts} attempt(s) remaining.`
+            : 'Too many failed attempts. Please request a new verification code.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // OTP is valid - mark as verified
     const { error: updateError } = await supabase
       .from('booking_otps')
       .update({ verified: true })
-      .eq('id', otps[0].id);
+      .eq('id', otp.id);
 
     if (updateError) {
       console.error('Error updating OTP:', updateError);
