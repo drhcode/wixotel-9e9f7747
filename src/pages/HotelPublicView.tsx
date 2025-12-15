@@ -223,15 +223,12 @@ const HotelPublicView = () => {
     try {
       setLoading(true);
 
-      // Fetch hotel by slug
-      const { data: hotelData, error: hotelError } = await supabase
-        .from("hotels")
-        .select("*")
-        .eq("slug", hotelSlug)
-        .eq("status", "active")
-        .maybeSingle();
+      // Fetch hotel by slug using secure RPC function
+      const { data: hotelResults, error: hotelError } = await supabase
+        .rpc('get_public_hotel_by_slug', { p_slug: hotelSlug });
 
       if (hotelError) throw hotelError;
+      const hotelData = hotelResults?.[0];
       if (!hotelData) {
         toast.error("Hotel not found");
         navigate("/");
@@ -240,13 +237,9 @@ const HotelPublicView = () => {
 
       setHotel(hotelData);
 
-      // Fetch available rooms for this hotel
+      // Fetch available rooms using secure RPC function (excludes ical_token)
       const { data: roomsData, error: roomsError } = await supabase
-        .from("rooms")
-        .select("*")
-        .eq("hotel_id", hotelData.id)
-        .eq("is_available", true)
-        .order("price", { ascending: true });
+        .rpc('get_public_rooms', { p_hotel_id: hotelData.id });
 
       if (roomsError) throw roomsError;
       setRooms(roomsData || []);

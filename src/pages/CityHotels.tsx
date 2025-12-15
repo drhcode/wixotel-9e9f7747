@@ -42,18 +42,12 @@ const CityHotels = () => {
 
     setLoading(true);
     try {
-      let query = supabase
-        .from("hotels")
-        .select("id, name, slug, address, city, country, description, images, about_us_image, latitude, longitude, is_verified, is_featured")
-        .eq("status", "active")
-        .eq("show_on_landing", true)
-        .eq("city", city);
-
-      if (country) {
-        query = query.eq("country", country);
-      }
-
-      const { data: hotelsData, error } = await query;
+      const { data: hotelsData, error } = await supabase
+        .rpc('get_public_hotels_filtered', { 
+          p_show_on_landing: true, 
+          p_city: city,
+          p_country: country || null
+        });
 
       if (error) throw error;
 

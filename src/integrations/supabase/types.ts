@@ -1806,6 +1806,124 @@ export type Database = {
           room_type: string
         }[]
       }
+      get_public_hotel_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          about_us: string
+          about_us_image: string
+          address: string
+          amenities: string[]
+          city: string
+          country: string
+          created_at: string
+          description: string
+          facebook_url: string
+          google_business_url: string
+          google_maps_url: string
+          id: string
+          images: string[]
+          instagram_url: string
+          is_featured: boolean
+          is_verified: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          name: string
+          phone: string
+          seo_description: string
+          seo_title: string
+          show_on_landing: boolean
+          slug: string
+          updated_at: string
+        }[]
+      }
+      get_public_hotels: {
+        Args: never
+        Returns: {
+          about_us: string
+          about_us_image: string
+          address: string
+          amenities: string[]
+          city: string
+          country: string
+          created_at: string
+          description: string
+          facebook_url: string
+          google_business_url: string
+          google_maps_url: string
+          id: string
+          images: string[]
+          instagram_url: string
+          is_featured: boolean
+          is_verified: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          name: string
+          phone: string
+          seo_description: string
+          seo_title: string
+          show_on_landing: boolean
+          slug: string
+          updated_at: string
+        }[]
+      }
+      get_public_hotels_filtered: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_show_on_landing?: boolean
+        }
+        Returns: {
+          about_us: string
+          about_us_image: string
+          address: string
+          amenities: string[]
+          city: string
+          country: string
+          created_at: string
+          description: string
+          facebook_url: string
+          google_business_url: string
+          google_maps_url: string
+          id: string
+          images: string[]
+          instagram_url: string
+          is_featured: boolean
+          is_verified: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          name: string
+          phone: string
+          seo_description: string
+          seo_title: string
+          show_on_landing: boolean
+          slug: string
+          updated_at: string
+        }[]
+      }
+      get_public_rooms: {
+        Args: { p_hotel_id: string }
+        Returns: {
+          amenities: string[]
+          capacity: number
+          created_at: string
+          description: string
+          hotel_id: string
+          id: string
+          images: string[]
+          is_available: boolean
+          main_photo_url: string
+          name: string
+          price: number
+          room_number: string
+          room_type: string
+          square_meters: number
+          status: string
+          updated_at: string
+        }[]
+      }
       get_user_hotel_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
