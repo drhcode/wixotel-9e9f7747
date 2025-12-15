@@ -1932,6 +1932,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      html_escape: { Args: { input: string }; Returns: string }
       lookup_booking_by_confirmation: {
         Args: { p_confirmation_number: string }
         Returns: Json
