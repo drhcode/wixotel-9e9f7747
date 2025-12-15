@@ -86,10 +86,7 @@ const Hotels = () => {
 
   const fetchHotels = async () => {
     const { data } = await supabase
-      .from('hotels')
-      .select('id, name, slug, address, city, country, description, images, about_us_image, latitude, longitude, is_verified, is_featured')
-      .eq('status', 'active')
-      .eq('show_on_landing', true);
+      .rpc('get_public_hotels_filtered', { p_show_on_landing: true });
     
     if (data) {
       const hotelsWithReviews = await Promise.all(
