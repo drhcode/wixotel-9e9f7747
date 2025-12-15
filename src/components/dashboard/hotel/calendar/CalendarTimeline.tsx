@@ -259,7 +259,7 @@ export const CalendarTimeline = ({
                               {format(new Date(startBooking.check_in), "MMM dd")} -{" "}
                               {format(new Date(startBooking.check_out), "MMM dd")}
                             </div>
-                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            <div className="flex items-center gap-1 mt-1">
                               <span 
                                 className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                                 style={{
