@@ -44,6 +44,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
   const [notes, setNotes] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
   const [status, setStatus] = useState<BookingStatus>("pending");
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "completed">("pending");
 
   const handlePrint = () => {
     const printWindow = window.open('', '', 'width=300,height=600');
@@ -141,6 +142,7 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       setNotes(booking.notes || "");
       setTotalAmount(booking.total_amount?.toString() || "");
       setStatus(booking.status);
+      setPaymentStatus(booking.payment_status === "completed" ? "completed" : "pending");
     }
   }, [booking]);
 
@@ -268,7 +270,8 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
         guest_phone: guestPhone.trim(),
         guest_count: guestCount,
         notes: notes.trim() || null,
-        total_amount: parseFloat(totalAmount) || 0
+        total_amount: parseFloat(totalAmount) || 0,
+        payment_status: paymentStatus
       })
       .eq('id', booking.id);
     setLoading(false);
@@ -413,6 +416,21 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
               </div>
 
               <div>
+                <p className="text-sm text-muted-foreground">Payment Status</p>
+                <span 
+                  className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full font-semibold"
+                  style={{
+                    backgroundColor: booking.payment_status === "completed" ? "#10b98115" : "#ef444415",
+                    color: booking.payment_status === "completed" ? "#10b981" : "#ef4444",
+                    border: `1px solid ${booking.payment_status === "completed" ? "#10b98140" : "#ef444440"}`
+                  }}
+                >
+                  <span className={`w-2 h-2 rounded-full ${booking.payment_status === "completed" ? "bg-green-500" : "bg-red-500"}`}></span>
+                  {booking.payment_status === "completed" ? "Paid" : "Unpaid"}
+                </span>
+              </div>
+
+              <div>
                 <p className="text-sm text-muted-foreground">Total Price</p>
                 <p className="font-medium">€{booking.total_amount}</p>
               </div>
@@ -554,6 +572,29 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Payment Status</Label>
+                <Select value={paymentStatus} onValueChange={(value: "pending" | "completed") => setPaymentStatus(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        Unpaid
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        Paid
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}
