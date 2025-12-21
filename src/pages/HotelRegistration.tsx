@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, UserPlus, Calendar, Users, BarChart3 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Trash2, Building2, UserPlus, Calendar, Users, BarChart3, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import PhoneInput from 'react-phone-number-input';
@@ -59,6 +59,10 @@ const HotelRegistration = () => {
   const { executeRecaptcha } = useRecaptcha();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [referralValidation, setReferralValidation] = useState<{
+    status: 'idle' | 'checking' | 'valid' | 'invalid';
+    message?: string;
+  }>({ status: 'idle' });
 
   const [hotelData, setHotelData] = useState({
     name: "",
@@ -103,6 +107,47 @@ const HotelRegistration = () => {
         // Silently fail, keep default
       });
   }, []);
+
+  // Real-time referral code validation
+  useEffect(() => {
+    const code = accountData.referralCode.trim().toUpperCase();
+    
+    if (!code) {
+      setReferralValidation({ status: 'idle' });
+      return;
+    }
+
+    if (code.length < 4) {
+      setReferralValidation({ status: 'idle' });
+      return;
+    }
+
+    setReferralValidation({ status: 'checking' });
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { data: refId, error } = await supabase
+          .rpc('lookup_referral_code', { p_referral_code: code });
+
+        if (error) {
+          console.error('Referral validation error:', error);
+          setReferralValidation({ status: 'invalid', message: 'Error validating code' });
+          return;
+        }
+
+        if (refId) {
+          setReferralValidation({ status: 'valid', message: 'Valid referral code!' });
+        } else {
+          setReferralValidation({ status: 'invalid', message: 'Code not found or inactive' });
+        }
+      } catch (err) {
+        console.error('Referral validation error:', err);
+        setReferralValidation({ status: 'invalid', message: 'Error validating code' });
+      }
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [accountData.referralCode]);
 
   const addRoom = () => {
     setRooms([...rooms, { name: "", price: 0, capacity: 2 }]);
@@ -583,17 +628,50 @@ const HotelRegistration = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="referral-code">Referral Code (Optional)</Label>
-                  <Input
-                    id="referral-code"
-                    type="text"
-                    placeholder="Enter referral code if you have one"
-                    value={accountData.referralCode}
-                    onChange={(e) => setAccountData({ ...accountData, referralCode: e.target.value.toUpperCase() })}
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Have a referral code? Enter it here to support your referrer!
-                  </p>
+                  <div className="relative">
+                    <Input
+                      id="referral-code"
+                      type="text"
+                      placeholder="Enter referral code if you have one"
+                      value={accountData.referralCode}
+                      onChange={(e) => setAccountData({ ...accountData, referralCode: e.target.value.toUpperCase() })}
+                      className={`font-mono pr-10 ${
+                        referralValidation.status === 'valid' 
+                          ? 'border-green-500 focus-visible:ring-green-500' 
+                          : referralValidation.status === 'invalid' 
+                          ? 'border-destructive focus-visible:ring-destructive' 
+                          : ''
+                      }`}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {referralValidation.status === 'checking' && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      {referralValidation.status === 'valid' && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      )}
+                      {referralValidation.status === 'invalid' && (
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      )}
+                    </div>
+                  </div>
+                  {referralValidation.status === 'valid' && (
+                    <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {referralValidation.message}
+                    </p>
+                  )}
+                  {referralValidation.status === 'invalid' && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <XCircle className="h-3 w-3" />
+                      {referralValidation.message}
+                    </p>
+                  )}
+                  {referralValidation.status === 'idle' && (
+                    <p className="text-xs text-muted-foreground">
+                      Have a referral code? Enter it here to support your referrer!
+                    </p>
+                  )}
                 </div>
                 </div>
 
