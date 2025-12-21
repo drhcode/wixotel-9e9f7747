@@ -273,9 +273,9 @@ const HotelAdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {hotel.name}
+                    WIXOTEL
                   </span>
-                  <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
+                  <span className="text-[9px] text-muted-foreground -mt-0.5">Hotel Manager</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -328,9 +328,9 @@ const HotelAdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {hotel.name}
+                    WIXOTEL
                   </span>
-                  <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
+                  <span className="text-[9px] text-muted-foreground -mt-0.5">Hotel Manager</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -405,9 +405,9 @@ const HotelAdminDashboard = () => {
                   </SidebarTrigger>
                   <div className="flex flex-col items-start leading-none">
                     <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
-                      {hotel.name}
+                      WIXOTEL
                     </span>
-                    <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
+                    <span className="text-[9px] text-muted-foreground -mt-0.5">Hotel Manager</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

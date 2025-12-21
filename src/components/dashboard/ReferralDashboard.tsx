@@ -233,16 +233,11 @@ const ReferralDashboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img 
-              src="/images/hotelhub-logo-hd.png" 
-              alt="Wixotel" 
-              className="h-10 w-auto"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-foreground">{referralData?.full_name}</h1>
-              <p className="text-sm text-muted-foreground">Referral Partner</p>
-            </div>
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
+              WIXOTEL
+            </span>
+            <span className="text-[9px] text-muted-foreground -mt-0.5">Referral</span>
           </div>
           <div className="flex items-center gap-2">
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
