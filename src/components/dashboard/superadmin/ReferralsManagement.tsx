@@ -150,21 +150,28 @@ const ReferralsManagement = () => {
     setOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this referral? This will also remove their user account.")) return;
+  const handleDelete = async (referral: Referral) => {
+    if (!confirm(`Are you sure you want to delete ${referral.full_name}? This will permanently remove their account and all associated data.`)) return;
 
+    setLoading(true);
     try {
-      const { error } = await supabase
-        .from("referrals")
-        .delete()
-        .eq("id", id);
+      const { data, error } = await supabase.functions.invoke('delete-referral-user', {
+        body: {
+          referral_id: referral.id,
+          user_id: referral.user_id,
+        },
+      });
 
       if (error) throw error;
-      toast.success("Referral deleted successfully");
+      if (data?.error) throw new Error(data.error);
+
+      toast.success("Referral user deleted successfully");
       fetchReferrals();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting referral:", error);
-      toast.error("Failed to delete referral");
+      toast.error(error.message || "Failed to delete referral");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -409,7 +416,8 @@ const ReferralsManagement = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(referral.id)}
+                        onClick={() => handleDelete(referral)}
+                        className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
