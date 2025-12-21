@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Hotel, Building2, DollarSign, TrendingUp, Check, X, LogOut, RefreshCw } from "lucide-react";
+import { Building2, DollarSign, TrendingUp, Check, X, LogOut, RefreshCw, Hotel } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -382,12 +382,11 @@ const SuperAdminDashboard = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 lg:gap-4">
                   <SidebarTrigger />
-                  <div className="flex items-center gap-2">
-                    <Hotel className="h-6 w-6 lg:h-8 lg:w-8 text-primary" />
-                    <span className="text-lg lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                      HotelManager
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
+                      WIXOTEL
                     </span>
-                    <Badge variant="secondary" className="ml-1 lg:ml-2 text-xs">Super Admin</Badge>
+                    <span className="text-[9px] text-muted-foreground -mt-0.5">Admin</span>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
