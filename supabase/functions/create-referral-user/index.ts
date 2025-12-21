@@ -74,31 +74,65 @@ serve(async (req) => {
       throw new Error('Password must contain at least one symbol');
     }
 
-    // Create the auth user
-    const { data: authData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name,
-      },
-    });
+    let userId: string;
 
-    if (createAuthError) {
-      console.error('Auth error:', createAuthError);
-      throw new Error(`Failed to create auth user: ${createAuthError.message}`);
-    }
-    if (!authData.user) {
-      throw new Error("Failed to create user - no user data returned");
-    }
+    // Check if user already exists
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-    console.log('Auth user created:', authData.user.id);
+    if (existingUser) {
+      console.log('User already exists:', existingUser.id);
+      userId = existingUser.id;
+
+      // Check if user already has a referral record
+      const { data: existingReferral } = await supabaseAdmin
+        .from("referrals")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (existingReferral) {
+        throw new Error('This user is already a referral partner');
+      }
+
+      // Check if user already has a role
+      const { data: existingRole } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .single();
+
+      if (existingRole && existingRole.role !== 'referral') {
+        throw new Error(`This user already has a different role: ${existingRole.role}`);
+      }
+    } else {
+      // Create the auth user
+      const { data: authData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name,
+        },
+      });
+
+      if (createAuthError) {
+        console.error('Auth error:', createAuthError);
+        throw new Error(`Failed to create auth user: ${createAuthError.message}`);
+      }
+      if (!authData.user) {
+        throw new Error("Failed to create user - no user data returned");
+      }
+
+      console.log('Auth user created:', authData.user.id);
+      userId = authData.user.id;
+    }
 
     // Create referral record
     const { error: referralError } = await supabaseAdmin
       .from("referrals")
       .insert({
-        user_id: authData.user.id,
+        user_id: userId,
         referral_code,
         full_name,
         email,
@@ -112,23 +146,43 @@ serve(async (req) => {
 
     console.log('Referral record created');
 
-    // Assign referral role
-    const { error: roleInsertError } = await supabaseAdmin
+    // Check if role already exists before inserting
+    const { data: roleCheck } = await supabaseAdmin
       .from("user_roles")
-      .insert({
-        user_id: authData.user.id,
-        role: "referral",
-      });
+      .select("id, role")
+      .eq("user_id", userId)
+      .single();
 
-    if (roleInsertError) {
-      console.error('Role insert error:', roleInsertError);
-      throw new Error(`Failed to assign referral role: ${roleInsertError.message}`);
+    if (roleCheck) {
+      // Update existing role to referral
+      const { error: roleUpdateError } = await supabaseAdmin
+        .from("user_roles")
+        .update({ role: "referral" })
+        .eq("user_id", userId);
+
+      if (roleUpdateError) {
+        console.error('Role update error:', roleUpdateError);
+        throw new Error(`Failed to update role: ${roleUpdateError.message}`);
+      }
+      console.log('Referral role updated successfully');
+    } else {
+      // Insert new role
+      const { error: roleInsertError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({
+          user_id: userId,
+          role: "referral",
+        });
+
+      if (roleInsertError) {
+        console.error('Role insert error:', roleInsertError);
+        throw new Error(`Failed to assign referral role: ${roleInsertError.message}`);
+      }
+      console.log('Referral role assigned successfully');
     }
 
-    console.log('Referral role assigned successfully');
-
     return new Response(
-      JSON.stringify({ success: true, user_id: authData.user.id }),
+      JSON.stringify({ success: true, user_id: userId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
