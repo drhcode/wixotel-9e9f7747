@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Key } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface Referral {
@@ -27,6 +27,9 @@ const ReferralsManagement = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [editingReferral, setEditingReferral] = useState<Referral | null>(null);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -199,6 +202,53 @@ const ReferralsManagement = () => {
     }
   };
 
+  const openPasswordDialog = (referral: Referral) => {
+    setSelectedReferral(referral);
+    setNewPassword("");
+    setPasswordDialogOpen(true);
+  };
+
+  const handlePasswordReset = async () => {
+    if (!selectedReferral || !newPassword) return;
+
+    // Validate password
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      toast.error("Password must contain at least one symbol");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-referral-password', {
+        body: {
+          user_id: selectedReferral.user_id,
+          new_password: newPassword,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Password reset successfully for ${selectedReferral.full_name}`);
+      setPasswordDialogOpen(false);
+      setSelectedReferral(null);
+      setNewPassword("");
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -344,6 +394,14 @@ const ReferralsManagement = () => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => openPasswordDialog(referral)}
+                        title="Reset Password"
+                      >
+                        <Key className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEdit(referral)}
                       >
                         <Edit className="h-4 w-4" />
@@ -363,6 +421,41 @@ const ReferralsManagement = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {selectedReferral?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new_password">New Password</Label>
+              <Input
+                id="new_password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be at least 8 characters with one uppercase letter and one symbol
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePasswordReset} disabled={loading || !newPassword}>
+              {loading ? "Resetting..." : "Reset Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
