@@ -1937,6 +1937,10 @@ export type Database = {
         Args: { p_confirmation_number: string }
         Returns: Json
       }
+      lookup_referral_code: {
+        Args: { p_referral_code: string }
+        Returns: string
+      }
       send_booking_confirmation_email:
         | {
             Args: {
