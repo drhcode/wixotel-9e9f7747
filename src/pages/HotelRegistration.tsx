@@ -229,17 +229,14 @@ const HotelRegistration = () => {
         .eq('name', 'Basic')
         .single();
 
-      // Check referral code if provided
+      // Check referral code if provided using security definer function
       let referralId = null;
       if (accountData.referralCode) {
-        const { data: referral } = await supabase
-          .from('referrals')
-          .select('id, is_active')
-          .eq('referral_code', accountData.referralCode)
-          .single();
+        const { data: refId, error: refError } = await supabase
+          .rpc('lookup_referral_code', { p_referral_code: accountData.referralCode.trim().toUpperCase() });
 
-        if (referral && referral.is_active) {
-          referralId = referral.id;
+        if (refId) {
+          referralId = refId;
         } else if (accountData.referralCode) {
           toast.warning('Referral code not found or inactive. Continuing without referral.');
         }
