@@ -1903,6 +1903,19 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_public_reviews: {
+        Args: { p_hotel_id: string }
+        Returns: {
+          created_at: string
+          hotel_id: string
+          id: string
+          photo_url: string
+          rating: number
+          review_text: string
+          status: string
+          title: string
+        }[]
+      }
       get_public_rooms: {
         Args: { p_hotel_id: string }
         Returns: {

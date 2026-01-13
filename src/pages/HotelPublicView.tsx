@@ -99,11 +99,12 @@ interface Room {
 
 interface Review {
   id: string;
+  hotel_id: string;
   title: string;
   rating: number;
   review_text: string;
   photo_url: string | null;
-  guest_email: string;
+  status: string;
   created_at: string;
 }
 
@@ -262,13 +263,9 @@ const HotelPublicView = () => {
     if (!hotel?.id) return;
 
     try {
+      // Use secure RPC function that excludes guest_email from public access
       const { data, error } = await supabase
-        .from("reviews")
-        .select("*")
-        .eq("hotel_id", hotel.id)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .rpc("get_public_reviews", { p_hotel_id: hotel.id });
 
       if (error) throw error;
       setReviews(data || []);
@@ -1646,7 +1643,7 @@ const HotelPublicView = () => {
                       />
                     )}
                     <div className="text-xs text-muted-foreground pt-2 border-t">
-                      {review.guest_email.substring(0, 2) + "***@" + review.guest_email.split("@")[1]}
+                      Verified Guest
                     </div>
                   </CardContent>
                 </Card>
