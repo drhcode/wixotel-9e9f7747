@@ -44,22 +44,9 @@ serve(async (req) => {
       );
     }
 
-    // Only allow dev mode bypass if ENVIRONMENT is explicitly set to 'development'
-    // This env variable should NEVER be set in production deployments
-    const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
-    if (isDevelopment && token === 'dev-mode-skip-recaptcha') {
-      console.log("[DEV] Skipping reCAPTCHA verification for development mode");
-      return new Response(
-        JSON.stringify({
-          success: true,
-          passed: true,
-          score: 1.0,
-          action: action,
-          message: "Development mode - reCAPTCHA bypassed",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // SECURITY: No development bypass allowed
+    // All reCAPTCHA tokens must be validated through Google's API
+    // Development testing should use Google's test keys instead
 
     // Verify token with Google reCAPTCHA API
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify`;

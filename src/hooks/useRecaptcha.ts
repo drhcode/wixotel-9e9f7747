@@ -1,7 +1,7 @@
 /**
  * reCAPTCHA v3 integration hook
  * Provides utilities to execute reCAPTCHA and verify tokens
- * Only active in production - skipped in development
+ * Always active - uses Google's reCAPTCHA API in all environments
  */
 
 const RECAPTCHA_SITE_KEY = "6LeWVhssAAAAACjsMkrM7q2hEMrfpXEGU2JddsUE";
@@ -9,19 +9,16 @@ const RECAPTCHA_SITE_KEY = "6LeWVhssAAAAACjsMkrM7q2hEMrfpXEGU2JddsUE";
 export const useRecaptcha = () => {
   /**
    * Execute reCAPTCHA and get a token
-   * In development, returns a mock token to skip verification
+   * Always uses Google's reCAPTCHA API - no development bypass
    * @param action - The action name for this verification (e.g., 'login', 'submit_lead', 'submit_review')
    * @returns Promise<string> - The reCAPTCHA token
    */
   const executeRecaptcha = async (action: string): Promise<string> => {
-    // Skip reCAPTCHA in development mode
-    if (import.meta.env.DEV) {
-      console.log(`[DEV] Skipping reCAPTCHA for action: ${action}`);
-      return 'dev-mode-skip-recaptcha';
-    }
-
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.grecaptcha) {
+        // In development without reCAPTCHA script loaded, log warning and return empty token
+        // Server will properly reject invalid tokens
+        console.warn('reCAPTCHA script not loaded - token validation will fail on server');
         reject(new Error('reCAPTCHA not loaded'));
         return;
       }
@@ -39,7 +36,8 @@ export const useRecaptcha = () => {
     });
   };
 
-  const isEnabled = import.meta.env.PROD;
+  // Always enabled - no bypass mode
+  const isEnabled = true;
 
   return { executeRecaptcha, isEnabled };
 };
