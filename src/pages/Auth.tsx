@@ -125,13 +125,6 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Store remember me preference
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('rememberMe');
-      }
-
       if (data.user) {
         // Check if user's hotel is approved
         const { data: hotel, error: hotelError } = await supabase
@@ -149,6 +142,12 @@ const Auth = () => {
             .maybeSingle();
 
           if (role?.role === 'super_admin' || role?.role === 'referral') {
+            // For super_admin and referral, respect their checkbox choice
+            if (rememberMe) {
+              localStorage.setItem('rememberMe', 'true');
+            } else {
+              localStorage.removeItem('rememberMe');
+            }
             toast.success("Welcome back!");
             navigate("/dashboard");
             return;
@@ -186,6 +185,10 @@ const Auth = () => {
           setShowSuspensionModal(true);
           return;
         }
+
+        // Auto-enable persistent session for hotel owners
+        // They stay logged in until they clear browser cache or manually logout
+        localStorage.setItem('rememberMe', 'true');
 
         toast.success("Welcome back!");
         navigate("/dashboard");
