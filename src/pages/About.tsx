@@ -434,7 +434,7 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-accent/20 to-primary/5 overflow-hidden max-w-5xl mx-auto relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 animate-pulse"></div>
