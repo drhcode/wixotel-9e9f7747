@@ -202,7 +202,7 @@ const About = () => {
       </section>
 
       {/* Stats Section with Icons */}
-      <section className="py-16 px-4 md:px-6 -mt-32 relative z-20">
+      <section className="py-12 md:py-16 px-2 sm:px-4 md:px-6 -mt-24 md:-mt-32 relative z-20">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {stats.map((stat) => (
