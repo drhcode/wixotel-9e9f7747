@@ -408,7 +408,7 @@ Unread notifications show a red badge with the count.`
 4. Select priority level
 5. Submit the ticket
 
-Our team will respond within 24 hours. You can also reach us via WhatsApp at +447400754801.`
+Our team will respond within 24 hours. You can also reach us via WhatsApp at +35568204518.`
         },
         {
           question: "How do I check my support ticket status?",
