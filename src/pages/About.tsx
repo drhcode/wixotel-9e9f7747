@@ -225,10 +225,10 @@ const About = () => {
       </section>
 
       {/* Story Section with Team Image */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            <div className="space-y-8 order-2 lg:order-1">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center max-w-7xl mx-auto">
+            <div className="space-y-6 md:space-y-8 order-2 lg:order-1">
               <div className="space-y-4">
                 <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary">
                   OUR STORY
