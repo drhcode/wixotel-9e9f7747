@@ -367,7 +367,7 @@ const About = () => {
       </section>
 
       {/* Guest Experience Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             <div className="space-y-8 order-2 lg:order-1">
