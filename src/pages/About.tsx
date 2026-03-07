@@ -167,7 +167,7 @@ const About = () => {
               <Globe className="h-4 w-4" />
               ABOUT WIXOTEL
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-tight">
               Transforming Hotel Management for the{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 Modern Era
