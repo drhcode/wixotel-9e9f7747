@@ -438,7 +438,7 @@ const About = () => {
         <div className="container mx-auto">
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-accent/20 to-primary/5 overflow-hidden max-w-5xl mx-auto relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 animate-pulse"></div>
-            <CardContent className="p-12 md:p-16 text-center space-y-8 relative z-10">
+            <CardContent className="p-6 sm:p-12 md:p-16 text-center space-y-8 relative z-10">
               <div className="space-y-4">
                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
                   Ready to Transform <br />
