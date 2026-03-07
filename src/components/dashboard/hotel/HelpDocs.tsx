@@ -408,7 +408,7 @@ Unread notifications show a red badge with the count.`
 4. Select priority level
 5. Submit the ticket
 
-Our team will respond within 24 hours. You can also reach us via WhatsApp at +447400754801.`
+Our team will respond within 24 hours. You can also reach us via WhatsApp at +35568204518.`
         },
         {
           question: "How do I check my support ticket status?",
@@ -586,7 +586,7 @@ Never share your login credentials with others.`
             </div>
             <div className="flex gap-2">
               <a 
-                href="https://wa.me/447400754801" 
+                href="https://wa.me/35568204518" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors text-sm font-medium"

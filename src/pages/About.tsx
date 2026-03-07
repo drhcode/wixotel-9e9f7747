@@ -151,7 +151,7 @@ const About = () => {
       />
 
       {/* Hero Section with Background Image */}
-      <section className="relative pt-32 pb-48 px-4 md:px-6 overflow-hidden">
+      <section className="relative pt-24 md:pt-32 pb-32 md:pb-48 px-2 sm:px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src={aboutHeroImage} 
@@ -167,7 +167,7 @@ const About = () => {
               <Globe className="h-4 w-4" />
               ABOUT WIXOTEL
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-tight">
               Transforming Hotel Management for the{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 Modern Era
@@ -202,7 +202,7 @@ const About = () => {
       </section>
 
       {/* Stats Section with Icons */}
-      <section className="py-16 px-4 md:px-6 -mt-32 relative z-20">
+      <section className="py-12 md:py-16 px-2 sm:px-4 md:px-6 -mt-24 md:-mt-32 relative z-20">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {stats.map((stat) => (
@@ -225,10 +225,10 @@ const About = () => {
       </section>
 
       {/* Story Section with Team Image */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            <div className="space-y-8 order-2 lg:order-1">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center max-w-7xl mx-auto">
+            <div className="space-y-6 md:space-y-8 order-2 lg:order-1">
               <div className="space-y-4">
                 <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary">
                   OUR STORY
@@ -281,7 +281,7 @@ const About = () => {
       </section>
 
       {/* Values Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/30 to-background">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6 bg-gradient-to-b from-background via-accent/30 to-background">
         <div className="container mx-auto">
           <div className="text-center space-y-4 mb-16 max-w-3xl mx-auto">
             <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
@@ -318,13 +318,13 @@ const About = () => {
       </section>
 
       {/* Technology Section */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center max-w-7xl mx-auto">
             <div className="relative group">
               <div className="absolute -inset-4 bg-gradient-primary opacity-20 rounded-3xl blur-2xl group-hover:opacity-30 transition-opacity"></div>
               <img 
-                src={aboutTechImage} 
+                src={aboutTechImage}
                 alt="Hotel management technology" 
                 className="relative rounded-2xl shadow-2xl w-full h-auto group-hover:scale-[1.02] transition-transform duration-500"
               />
@@ -367,7 +367,7 @@ const About = () => {
       </section>
 
       {/* Guest Experience Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6 bg-gradient-to-b from-background via-primary/5 to-background">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             <div className="space-y-8 order-2 lg:order-1">
@@ -434,11 +434,11 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-accent/20 to-primary/5 overflow-hidden max-w-5xl mx-auto relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 animate-pulse"></div>
-            <CardContent className="p-12 md:p-16 text-center space-y-8 relative z-10">
+            <CardContent className="p-6 sm:p-12 md:p-16 text-center space-y-8 relative z-10">
               <div className="space-y-4">
                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
                   Ready to Transform <br />
@@ -476,7 +476,7 @@ const About = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 md:px-6 border-t bg-accent/30">
+      <footer className="py-12 px-2 sm:px-4 md:px-6 border-t bg-accent/30">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
@@ -496,9 +496,6 @@ const About = () => {
               <h3 className="font-semibold mb-4">Contact</h3>
               <div className="space-y-2">
                 <a href="mailto:support@wixotel.com" className="block text-sm text-primary hover:underline">support@wixotel.com</a>
-                <a href="https://wa.me/447400754801" target="_blank" rel="noopener noreferrer" className="block text-sm text-primary hover:underline">
-                  Support via WhatsApp
-                </a>
               </div>
             </div>
           </div>
