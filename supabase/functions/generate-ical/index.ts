@@ -74,9 +74,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate token - constant-time comparison to prevent timing attacks
     const validToken = room.ical_token;
-    if (!validToken || token.length !== validToken.length || token !== validToken) {
+    if (!validToken || token.length !== validToken.length) {
+      console.warn(`Invalid token attempt for room ${roomId}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const tokenBuffer = new TextEncoder().encode(token);
+    const validBuffer = new TextEncoder().encode(validToken);
+    if (!timingSafeEqual(tokenBuffer, validBuffer)) {
       console.warn(`Invalid token attempt for room ${roomId}`);
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
