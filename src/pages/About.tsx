@@ -496,9 +496,6 @@ const About = () => {
               <h3 className="font-semibold mb-4">Contact</h3>
               <div className="space-y-2">
                 <a href="mailto:support@wixotel.com" className="block text-sm text-primary hover:underline">support@wixotel.com</a>
-                <a href="https://wa.me/447400754801" target="_blank" rel="noopener noreferrer" className="block text-sm text-primary hover:underline">
-                  Support via WhatsApp
-                </a>
               </div>
             </div>
           </div>
