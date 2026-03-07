@@ -281,7 +281,7 @@ const About = () => {
       </section>
 
       {/* Values Section */}
-      <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-background via-accent/30 to-background">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6 bg-gradient-to-b from-background via-accent/30 to-background">
         <div className="container mx-auto">
           <div className="text-center space-y-4 mb-16 max-w-3xl mx-auto">
             <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-semibold text-primary mb-4">
