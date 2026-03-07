@@ -476,7 +476,7 @@ const About = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 md:px-6 border-t bg-accent/30">
+      <footer className="py-12 px-2 sm:px-4 md:px-6 border-t bg-accent/30">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
