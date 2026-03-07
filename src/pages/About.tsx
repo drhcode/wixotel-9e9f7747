@@ -318,13 +318,13 @@ const About = () => {
       </section>
 
       {/* Technology Section */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-16 md:py-24 px-2 sm:px-4 md:px-6">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center max-w-7xl mx-auto">
             <div className="relative group">
               <div className="absolute -inset-4 bg-gradient-primary opacity-20 rounded-3xl blur-2xl group-hover:opacity-30 transition-opacity"></div>
               <img 
-                src={aboutTechImage} 
+                src={aboutTechImage}
                 alt="Hotel management technology" 
                 className="relative rounded-2xl shadow-2xl w-full h-auto group-hover:scale-[1.02] transition-transform duration-500"
               />
