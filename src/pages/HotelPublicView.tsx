@@ -590,7 +590,6 @@ const HotelPublicView = () => {
         user_agent: deviceInfo.user_agent,
       };
 
-      console.log("Submitting lead with data:", leadData);
 
       const { error } = await supabase.from("leads").insert(leadData);
 

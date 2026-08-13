@@ -78,8 +78,6 @@ const CalendarManager = ({ hotelId }: Props) => {
           filter: `hotel_id=eq.${hotelId}`
         },
         (payload) => {
-          console.log('Room status realtime update:', payload);
-          console.log('Old status:', payload.old, 'New status:', payload.new);
           
           // Update the room in the local state
           setRooms(prevRooms => {
@@ -88,7 +86,6 @@ const CalendarManager = ({ hotelId }: Props) => {
                 ? { ...room, ...payload.new }
                 : room
             );
-            console.log('Updated rooms state:', updatedRooms);
             return updatedRooms;
           });
           
@@ -102,7 +99,6 @@ const CalendarManager = ({ hotelId }: Props) => {
         }
       )
       .subscribe((status) => {
-        console.log('Room status channel subscription:', status);
       });
 
     return () => {

@@ -64,7 +64,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
             filter: `hotel_id=eq.${hotelId}`,
           },
           (payload) => {
-            console.log('Leads change detected in sidebar:', payload);
             // Small delay to ensure database update is complete
             setTimeout(() => {
               fetchLeadsCount();
@@ -77,7 +76,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
       const broadcastChannel = supabase
         .channel(`hotel-${hotelId}`)
         .on('broadcast', { event: 'leads_updated' }, (payload) => {
-          console.log('Broadcast leads_updated received:', payload);
           fetchLeadsCount();
         })
         .subscribe();
@@ -96,7 +94,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
           (payload) => {
             const newRow: any = payload.new;
             if (newRow?.type === 'new_lead') {
-              console.log('New lead notification detected -> refresh leads count');
               fetchLeadsCount();
             }
           }
@@ -115,7 +112,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
             filter: `hotel_id=eq.${hotelId}`,
           },
           (payload) => {
-            console.log('Invoices change detected in sidebar:', payload);
             setTimeout(() => {
               fetchUnpaidInvoicesCount();
               fetchOverdueInvoices();
@@ -125,7 +121,6 @@ export function HotelSidebar({ activeTab, onTabChange, hotelId }: HotelSidebarPr
         .subscribe();
 
       return () => {
-        console.log('Cleaning up leads subscriptions');
         supabase.removeChannel(leadsChannel);
         supabase.removeChannel(broadcastChannel);
         supabase.removeChannel(notificationsChannel);

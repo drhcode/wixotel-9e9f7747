@@ -91,7 +91,6 @@ const HotelAdminDashboard = () => {
       const broadcastChannel = supabase
         .channel(`hotel-${hotel.id}`)
         .on('broadcast', { event: 'leads_updated' }, () => {
-          console.log('Broadcast leads_updated received in horizontal menu');
           fetchLeadsCount();
         })
         .subscribe();

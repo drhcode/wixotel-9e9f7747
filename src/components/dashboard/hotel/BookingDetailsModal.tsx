@@ -214,7 +214,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       return;
     }
 
-    console.log('Updating booking status to:', newStatus, 'for booking:', booking.id, 'room:', booking.room_id);
 
     const { error } = await supabase
       .from('bookings')
@@ -225,7 +224,6 @@ const BookingDetailsModal = ({ booking, onClose, onUpdate }: Props) => {
       console.error('Failed to update booking status:', error);
       toast.error("Failed to update status");
     } else {
-      console.log('Booking status updated successfully. Trigger should update room status to dirty.');
       
       // Update earnings status to completed when guest checks out
       if (newStatus === 'checked_out') {
