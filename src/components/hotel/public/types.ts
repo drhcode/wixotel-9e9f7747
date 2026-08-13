@@ -48,8 +48,11 @@ export interface PublicReview {
 
 /** Strips internal room-number prefixes/suffixes for public display. */
 export const cleanRoomName = (name: string) => {
-  return name
-    .replace(/^\d+\s*-\s*/, "")
-    .replace(/\s*-\s*\d+$/, "")
-    .trim();
+  // Remove pattern like "105 - " or "A1 - " from the beginning
+  let cleaned = name.replace(/^[A-Z0-9]+\s*-\s*/i, "");
+  // Remove ALL parenthetical content like "(flutura)" anywhere in the string
+  cleaned = cleaned.replace(/\s*\([^)]*\)/g, "");
+  // Remove trailing numbers like "203"
+  cleaned = cleaned.replace(/\s*\d+\s*$/, "");
+  return cleaned.trim();
 };
