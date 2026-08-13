@@ -48,7 +48,7 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
     }
 
     // Initialize map with much closer zoom
-    map.current = L.map(mapContainer.current).setView(center, zoom);
+    map.current = L.map(mapContainer.current, { fadeAnimation: false, zoomAnimation: false }).setView(center, zoom, { animate: false });
 
     // Add OpenStreetMap tile layer (free)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
