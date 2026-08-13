@@ -59,6 +59,12 @@ import { Link } from "react-router-dom";
 import wixotelLogo from "@/assets/wixotel-logo.png";
 import HotelsLeafletMap from "@/components/HotelsLeafletMap";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
+import { HotelPublicHeader } from "@/components/hotel/public/HotelPublicHeader";
+import { HotelHeroSection } from "@/components/hotel/public/HotelHeroSection";
+import { HotelRoomsSection } from "@/components/hotel/public/HotelRoomsSection";
+import { HotelAboutSection } from "@/components/hotel/public/HotelAboutSection";
+import { HotelContactSection } from "@/components/hotel/public/HotelContactSection";
+import { HotelReviewsSection } from "@/components/hotel/public/HotelReviewsSection";
 
 interface Hotel {
   id: string;
@@ -590,7 +596,6 @@ const HotelPublicView = () => {
         user_agent: deviceInfo.user_agent,
       };
 
-      console.log("Submitting lead with data:", leadData);
 
       const { error } = await supabase.from("leads").insert(leadData);
 
@@ -838,504 +843,34 @@ const HotelPublicView = () => {
         jsonLd={hotelJsonLd || undefined}
       />
       <div className="min-h-screen bg-background">
-      {/* Modern Header with Navigation */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-            >
-              {/* <img src={wixotelLogo} alt="Wixotel" className="h-10 w-10 object-contain rounded-lg" /> */}
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-xl font-batangas font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  {hotel?.name}
-                </span>
-                <span className="text-[9px] text-muted-foreground -mt-0.5">by wixotel</span>
-              </div>
-            </button>
+      <HotelPublicHeader
+        hotelName={hotel?.name ?? ""}
+        mobileMenuOpen={mobileMenuOpen}
+        onMobileMenuOpenChange={setMobileMenuOpen}
+        onNavigate={scrollToSection}
+        onFindBooking={() => setBookingLookupOpen(true)}
+        onLogoClick={() => navigate("/")}
+      />
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6">
-              <button
-                onClick={() => scrollToSection("rooms")}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Rooms
-              </button>
-              <button
-                onClick={() => scrollToSection("about")}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                About Us
-              </button>
-              <button
-                onClick={() => scrollToSection("reviews")}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Reviews
-              </button>
-              <button
-                onClick={() => scrollToSection("contact")}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Contact Us
-              </button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBookingLookupOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Search className="h-4 w-4" />
-                Find Booking
-              </Button>
-            </nav>
-
-            {/* Mobile Navigation */}
-            <div className="flex lg:hidden items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBookingLookupOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Search className="h-4 w-4" />
-                <span className="text-xs sm:text-sm">Find Booking</span>
-              </Button>
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px]">
-                  <div className="flex flex-col gap-6 mt-8">
-                    <button
-                      onClick={() => scrollToSection("rooms")}
-                      className="text-lg font-medium hover:text-primary transition-colors text-left"
-                    >
-                      Rooms
-                    </button>
-                    <button
-                      onClick={() => scrollToSection("about")}
-                      className="text-lg font-medium hover:text-primary transition-colors text-left"
-                    >
-                      About Us
-                    </button>
-                    <button
-                      onClick={() => scrollToSection("reviews")}
-                      className="text-lg font-medium hover:text-primary transition-colors text-left"
-                    >
-                      Reviews
-                    </button>
-                    <button
-                      onClick={() => scrollToSection("contact")}
-                      className="text-lg font-medium hover:text-primary transition-colors text-left"
-                    >
-                      Contact Us
-                    </button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative h-[60vh] sm:h-[70vh] lg:h-[80vh] min-h-[500px] sm:min-h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          {hotel?.about_us_image ? (
-            <>
-              <img
-                src={hotel.about_us_image}
-                alt={hotel.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/75 to-background/95 sm:from-background/80 sm:via-background/60 sm:to-background/90" />
-            </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-accent/30" />
-          )}
-        </div>
-
-        {/* Hero Content */}
-        <div className="container mx-auto px-4 relative z-10 text-center space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground drop-shadow-lg leading-tight">
-            Welcome to <br className="sm:hidden" />
-            <span className="bg-gradient-primary bg-clip-text text-transparent">{hotel?.name}</span>
-          </h1>
-          {hotel?.description && (
-            <p className="text-sm sm:text-lg md:text-xl lg:text-2xl text-foreground/90 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed drop-shadow line-clamp-3 sm:line-clamp-none px-4">
-              {hotel.description}
-            </p>
-          )}
-          <div className="pt-2 sm:pt-4">
-            <Button
-              size="lg"
-              onClick={() => scrollToSection("rooms")}
-              className="bg-gradient-primary hover:opacity-90 shadow-elegant hover:shadow-glow hover:scale-105 transition-all text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 w-auto"
-            >
-              Explore Our Rooms
-            </Button>
-          </div>
-        </div>
-      </section>
+      <HotelHeroSection hotel={hotel} onExploreRooms={() => scrollToSection("rooms")} />
 
       {/* Gallery Slider */}
       {hotel?.images && hotel.images.length > 0 && (
         <GallerySlider images={hotel.images} hotelName={hotel.name} />
       )}
 
-      {/* Rooms Section */}
-      <section id="rooms" className="py-16 px-4 scroll-mt-16">
-        <div className="container mx-auto">
-          <div className="text-center mb-12 space-y-4 animate-fade-in">
-            <h2 className="text-4xl font-bold tracking-tight">Our Rooms</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Discover comfort and luxury in every room</p>
-          </div>
+      <HotelRoomsSection
+        rooms={rooms}
+        priceRange={priceRange}
+        onPriceRangeChange={setPriceRange}
+        selectedCapacity={selectedCapacity}
+        onSelectedCapacityChange={setSelectedCapacity}
+        onSelectRoom={setSelectedRoom}
+      />
 
-          {/* Filters */}
-          {rooms.length > 0 && (
-            <Card className="mb-8 border-border/50 shadow-md">
-              <CardContent className="pt-6">
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {/* Price Range Filter */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold">Price Range</Label>
-                      <span className="text-sm text-muted-foreground">
-                        €{priceRange[0]} - €{priceRange[1]}
-                      </span>
-                    </div>
-                    <Slider
-                      min={Math.min(...rooms.map(r => r.price))}
-                      max={Math.max(...rooms.map(r => r.price))}
-                      step={10}
-                      value={priceRange}
-                      onValueChange={(value) => setPriceRange(value as [number, number])}
-                      className="w-full"
-                    />
-                  </div>
+      <HotelAboutSection hotel={hotel} />
 
-                  {/* Guest Capacity Filter */}
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">Guest Capacity</Label>
-                    <Select value={selectedCapacity} onValueChange={setSelectedCapacity}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Any capacity" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Any capacity</SelectItem>
-                        {Array.from(new Set(rooms.map(r => r.capacity)))
-                          .sort((a, b) => a - b)
-                          .map(capacity => (
-                            <SelectItem key={capacity} value={capacity.toString()}>
-                              {capacity} {capacity === 1 ? 'guest' : 'guests'}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {rooms.length === 0 ? (
-            <Card className="border-border/50">
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No rooms available at the moment
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {rooms
-                .filter(room => {
-                  // Filter by price range
-                  const inPriceRange = room.price >= priceRange[0] && room.price <= priceRange[1];
-                  
-                  // Filter by capacity
-                  const matchesCapacity = selectedCapacity === "all" || room.capacity === parseInt(selectedCapacity);
-                  
-                  return inPriceRange && matchesCapacity;
-                })
-                .map((room, index) => (
-                <Card
-                  key={room.id}
-                  className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in flex flex-col"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  onClick={() => setSelectedRoom(room)}
-                >
-                  <div className="relative overflow-hidden">
-                    {room.main_photo_url ? (
-                      <img
-                        src={room.main_photo_url}
-                        alt={cleanRoomName(room.name)}
-                        className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-56 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <Bed className="h-16 w-16 text-muted-foreground" />
-                      </div>
-                    )}
-                    {room.room_number && (
-                      <Badge className="absolute top-4 right-4 bg-background/90 backdrop-blur">
-                        {room.room_number}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {cleanRoomName(room.name)}
-                    </CardTitle>
-                    {room.room_type && <CardDescription className="text-base">{room.room_type}</CardDescription>}
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-6 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-primary" />
-                          <span>{room.capacity} guests</span>
-                        </div>
-                        {room.square_meters && (
-                          <div className="flex items-center gap-2">
-                            <Home className="h-4 w-4 text-primary" />
-                            <span>{room.square_meters} m²</span>
-                          </div>
-                        )}
-                      </div>
-                      {room.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{room.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t mt-4">
-                      <div>
-                        <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                          €{room.price}
-                        </div>
-                        <div className="text-xs text-muted-foreground">per night</div>
-                      </div>
-                      <Button size="sm" className="group-hover:bg-gradient-primary transition-all">
-                        Book Now
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* About Us Section */}
-      <section id="about" className="relative py-20 px-4 scroll-mt-16 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-accent/20 -z-10" />
-        
-        <div className="container mx-auto">
-          <div className="max-w-7xl mx-auto space-y-12 animate-fade-in">
-            <div className="text-center space-y-4">
-              <h2 className="text-5xl font-bold tracking-tight">About Us</h2>
-              <p className="text-xl text-muted-foreground">Experience exceptional hospitality</p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* About Us Image - Left */}
-              <div className="order-2 lg:order-1">
-                {hotel?.about_us_image ? (
-                  <div className="relative rounded-2xl overflow-hidden shadow-elegant group">
-                    <img
-                      src={hotel.about_us_image}
-                      alt={`${hotel.name} - About Us`}
-                      className="w-full h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-                  </div>
-                ) : (
-                  <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 h-[500px] flex items-center justify-center">
-                    <Hotel className="h-32 w-32 text-muted-foreground/30" />
-                  </div>
-                )}
-              </div>
-
-              {/* About Us Text - Right */}
-              <div className="order-1 lg:order-2 space-y-6">
-                {hotel?.about_us ? (
-                  <div className="space-y-6">
-                    <p className="text-lg text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {hotel.about_us}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-center lg:text-left">
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                      Learn more about our exceptional hospitality and services.
-                    </p>
-                  </div>
-                )}
-
-                {hotel?.amenities && hotel.amenities.length > 0 && (
-                  <Card className="border-border/50 shadow-md bg-card/50 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-xl">
-                        <Coffee className="h-6 w-6 text-primary" />
-                        Hotel Amenities
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        {hotel.amenities.map((amenity, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-primary" />
-                            <span className="text-sm font-medium">{amenity}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Us Section */}
-      <section id="contact" className="py-16 px-4 scroll-mt-16">
-        <div className="container mx-auto">
-          <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl font-bold tracking-tight">Contact Us</h2>
-              <p className="text-xl text-muted-foreground">Get in touch with us for any inquiries</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Contact Details - Left */}
-              <div className="space-y-6">
-                {hotel?.phone && (
-                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                          <Phone className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">Phone</CardTitle>
-                          <a
-                            href={`tel:${hotel.phone}`}
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                          >
-                            {hotel.phone}
-                          </a>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                )}
-
-
-                <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Address</CardTitle>
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel?.address || "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          {hotel?.address}
-                        </a>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-
-                {/* Social Media Links */}
-                {(hotel?.facebook_url || hotel?.instagram_url || hotel?.google_business_url) && (
-                  <Card className="border-border/50 hover:shadow-elegant transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="text-lg mb-4">Connect With Us</CardTitle>
-                      <div className="flex items-center gap-4">
-                        {hotel?.facebook_url && (
-                          <a
-                            href={hotel.facebook_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
-                            aria-label="Visit our Facebook page"
-                          >
-                            <Facebook className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                          </a>
-                        )}
-                        {hotel?.instagram_url && (
-                          <a
-                            href={hotel.instagram_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
-                            aria-label="Visit our Instagram page"
-                          >
-                            <Instagram className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                          </a>
-                        )}
-                        {hotel?.google_business_url && (
-                          <a
-                            href={hotel.google_business_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:from-primary/30 hover:to-primary/10 transition-all group"
-                            aria-label="View on Google My Business"
-                          >
-                            <MapPin className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                          </a>
-                        )}
-                      </div>
-                    </CardHeader>
-                  </Card>
-                )}
-              </div>
-
-              {/* Map - Right */}
-              <Card className="border-border/50 overflow-hidden h-full min-h-[400px]">
-                <CardContent className="p-0 h-full min-h-[400px]">
-                  {hotel?.latitude && hotel?.longitude ? (
-                    <HotelsLeafletMap
-                      hotels={[
-                        {
-                          id: hotel.id,
-                          name: hotel.name,
-                          slug: hotel.slug,
-                          latitude: hotel.latitude,
-                          longitude: hotel.longitude,
-                          city: hotel.city,
-                          country: hotel.country,
-                        },
-                      ]}
-                    />
-                  ) : (
-                    <iframe
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(hotel?.address || "")}&output=embed`}
-                      className="w-full h-full min-h-[400px]"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    ></iframe>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HotelContactSection hotel={hotel} />
 
       {/* Lead Inquiry Form Section */}
       <section
@@ -1580,78 +1115,7 @@ const HotelPublicView = () => {
         </div>
       </section>
 
-      {/* Reviews Section */}
-      <section id="reviews" className="py-16 px-4 bg-gradient-to-b from-accent/30 to-background scroll-mt-16">
-        <div className="container mx-auto">
-          <div className="text-center mb-12 space-y-4 animate-fade-in">
-            <h2 className="text-4xl font-bold tracking-tight">Guest Reviews</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              See what our guests have to say about their experience
-            </p>
-            <Button
-              onClick={() => setReviewModalOpen(true)}
-              className="bg-gradient-primary hover:opacity-90 shadow-elegant"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Write a Review
-            </Button>
-          </div>
-
-          {reviews.length === 0 ? (
-            <Card className="border-border/50 max-w-2xl mx-auto">
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No reviews yet. Be the first to share your experience!
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-              {reviews.map((review, index) => (
-                <Card
-                  key={review.id}
-                  className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <CardHeader>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1 mb-2">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <CardTitle className="text-lg">{review.title}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {new Date(review.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.review_text}</p>
-                    {review.photo_url && (
-                      <img
-                        src={review.photo_url}
-                        alt="Review"
-                        className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
-                      />
-                    )}
-                    <div className="text-xs text-muted-foreground pt-2 border-t">
-                      Verified Guest
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <HotelReviewsSection reviews={reviews} onWriteReview={() => setReviewModalOpen(true)} />
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t bg-accent/20">

@@ -105,7 +105,6 @@ const EarningsManager = ({ hotelId }: EarningsManagerProps) => {
         throw error;
       }
 
-      console.log("Fetched earnings data:", data);
 
       const earningsData = data || [];
       setEarnings(earningsData);

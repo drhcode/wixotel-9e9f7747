@@ -99,8 +99,6 @@ const SuperAdminDashboard = () => {
         return sum + price;
       }, 0) || 0;
 
-      console.log('Active subscriptions:', subscriptionsData);
-      console.log('Total monthly revenue:', totalRevenue);
 
       setStats({
         totalHotels,

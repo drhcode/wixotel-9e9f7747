@@ -180,7 +180,6 @@ const Landing = () => {
           reverseGeocode(location.lat, location.lng);
         },
         (error) => {
-          console.log("Location access denied", error);
         }
       );
     }

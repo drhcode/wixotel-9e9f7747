@@ -135,7 +135,6 @@ const Hotels = () => {
           setUserLocation(location);
         },
         (error) => {
-          console.log("Location access denied", error);
         }
       );
     }

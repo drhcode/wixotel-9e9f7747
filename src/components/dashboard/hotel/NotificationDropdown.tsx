@@ -49,7 +49,6 @@ export function NotificationDropdown({ hotelId }: NotificationDropdownProps) {
           filter: `hotel_id=eq.${hotelId}`,
         },
         (payload) => {
-          console.log('Notification change:', payload);
           
           if (payload.eventType === 'INSERT') {
             // Refresh to maintain pagination
