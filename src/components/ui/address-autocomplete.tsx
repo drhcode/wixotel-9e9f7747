@@ -34,7 +34,7 @@ export const AddressAutocomplete = React.forwardRef<
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
 
