@@ -1945,6 +1945,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      hotel_protected_fields_unchanged: {
+        Args: {
+          _hotel_id: string
+          _is_featured: boolean
+          _is_verified: boolean
+          _plan_id: string
+          _status: Database["public"]["Enums"]["hotel_status"]
+        }
+        Returns: boolean
+      }
       html_escape: { Args: { input: string }; Returns: string }
       lookup_booking_by_confirmation: {
         Args: { p_confirmation_number: string }
