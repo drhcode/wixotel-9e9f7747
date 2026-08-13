@@ -152,7 +152,7 @@ const HotelsLeafletMap = ({ hotels, onHotelClick }: HotelsLeafletMapProps) => {
       const bounds = L.latLngBounds(
         hotelsWithCoords.map(h => [Number(h.latitude), Number(h.longitude)] as [number, number])
       );
-      map.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
+      map.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15, animate: false });
     }
 
     // Cleanup
