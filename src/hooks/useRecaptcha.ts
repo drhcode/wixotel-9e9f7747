@@ -4,7 +4,7 @@
  * Always active - uses Google's reCAPTCHA API in all environments
  */
 
-const RECAPTCHA_SITE_KEY = "6LeWVhssAAAAACjsMkrM7q2hEMrfpXEGU2JddsUE";
+const RECAPTCHA_SITE_KEY = "6LfK3swtAAAAANeRF-ZqQGFkqnVrUsrMC3-v_Oi4";
 
 export const useRecaptcha = () => {
   /**
