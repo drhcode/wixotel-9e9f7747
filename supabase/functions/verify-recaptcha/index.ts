@@ -69,6 +69,19 @@ serve(async (req) => {
 
     if (!result.success) {
       console.error("reCAPTCHA verification failed:", result["error-codes"]);
+      // If Google rejects because of OUR configuration (deleted project, bad secret),
+      // don't lock real users out — let the request through and log loudly.
+      const codes = result["error-codes"] ?? [];
+      const userFault = codes.some((c) =>
+        ["invalid-input-response", "missing-input-response", "timeout-or-duplicate"].includes(c)
+      );
+      if (!userFault) {
+        console.error("reCAPTCHA misconfigured on provider side, failing open:", codes);
+        return new Response(
+          JSON.stringify({ success: true, passed: true, degraded: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
         JSON.stringify({
           success: false,
