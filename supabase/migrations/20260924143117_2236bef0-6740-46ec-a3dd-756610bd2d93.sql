@@ -1,0 +1,2 @@
+GRANT EXECUTE ON FUNCTION public.check_booking_overlap(uuid, date, date, uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.hotel_protected_fields_unchanged(uuid, hotel_status, boolean, boolean, uuid) TO authenticated;
