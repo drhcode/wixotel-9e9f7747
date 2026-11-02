@@ -56,7 +56,7 @@ const BookingsManager = ({ hotelId }: Props) => {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, rooms(name)')
+        .select('*, rooms(name, room_number, room_type)')
         .eq('hotel_id', hotelId)
         .order('created_at', { ascending: false });
 
@@ -68,34 +68,43 @@ const BookingsManager = ({ hotelId }: Props) => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Full Name', 'Email', 'Phone', 'Room', 'Check-in', 'Check-out', 'Amount', 'Status', 'Payment', 'Source', 'Notes'];
-    const csvData = filteredBookings.map(booking => [
-      booking.full_name || '',
-      booking.guest_email || '',
-      booking.guest_phone || '',
-      booking.rooms?.name || '',
-      new Date(booking.check_in).toLocaleDateString(),
-      new Date(booking.check_out).toLocaleDateString(),
-      `€${booking.total_amount}`,
-      booking.status,
-      booking.payment_status,
-      booking.source || 'manual',
-      booking.notes || ''
-    ]);
+    const headers = ['Confirmation #', 'Guest Name', 'Email', 'Phone', 'Room Name', 'Room Number', 'Room Type', 'Check-in', 'Check-out', 'Nights', 'Guests', 'Total Amount (EUR)', 'Booking Status', 'Payment Status', 'Source', 'Notes', 'Created At'];
+    const csvData = filteredBookings.map((booking: any) => {
+      const nights = Math.max(0, Math.round((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / 86400000));
+      return [
+        booking.confirmation_number || '',
+        booking.full_name || '',
+        booking.guest_email || '',
+        booking.guest_phone || '',
+        booking.rooms?.name || '',
+        booking.rooms?.room_number || '',
+        booking.rooms?.room_type || '',
+        booking.check_in,
+        booking.check_out,
+        nights,
+        booking.guest_count ?? '',
+        Number(booking.total_amount || 0).toFixed(2),
+        booking.status,
+        booking.payment_status,
+        booking.source || 'manual',
+        booking.notes || '',
+        booking.created_at ? new Date(booking.created_at).toISOString().replace('T', ' ').slice(0, 16) : '',
+      ];
+    });
 
-    const csv = [
-      headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    const esc = (cell: unknown) => `"${String(cell ?? '').replace(/"/g, '""')}"`;
+    const csv = [headers, ...csvData].map(row => row.map(esc).join(',')).join('\r\n');
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     const date = new Date().toISOString().split('T')[0];
     a.download = `reservations-${date}.csv`;
+    document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 30000);
   };
 
   const filteredBookings = bookings.filter((booking) => {
